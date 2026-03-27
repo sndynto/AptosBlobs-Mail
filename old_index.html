@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AptosBlobs Mail — Decentralized on Shelby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Exo+2:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:    #060810;
+    --bg2:   #0b0f1a;
+    --bg3:   #101622;
+    --bg4:   #161e2e;
+    --bg5:   #1a2438;
+    --border:  rgba(30,50,90,0.7);
+    --border2: rgba(50,90,160,0.5);
+    --accent:  #2563eb;
+    --accent2: #3b82f6;
+    --accent3: #60a5fa;
+    --accent-glow: rgba(37,99,235,0.18);
+    --accent-glow2: rgba(59,130,246,0.3);
+    --aptos:  #00e5b8;
+    --aptos2: #00c49f;
+    --aptos-glow: rgba(0,229,184,0.12);
+    --aptos-glow2: rgba(0,229,184,0.25);
+    --shelby:  #f59e0b;
+    --shelby2: #fbbf24;
+    --shelby-glow: rgba(245,158,11,0.10);
+    --shelby-glow2: rgba(245,158,11,0.22);
+    --text:  #dde8f8;
+    --text2: #7c93b8;
+    --text3: #3d5070;
+    --danger: #f43f5e;
+    --success: #10d98a;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Exo 2', sans-serif;
+    --title: 'Rajdhani', sans-serif;
+    --radius: 6px;
+    --shadow: 0 8px 40px rgba(0,0,0,0.6);
+    --glow-aptos: 0 0 20px rgba(0,229,184,0.2), 0 0 60px rgba(0,229,184,0.06);
+    --glow-shelby: 0 0 20px rgba(245,158,11,0.2), 0 0 60px rgba(245,158,11,0.06);
+    --glow-accent: 0 0 20px rgba(59,130,246,0.25), 0 0 60px rgba(59,130,246,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── Deep space background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,184,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,184,0.025) 1px, transparent 1px),
+      linear-gradient(rgba(59,130,246,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.018) 1px, transparent 1px);
+    background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 20% 50%, rgba(0,229,184,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 80% 30%, rgba(37,99,235,0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 40% at 60% 80%, rgba(245,158,11,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Animated gradient border utility ── */
+  @keyframes borderRotate {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform: scale(1); }
+    50%      { opacity:0.5; transform: scale(0.85); }
+  }
+  @keyframes scan {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  @keyframes shimmer {
+    0%   { left: -60%; }
+    100% { left: 140%; }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 0 8px rgba(0,229,184,0.15); }
+    50%      { box-shadow: 0 0 20px rgba(0,229,184,0.35); }
+  }
+  @keyframes borderGlow {
+    0%,100% { border-color: rgba(0,229,184,0.3); }
+    50%      { border-color: rgba(0,229,184,0.7); }
+  }
+
+  /* ===== TOPBAR ===== */
+  .topbar {
+    position: relative;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    background: linear-gradient(90deg, rgba(11,15,26,0.98) 0%, rgba(10,12,20,0.98) 100%);
+    border-bottom: 1px solid rgba(0,229,184,0.12);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 1px 0 rgba(0,229,184,0.05), 0 4px 32px rgba(0,0,0,0.5);
+  }
+  .topbar::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,184,0.4), rgba(37,99,235,0.3), transparent);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-family: var(--title);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #1a3a8a, #00b89c);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 0 18px rgba(0,229,184,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15));
+  }
+
+  .logo-tag {
+    font-size: 9px;
+    color: var(--aptos);
+    font-family: var(--mono);
+    font-weight: 400;
+    margin-left: 1px;
+    letter-spacing: 2px;
+    opacity: 0.9;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chain-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    background: rgba(0,229,184,0.06);
+    border: 1px solid rgba(0,229,184,0.18);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--aptos);
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .chain-badge:hover {
+    background: rgba(0,229,184,0.12);
+    border-color: rgba(0,229,184,0.4);
+    box-shadow: var(--glow-aptos);
+  }
+  .chain-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--aptos);
+    box-shadow: 0 0 8px var(--aptos);
+    animation: pulse 2s infinite;
+  }
+
+  .shelby-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.18);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--shelby);
+    letter-spacing: 0.5px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+
+  .btn-connect {
+    padding: 7px 18px;
+    background: linear-gradient(135deg, #1e3a8a, #1a5a70);
+    color: #fff;
+    border: 1px solid rgba(59,130,246,0.4);
+    border-radius: 3px;
+    font-family: var(--title);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 0 18px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .btn-connect:hover {
+    background: linear-gradient(135deg, #2563eb, #0891b2);
+    border-color: rgba(96,165,250,0.6);
+    box-shadow: var(--glow-accent);
+    transform: translateY(-1px);
+  }
+  .btn-connect.connected {
+    background: rgba(16,22,34,0.9);
+    border: 1px solid rgba(0,229,184,0.25);
+    color: var(--aptos);
+    box-shadow: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: none;
+  }
+  .btn-connect.connected:hover {
+    border-color: rgba(0,229,184,0.45);
+    box-shadow: 0 0 14px rgba(0,229,184,0.15);
+    transform: translateY(0);
+  }
+
+  /* ===== LAYOUT ===== */
+  .layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 220px;
+    background: linear-gradient(180deg, rgba(11,15,26,0.97) 0%, rgba(8,10,18,0.97) 100%);
+    border-right: 1px solid rgba(0,229,184,0.08);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0;
+    flex-shrink: 0;
+    box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+  }
+  .sidebar::after {
+    content: '';
+    position: absolute;
+    left: 219px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(0,229,184,0.2) 30%, rgba(37,99,235,0.15) 70%, transparent);
+    pointer-events: none;
+  }
+
+  .btn-compose {
+    margin: 0 10px 16px;
+    padding: 11px 14px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.8), rgba(0,180,140,0.7));
+    color: #fff;
+    border: 1px solid rgba(0,229,184,0.3);
+    border-radius: 4px;
+    font-family: var(--title);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.25s;
+    box-shadow: 0 0 22px rgba(0,229,184,0.14), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .btn-compose::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    animation: shimmer 3s infinite;
+  }
+  .btn-compose:hover {
+    background: linear-gradient(135deg, #2563eb, #00b89c);
+    border-color: rgba(0,229,184,0.5);
+    box-shadow: 0 0 30px rgba(0,229,184,0.2), var(--glow-accent);
+    transform: translateY(-1px);
+  }
+
+  .nav-section { padding: 4px 0; }
+
+  .nav-label {
+    padding: 8px 16px 5px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 8px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 400;
+    border-left: 2px solid transparent;
+    letter-spacing: 0.3px;
+    position: relative;
+  }
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.18s;
+  }
+  .nav-item:hover {
+    background: rgba(0,229,184,0.04);
+    color: var(--text);
+    border-left-color: rgba(0,229,184,0.25);
+  }
+  .nav-item:hover .nav-icon { filter: drop-shadow(0 0 4px rgba(0,229,184,0.4)); }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(0,229,184,0.06));
+    color: var(--aptos);
+    border-left: 2px solid var(--aptos);
+    font-weight: 500;
+    box-shadow: inset 0 0 20px rgba(0,229,184,0.04);
+  }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 5px rgba(0,229,184,0.5)); }
+
+  .nav-item-left { display: flex; align-items: center; gap: 10px; }
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; transition: filter 0.18s; }
+  .nav-count {
+    font-family: var(--mono);
+    font-size: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--aptos2));
+    color: #fff;
+    padding: 1px 6px;
+    border-radius: 2px;
+    min-width: 18px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 8px rgba(0,229,184,0.2);
+  }
+
+  .sidebar-storage {
+    margin-top: auto;
+    padding: 12px 12px 10px;
+    border-top: 1px solid rgba(0,229,184,0.07);
+  }
+
+  .storage-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  .storage-bar {
+    height: 3px;
+    background: rgba(30,50,90,0.6);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 5px;
+  }
+
+  .storage-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent2), var(--aptos));
+    border-radius: 2px;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px rgba(0,229,184,0.4);
+  }
+
+  .storage-info {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== MAIL LIST ===== */
+  .mail-list {
+    width: 320px;
+    background: rgba(9,13,22,0.95);
+    border-right: 1px solid rgba(37,99,235,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .mail-list-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(37,99,235,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(11,15,26,0.8);
+  }
+
+  .mail-list-title {
+    font-family: var(--title);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .mail-list-actions { display: flex; gap: 5px; }
+
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(20,28,45,0.8);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-size: 12px;
+    color: var(--text3);
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  }
+  .icon-btn:hover {
+    background: rgba(37,99,235,0.1);
+    border-color: rgba(0,229,184,0.3);
+    color: var(--aptos);
+    box-shadow: 0 0 10px rgba(0,229,184,0.1);
+  }
+
+  .search-box {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(37,99,235,0.08);
+    background: rgba(8,10,18,0.6);
+  }
+
+  .search-input {
+    width: 100%;
+    background: rgba(10,14,24,0.8);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: 3px;
+    padding: 7px 12px 7px 32px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    outline: none;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .search-input:focus {
+    border-color: rgba(0,229,184,0.35);
+    box-shadow: 0 0 14px rgba(0,229,184,0.08), inset 0 0 8px rgba(0,229,184,0.03);
+  }
+  .search-input::placeholder { color: var(--text3); }
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3); font-size: 11px;
+  }
+
+  .mail-items {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(37,99,235,0.2) transparent;
+  }
+
+  .mail-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(20,30,50,0.8);
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mail-item::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.18s;
+  }
+  .mail-item:hover {
+    background: rgba(37,99,235,0.05);
+  }
+  .mail-item:hover::after { background: rgba(0,229,184,0.25); }
+  .mail-item.active {
+    background: linear-gradient(90deg, rgba(37,99,235,0.1), rgba(0,229,184,0.04));
+    border-left: 2px solid var(--aptos);
+  }
+  .mail-item.active::after { background: var(--aptos); }
+  .mail-item.unread .mail-item-from { font-weight: 600; color: var(--text); }
+  .mail-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 50%;
+    transform: translateY(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--aptos);
+    box-shadow: 0 0 8px var(--aptos);
+  }
+
+  .mail-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3px;
+  }
+
+  .mail-item-from {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+    letter-spacing: 0.2px;
+  }
+
+  .mail-item-time {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .mail-item-subject {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+  }
+
+  .mail-item-preview {
+    font-size: 11px;
+    color: var(--text3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mail-item-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .tag-shelby {
+    color: var(--shelby);
+    border-color: rgba(245,158,11,0.25);
+    background: rgba(245,158,11,0.06);
+  }
+  .tag-aptos {
+    color: var(--aptos);
+    border-color: rgba(0,229,184,0.25);
+    background: rgba(0,229,184,0.05);
+  }
+  .tag-enc {
+    color: var(--accent3);
+    border-color: rgba(96,165,250,0.25);
+    background: rgba(96,165,250,0.05);
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-right: 10px;
+    font-family: var(--title);
+    letter-spacing: 0.5px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    position: relative;
+  }
+
+  .mail-item-main { display: flex; align-items: flex-start; }
+  .mail-item-content { flex: 1; min-width: 0; }
+
+  /* ===== MAIL VIEW ===== */
+  .mail-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(6,8,16,0.97);
+  }
+
+  .mail-view-header {
+    padding: 18px 26px;
+    border-bottom: 1px solid rgba(37,99,235,0.1);
+    background: linear-gradient(180deg, rgba(11,15,26,0.9), rgba(8,11,20,0.8));
+    position: relative;
+  }
+  .mail-view-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,184,0.2), rgba(37,99,235,0.15), transparent);
+  }
+
+  .mail-view-subject {
+    font-family: var(--title);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.3;
+    letter-spacing: 0.5px;
+    animation: fadeSlideIn 0.3s ease;
+  }
+
+  .mail-view-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .mail-meta-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .avatar-lg {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: var(--title);
+    letter-spacing: 0.5px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    box-shadow: 0 0 16px rgba(0,0,0,0.4);
+  }
+
+  .mail-from-info {}
+  .mail-from-name { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; }
+  .mail-from-addr {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    cursor: pointer;
+    transition: color 0.18s;
+    letter-spacing: 0.5px;
+  }
+  .mail-from-addr:hover { color: var(--aptos); text-shadow: 0 0 8px rgba(0,229,184,0.3); }
+
+  .mail-view-actions { display: flex; gap: 6px; }
+
+  .btn-action {
+    padding: 7px 14px;
+    background: rgba(14,20,35,0.8);
+    border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 3px;
+    color: var(--text2);
+    font-family: var(--title);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .btn-action:hover {
+    background: rgba(37,99,235,0.1);
+    border-color: rgba(0,229,184,0.3);
+    color: var(--aptos);
+    box-shadow: 0 0 14px rgba(0,229,184,0.1);
+  }
+  .btn-action.primary {
+    background: linear-gradient(135deg, rgba(37,99,235,0.7), rgba(0,160,130,0.6));
+    border-color: rgba(0,229,184,0.35);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(0,229,184,0.12);
+  }
+  .btn-action.primary:hover {
+    background: linear-gradient(135deg, #2563eb, #00b89c);
+    box-shadow: var(--glow-aptos);
+    color: #fff;
+  }
+
+  .mail-view-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 26px 28px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(37,99,235,0.2) transparent;
+  }
+
+  .mail-content {
+    max-width: 720px;
+    font-size: 14px;
+    line-height: 1.85;
+    color: var(--text2);
+    animation: fadeSlideIn 0.35s ease;
+  }
+
+  .mail-content p { margin-bottom: 14px; }
+  .mail-content strong { color: var(--text); font-weight: 600; }
+  .mail-content code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(37,99,235,0.08);
+    padding: 2px 7px;
+    border-radius: 3px;
+    color: var(--aptos);
+    border: 1px solid rgba(0,229,184,0.15);
+    letter-spacing: 0.3px;
+  }
+
+  .blob-info {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: rgba(12,16,28,0.8);
+    border: 1px solid rgba(245,158,11,0.15);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .blob-info::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--shelby), transparent);
+  }
+  .blob-info:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: var(--glow-shelby);
+    background: rgba(15,20,35,0.9);
+  }
+
+  .blob-icon {
+    width: 38px; height: 38px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+
+  .blob-details {}
+  .blob-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; letter-spacing: 0.3px; }
+  .blob-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    letter-spacing: 0.3px;
+  }
+  .blob-meta span { display: flex; align-items: center; gap: 4px; }
+
+  .verify-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 5px 10px;
+    background: rgba(16,217,138,0.07);
+    border: 1px solid rgba(16,217,138,0.2);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--success);
+    flex-shrink: 0;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    animation: borderGlow 3s ease-in-out infinite;
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+  }
+
+  /* ===== COMPOSE PANEL ===== */
+  .compose-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,4,10,0.75);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 72px 24px 24px;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .compose-overlay.open { opacity: 1; pointer-events: all; }
+
+  .compose-panel {
+    width: 580px;
+    max-width: 100%;
+    background: linear-gradient(180deg, rgba(13,18,32,0.99) 0%, rgba(9,13,24,0.99) 100%);
+    border: 1px solid rgba(0,229,184,0.18);
+    border-radius: 4px;
+    box-shadow: 0 0 60px rgba(0,229,184,0.1), 0 24px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(0,229,184,0.07);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(30px);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 80vh;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .compose-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,184,0.5), rgba(37,99,235,0.4), transparent);
+  }
+  .compose-overlay.open .compose-panel { transform: translateY(0); }
+
+  .compose-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(0,229,184,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(16,22,38,0.8);
+  }
+
+  .compose-title {
+    font-family: var(--title);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .compose-badge {
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 2px 8px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 2px;
+    color: var(--shelby);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .close-btn {
+    width: 24px; height: 24px;
+    background: rgba(20,28,50,0.8);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: var(--text3);
+    transition: all 0.18s;
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  }
+  .close-btn:hover {
+    color: var(--danger);
+    border-color: rgba(244,63,94,0.3);
+    background: rgba(244,63,94,0.08);
+  }
+
+  .compose-fields { display: flex; flex-direction: column; }
+
+  .compose-field {
+    display: flex;
+    align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(20,30,50,0.8);
+    gap: 12px;
+    transition: background 0.18s;
+  }
+  .compose-field:focus-within {
+    background: rgba(0,229,184,0.02);
+  }
+
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    width: 48px;
+    flex-shrink: 0;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .field-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+  .field-input::placeholder { color: var(--text3); }
+
+  .compose-body-area {
+    flex: 1;
+    padding: 14px 18px;
+    min-height: 150px;
+  }
+
+  .body-textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.75;
+    min-height: 140px;
+  }
+  .body-textarea::placeholder { color: var(--text3); }
+
+  .compose-footer {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(20,30,50,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(10,14,24,0.6);
+  }
+
+  .compose-footer-left { display: flex; gap: 6px; }
+
+  .file-upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.18);
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    color: var(--shelby);
+    transition: all 0.18s;
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+  }
+  .file-upload-btn:hover {
+    background: rgba(245,158,11,0.12);
+    border-color: rgba(245,158,11,0.35);
+    box-shadow: var(--glow-shelby);
+  }
+
+  .upload-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--shelby);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 1.5px solid rgba(245,158,11,0.15);
+    border-top-color: var(--shelby);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .spinning .spinner { display: block; }
+
+  .btn-send {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.8), rgba(0,180,140,0.7));
+    color: #fff;
+    border: 1px solid rgba(0,229,184,0.3);
+    border-radius: 3px;
+    font-family: var(--title);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.22s;
+    box-shadow: 0 0 20px rgba(0,229,184,0.12);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .btn-send:hover {
+    background: linear-gradient(135deg, #2563eb, #00b89c);
+    border-color: rgba(0,229,184,0.5);
+    box-shadow: var(--glow-aptos);
+    transform: translateY(-1px);
+  }
+  .btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toast {
+    padding: 10px 20px;
+    background: rgba(13,18,32,0.95);
+    border: 1px solid rgba(37,99,235,0.3);
+    border-radius: 3px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(37,99,235,0.08);
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--mono);
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(12px);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .toast.success { border-color: rgba(16,217,138,0.3); color: var(--success); box-shadow: 0 0 20px rgba(16,217,138,0.08); }
+  .toast.error   { border-color: rgba(244,63,94,0.3);  color: var(--danger);  box-shadow: 0 0 20px rgba(244,63,94,0.08); }
+  .toast.info    { border-color: rgba(59,130,246,0.3);  color: var(--accent3); box-shadow: 0 0 20px rgba(59,130,246,0.08); }
+
+  /* ===== STATS BAR ===== */
+  .stats-bar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+    padding: 5px 28px;
+    background: rgba(8,11,20,0.9);
+    border-bottom: 1px solid rgba(0,229,184,0.06);
+  }
+  .stats-bar::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(37,99,235,0.15), rgba(0,229,184,0.1), transparent);
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .stat-item .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .stat-item.ok .dot {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    animation: pulse 3s infinite;
+  }
+  .stat-item.warn .dot { background: var(--shelby); box-shadow: 0 0 6px var(--shelby); }
+  .stat-val { color: var(--aptos); font-weight: 400; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .empty-icon {
+    font-size: 52px;
+    opacity: 0.12;
+    filter: grayscale(0.5);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.2); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,229,184,0.3); }
+
+  /* Progress bar for upload */
+  .upload-progress {
+    height: 2px;
+    background: rgba(20,30,50,0.8);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-top: 8px;
+    display: none;
+  }
+  .upload-progress.active { display: block; }
+  .upload-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--aptos));
+    border-radius: 1px;
+    transition: width 0.35s ease;
+    width: 0%;
+    box-shadow: 0 0 8px rgba(0,229,184,0.4);
+  }
+
+  /* Wallet address truncate */
+  .addr { font-family: var(--mono); font-size: 10px; }
+
+  /* Network indicator */
+  .network-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .separator {
+    width: 1px; height: 20px;
+    background: linear-gradient(180deg, transparent, rgba(0,229,184,0.15), transparent);
+  }
+
+  /* Uploaded files list */
+  .attached-files {
+    padding: 6px 18px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .attached-file {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--shelby);
+    letter-spacing: 0.5px;
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  }
+  .attached-file-remove { cursor: pointer; opacity: 0.5; transition: opacity 0.15s; }
+  .attached-file-remove:hover { opacity: 1; color: var(--danger); }
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">✉</div>
+    AptosBlobs<span class="logo-tag">MAIL</span>
+  </div>
+  <div class="network-info">
+    <div class="separator"></div>
+    <div class="chain-badge" onclick="toggleNetwork()">
+      <div class="chain-dot"></div>
+      <span id="networkLabel">Aptos Testnet</span>
+    </div>
+    <div class="shelby-badge">
+      ⬡ Shelby v0.3
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-connect" id="connectBtn" onclick="connectWallet()">
+      Connect Wallet
+    </button>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item ok">
+    <div class="dot"></div>
+    Aptos RPC <span class="stat-val">12ms</span>
+  </div>
+  <div class="separator"></div>
+  <div class="stat-item ok">
+    <div class="dot"></div>
+    Shelby RPC <span class="stat-val">28ms</span>
+  </div>
+  <div class="separator"></div>
+  <div class="stat-item warn">
+    <div class="dot" style="background:var(--shelby)"></div>
+    Storage Providers <span class="stat-val">7 active</span>
+  </div>
+  <div class="separator"></div>
+  <div class="stat-item ok">
+    <div class="dot"></div>
+    Erasure Coding <span class="stat-val">8+4</span>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <button class="btn-compose" onclick="openCompose()">
+      New Message
+    </button>
+
+    <div class="nav-section">
+      <div class="nav-label">Mailbox</div>
+      <div class="nav-item active" onclick="selectNav(this, 'inbox')">
+        <div class="nav-item-left">
+          <span class="nav-icon">📥</span> Inbox
+        </div>
+        <span class="nav-count">3</span>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'sent')">
+        <div class="nav-item-left">
+          <span class="nav-icon">📤</span> Sent
+        </div>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'drafts')">
+        <div class="nav-item-left">
+          <span class="nav-icon">📋</span> Drafts
+        </div>
+        <span class="nav-count" style="background:var(--text3)">1</span>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'starred')">
+        <div class="nav-item-left">
+          <span class="nav-icon">⭐</span> Starred
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">On-Chain</div>
+      <div class="nav-item" onclick="selectNav(this, 'blobs')">
+        <div class="nav-item-left">
+          <span class="nav-icon">⬡</span> Blobs
+        </div>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'transactions')">
+        <div class="nav-item-left">
+          <span class="nav-icon">⛓</span> Transactions
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Labels</div>
+      <div class="nav-item" onclick="selectNav(this, 'defi')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color:#00d4aa">●</span> DeFi
+        </div>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'dao')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color:#f59e0b">●</span> DAO
+        </div>
+      </div>
+      <div class="nav-item" onclick="selectNav(this, 'nft')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color:#8b5cf6">●</span> NFT
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-storage">
+      <div class="storage-label">Shelby Storage</div>
+      <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+      <div class="storage-info">
+        <span>34.2 MB used</span>
+        <span>100 MB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIL LIST -->
+  <div class="mail-list">
+    <div class="mail-list-header">
+      <span class="mail-list-title" id="listTitle">Inbox</span>
+      <div class="mail-list-actions">
+        <div class="icon-btn" title="Refresh" onclick="refresh()">↻</div>
+        <div class="icon-btn" title="Filter">⚡</div>
+        <div class="icon-btn" title="Sort">↕</div>
+      </div>
+    </div>
+    <div class="search-box">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" placeholder="Search by address, subject..." oninput="filterMail(this.value)">
+      </div>
+    </div>
+    <div class="mail-items" id="mailItems">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- MAIL VIEW -->
+  <div class="mail-view" id="mailView">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">✉</div>
+      <div>Select a message to read</div>
+      <div style="font-size:10px;margin-top:4px;color:var(--text3)">Stored on Shelby · Settled on Aptos</div>
+    </div>
+    <div id="mailViewContent" style="display:none;flex-direction:column;height:100%">
+      <div class="mail-view-header">
+        <div class="mail-view-subject" id="viewSubject"></div>
+        <div class="mail-view-meta">
+          <div class="mail-meta-left">
+            <div class="avatar-lg" id="viewAvatar"></div>
+            <div class="mail-from-info">
+              <div class="mail-from-name" id="viewFrom"></div>
+              <div class="mail-from-addr" id="viewAddr" onclick="copyAddr()"></div>
+            </div>
+          </div>
+          <div class="mail-view-actions">
+            <button class="btn-action" onclick="replyMail()">↩ Reply</button>
+            <button class="btn-action" onclick="forwardMail()">↪ Forward</button>
+            <button class="btn-action primary" onclick="viewOnChain()">⛓ On-Chain</button>
+          </div>
+        </div>
+      </div>
+      <div class="mail-view-body">
+        <div class="mail-content" id="viewBody"></div>
+        <div id="viewBlobs"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- COMPOSE OVERLAY -->
+<div class="compose-overlay" id="composeOverlay" onclick="closeComposeOnBg(event)">
+  <div class="compose-panel">
+    <div class="compose-header">
+      <div class="compose-title">
+        New Message
+        <span class="compose-badge">via Shelby</span>
+      </div>
+      <div class="close-btn" onclick="closeCompose()">✕</div>
+    </div>
+    <div class="compose-fields">
+      <div class="compose-field">
+        <span class="field-label">To</span>
+        <input class="field-input" id="composeTo" placeholder="0x... (Aptos address)">
+      </div>
+      <div class="compose-field">
+        <span class="field-label">Subject</span>
+        <input class="field-input" id="composeSubject" placeholder="Subject">
+      </div>
+    </div>
+    <div class="attached-files" id="attachedFiles"></div>
+    <div class="compose-body-area">
+      <textarea class="body-textarea" id="composeBody" placeholder="Write your message...&#10;&#10;This message will be stored as a blob on Shelby Protocol and settled on the Aptos blockchain."></textarea>
+    </div>
+    <div class="upload-progress" id="uploadProgress">
+      <div class="upload-progress-fill" id="uploadFill"></div>
+    </div>
+    <div class="compose-footer">
+      <div class="compose-footer-left">
+        <label class="file-upload-btn">
+          <input type="file" multiple style="display:none" onchange="handleFileSelect(event)">
+          ⬡ Attach Blob
+        </label>
+        <div class="upload-status" id="uploadStatus" style="display:none">
+          <div class="spinner" id="uploadSpinner"></div>
+          <span id="uploadStatusText"></span>
+        </div>
+      </div>
+      <button class="btn-send" onclick="sendMail()" id="sendBtn">
+        ➤ Send via Aptos
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== STATE =====
+let connected = false;
+let walletAddr = null;
+let selectedMailId = null;
+let attachedFiles = [];
+
+const COLORS = [
+  ['#1a3a6b','#60a5fa'],['#1a4a3b','#34d399'],['#4a2a1a','#fb923c'],
+  ['#3a1a4a','#c084fc'],['#4a3a1a','#fbbf24'],['#1a3a4a','#38bdf8']
+];
+
+const mails = [
+  {
+    id: 1, unread: true,
+    from: 'Protocol Team', addr: '0x8f3a...2d1e',
+    subject: '🎉 Welcome to AptosBlobs Mail',
+    preview: 'Your decentralized inbox is ready. Messages stored on Shelby, settled on Aptos.',
+    time: '10:24 AM',
+    tags: ['shelby','aptos'],
+    body: `<p>Welcome to <strong>AptosBlobs Mail</strong> — the first decentralized email client built on Aptos and powered by Shelby Protocol for blob storage.</p>
+<p>Every message you send is encoded with <strong>erasure coding</strong>, distributed across Shelby storage providers, and the commitment hash is registered on-chain via Aptos smart contracts.</p>
+<p>Key features:<br>
+• <strong>Decentralized Storage</strong> — Messages stored as blobs on Shelby's distributed network<br>
+• <strong>On-Chain Commitments</strong> — Cryptographic proofs settled on Aptos<br>
+• <strong>Wallet Authentication</strong> — Sign in with any Aptos wallet (Petra, Martian, Pontem)<br>
+• <strong>End-to-End Integrity</strong> — Verify any message with <code>useUploadBlobs</code> SDK</p>
+<p>To get started, connect your Aptos wallet and compose your first on-chain message.</p>`,
+    blobs: [{name:'welcome.json',size:'2.4 KB',hash:'0xb2e4...8f1a',enc:'8+4'}],
+    color: 0
+  },
+  {
+    id: 2, unread: true,
+    from: 'Shelby Protocol', addr: '0x4c7b...9a2f',
+    subject: 'Testnet Early Access Approved',
+    preview: 'Your application to build on Shelby testnet has been approved. Here are your credentials.',
+    time: '9:15 AM',
+    tags: ['shelby'],
+    body: `<p>Your early access application to <strong>Shelby Testnet</strong> has been approved!</p>
+<p>Shelby is a high-performance decentralized blob storage system built for demanding read-heavy workloads — video streaming, AI inference, large-scale data analytics.</p>
+<p>Your testnet credentials:<br>
+RPC Endpoint: <code>https://rpc.testnet.shelby.xyz</code><br>
+Network ID: <code>testnet-1</code><br>
+Storage Quota: <code>100 MB</code></p>
+<p>Use the Shelby TypeScript SDK to upload blobs:<br>
+<code>npm install @shelby-protocol/sdk @shelby-protocol/react</code></p>
+<p>Join us in <strong>Discord</strong> for support and updates. Happy building!</p>`,
+    blobs: [{name:'credentials.json',size:'1.1 KB',hash:'0xd7f2...3c8e',enc:'8+4'}],
+    color: 1
+  },
+  {
+    id: 3, unread: true,
+    from: 'Aptos Foundation', addr: '0xa1b2...c3d4',
+    subject: 'Aptos Wallet Adapter — New SDK Update',
+    preview: 'The Aptos Wallet Adapter dApp integration now supports unified signing. Update your dependencies.',
+    time: 'Yesterday',
+    tags: ['aptos','enc'],
+    body: `<p>The <strong>Aptos Wallet Adapter</strong> has been updated with new features for dApp developers.</p>
+<p>Key changes in the latest release:<br>
+• Unified <code>signAndSubmitTransaction</code> API across all wallet providers<br>
+• Support for <strong>Petra</strong>, <strong>Martian</strong>, <strong>Pontem</strong>, and <strong>Rise Wallet</strong><br>
+• Improved TypeScript types for <code>AccountInfo</code> and <code>NetworkInfo</code><br>
+• New <code>useWallet</code> hook with better state management</p>
+<p>To integrate with Shelby Protocol for blob storage, use the wallet adapter signer pattern:</p>
+<p><code>const { account, signAndSubmitTransaction } = useWallet();</code></p>
+<p>This allows Shelby's <code>useUploadBlobs</code> hook to use your connected wallet to register blob commitments on-chain via Aptos smart contracts.</p>`,
+    blobs: [],
+    color: 2
+  },
+  {
+    id: 4, unread: false,
+    from: 'Jump Crypto', addr: '0x6e9f...7b3c',
+    subject: 'High-Performance Storage Architecture',
+    preview: 'How Shelby achieves consistent high throughput using dedicated fiber networks and erasure coding.',
+    time: 'Mon',
+    tags: ['shelby'],
+    body: `<p>Shelby's storage architecture is designed for <strong>demanding read-heavy workloads</strong> with consistent performance guarantees.</p>
+<p>The system uses <strong>dedicated private bandwidth</strong> — a fiber network separate from the public internet — to ensure predictable I/O performance across storage providers.</p>
+<p>Data integrity is maintained through:<br>
+• <strong>Erasure Coding (8+4)</strong> — 8 data shards + 4 parity shards, tolerating 4 provider failures<br>
+• <strong>Novel Auditing System</strong> — continuous verification of stored blobs<br>
+• <strong>Aptos Settlement</strong> — audit outcomes written to Aptos for transparency</p>
+<p>Storage providers earn rewards through a <strong>paid reads model</strong> — ensuring providers are incentivized to deliver quality service rather than just availability.</p>`,
+    blobs: [{name:'architecture.pdf',size:'847 KB',hash:'0x1a3e...9d2b',enc:'8+4'},{name:'whitepaper.pdf',size:'2.1 MB',hash:'0xf8c1...4e7a',enc:'8+4'}],
+    color: 3
+  },
+  {
+    id: 5, unread: false,
+    from: 'DAO Governance', addr: '0x3d8a...1f5e',
+    subject: '[Vote] Proposal #47 — Storage Fee Adjustment',
+    preview: 'New governance proposal to adjust storage provider fee distribution. Voting ends Friday.',
+    time: 'Sun',
+    tags: ['aptos'],
+    body: `<p><strong>Proposal #47</strong> has been submitted to the DAO for vote.</p>
+<p>This proposal adjusts the fee distribution model for storage providers on Shelby Protocol, increasing read rewards by 15% to incentivize higher-quality service delivery.</p>
+<p>Current distribution:<br>
+• Storage Providers: 70%<br>
+• Protocol Treasury: 20%<br>
+• Audit Reserve: 10%</p>
+<p>Proposed distribution:<br>
+• Storage Providers: 80%<br>
+• Protocol Treasury: 12%<br>
+• Audit Reserve: 8%</p>
+<p>Vote on Aptos using your connected wallet. Transaction will be submitted via smart contract call.</p>`,
+    blobs: [],
+    color: 4
+  },
+];
+
+let filteredMails = [...mails];
+let currentView = 'inbox';
+
+// ===== RENDER MAIL LIST =====
+function renderMailList(mailsToRender) {
+  const container = document.getElementById('mailItems');
+  if (mailsToRender.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>No messages</div></div>';
+    return;
+  }
+  container.innerHTML = mailsToRender.map(m => {
+    const [bg, fg] = COLORS[m.color];
+    const tags = m.tags.map(t => `<span class="tag tag-${t}">${t==='shelby'?'⬡ Shelby':t==='aptos'?'⬡ Aptos':'🔒 Enc'}</span>`).join('');
+    return `
+    <div class="mail-item ${m.unread?'unread':''} ${selectedMailId===m.id?'active':''}" onclick="openMail(${m.id})">
+      <div class="mail-item-main">
+        <div class="avatar" style="background:${bg};color:${fg}">${m.from[0]}</div>
+        <div class="mail-item-content">
+          <div class="mail-item-top">
+            <div class="mail-item-from">${m.from}</div>
+            <div class="mail-item-time">${m.time}</div>
+          </div>
+          <div class="mail-item-subject">${m.subject}</div>
+          <div class="mail-item-preview">${m.preview}</div>
+          ${tags ? `<div class="mail-item-tags">${tags}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMail(q) {
+  q = q.toLowerCase();
+  filteredMails = mails.filter(m =>
+    m.from.toLowerCase().includes(q) ||
+    m.subject.toLowerCase().includes(q) ||
+    m.addr.toLowerCase().includes(q) ||
+    m.preview.toLowerCase().includes(q)
+  );
+  renderMailList(filteredMails);
+}
+
+// ===== OPEN MAIL =====
+function openMail(id) {
+  selectedMailId = id;
+  const mail = mails.find(m => m.id === id);
+  if (!mail) return;
+  mail.unread = false;
+
+  renderMailList(filteredMails);
+
+  const [bg, fg] = COLORS[mail.color];
+  document.getElementById('viewSubject').textContent = mail.subject;
+  document.getElementById('viewAvatar').textContent = mail.from[0];
+  document.getElementById('viewAvatar').style.background = bg;
+  document.getElementById('viewAvatar').style.color = fg;
+  document.getElementById('viewFrom').textContent = mail.from;
+  document.getElementById('viewAddr').textContent = mail.addr;
+  document.getElementById('viewBody').innerHTML = mail.body;
+
+  const blobsEl = document.getElementById('viewBlobs');
+  if (mail.blobs && mail.blobs.length > 0) {
+    blobsEl.innerHTML = mail.blobs.map(b => `
+      <div class="blob-info">
+        <div class="blob-icon">⬡</div>
+        <div class="blob-details">
+          <div class="blob-name">${b.name}</div>
+          <div class="blob-meta">
+            <span>📦 ${b.size}</span>
+            <span>🔗 ${b.hash}</span>
+            <span>⚙ Erasure ${b.enc}</span>
+          </div>
+        </div>
+        <div class="verify-badge">✓ Verified on Aptos</div>
+      </div>
+    `).join('');
+  } else {
+    blobsEl.innerHTML = '';
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('mailViewContent').style.display = 'flex';
+}
+
+// ===== NAV =====
+function selectNav(el, view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  currentView = view;
+  const titles = {inbox:'Inbox',sent:'Sent',drafts:'Drafts',starred:'Starred',blobs:'Blobs',transactions:'Transactions',defi:'DeFi',dao:'DAO',nft:'NFT'};
+  document.getElementById('listTitle').textContent = titles[view] || view;
+
+  if (view === 'inbox') {
+    filteredMails = [...mails];
+  } else if (view === 'sent') {
+    filteredMails = [];
+  } else if (view === 'drafts') {
+    filteredMails = [];
+  } else {
+    filteredMails = mails.filter(m => m.tags.includes(view));
+  }
+  renderMailList(filteredMails);
+  selectedMailId = null;
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('mailViewContent').style.display = 'none';
+}
+
+// ===== WALLET =====
+function connectWallet() {
+  const btn = document.getElementById('connectBtn');
+  if (connected) {
+    connected = false;
+    walletAddr = null;
+    btn.textContent = 'Connect Wallet';
+    btn.className = 'btn-connect';
+    showToast('Wallet disconnected', 'info');
+    return;
+  }
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+  setTimeout(() => {
+    connected = true;
+    walletAddr = '0x' + Math.random().toString(16).slice(2,10) + '...' + Math.random().toString(16).slice(2,6);
+    btn.textContent = walletAddr;
+    btn.className = 'btn-connect connected';
+    btn.disabled = false;
+    showToast('✓ Wallet connected · Petra', 'success');
+  }, 1200);
+}
+
+function toggleNetwork() {
+  const label = document.getElementById('networkLabel');
+  if (label.textContent === 'Aptos Testnet') {
+    label.textContent = 'Aptos Mainnet';
+    showToast('Switched to Aptos Mainnet', 'info');
+  } else {
+    label.textContent = 'Aptos Testnet';
+    showToast('Switched to Aptos Testnet', 'info');
+  }
+}
+
+// ===== COMPOSE =====
+function openCompose() {
+  document.getElementById('composeOverlay').classList.add('open');
+}
+function closeCompose() {
+  document.getElementById('composeOverlay').classList.remove('open');
+  attachedFiles = [];
+  document.getElementById('attachedFiles').innerHTML = '';
+  document.getElementById('composeTo').value = '';
+  document.getElementById('composeSubject').value = '';
+  document.getElementById('composeBody').value = '';
+  document.getElementById('uploadStatus').style.display = 'none';
+  document.getElementById('uploadProgress').classList.remove('active');
+}
+function closeComposeOnBg(e) {
+  if (e.target === document.getElementById('composeOverlay')) closeCompose();
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  files.forEach(f => {
+    attachedFiles.push(f);
+    renderAttachments();
+  });
+  simulateUpload(files[0].name);
+}
+
+function renderAttachments() {
+  const el = document.getElementById('attachedFiles');
+  el.innerHTML = attachedFiles.map((f,i) => `
+    <div class="attached-file">
+      ⬡ ${f.name} <span class="attached-file-remove" onclick="removeAttachment(${i})">✕</span>
+    </div>
+  `).join('');
+}
+
+function removeAttachment(i) {
+  attachedFiles.splice(i,1);
+  renderAttachments();
+}
+
+function simulateUpload(name) {
+  const status = document.getElementById('uploadStatus');
+  const spinner = document.getElementById('uploadSpinner');
+  const text = document.getElementById('uploadStatusText');
+  const progress = document.getElementById('uploadProgress');
+  const fill = document.getElementById('uploadFill');
+  status.style.display = 'flex';
+  spinner.style.display = 'block';
+  progress.classList.add('active');
+  const steps = [
+    [10,'Encoding with erasure coding...'],
+    [35,'Registering commitment on Aptos...'],
+    [60,'Uploading to Shelby RPC...'],
+    [85,'Distributing to providers...'],
+    [100,'Blob stored ✓']
+  ];
+  let i = 0;
+  function next() {
+    if (i >= steps.length) {
+      spinner.style.display = 'none';
+      text.textContent = `⬡ ${name} stored on Shelby`;
+      setTimeout(()=>{ progress.classList.remove('active'); fill.style.width='0%'; }, 2000);
+      return;
+    }
+    fill.style.width = steps[i][0] + '%';
+    text.textContent = steps[i][1];
+    i++;
+    setTimeout(next, 500);
+  }
+  text.textContent = 'Preparing blob...';
+  setTimeout(next, 200);
+}
+
+function sendMail() {
+  const to = document.getElementById('composeTo').value.trim();
+  const subject = document.getElementById('composeSubject').value.trim();
+  const body = document.getElementById('composeBody').value.trim();
+
+  if (!to) { showToast('⚠ Enter recipient address', 'error'); return; }
+  if (!subject) { showToast('⚠ Enter a subject', 'error'); return; }
+  if (!body) { showToast('⚠ Write a message', 'error'); return; }
+  if (!connected) { showToast('⚠ Connect wallet first', 'error'); return; }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing...';
+
+  const stages = [
+    [600,'Encoding message blob...'],
+    [1200,'Registering on Aptos...'],
+    [1900,'Uploading to Shelby...'],
+    [2600,'Confirming transaction...'],
+  ];
+
+  stages.forEach(([delay, msg]) => {
+    setTimeout(() => { btn.textContent = msg; }, delay);
+  });
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '➤ Send via Aptos';
+    closeCompose();
+    showToast('✓ Message sent · Stored on Shelby · Settled on Aptos', 'success');
+
+    const newMail = {
+      id: Date.now(), unread: false,
+      from: 'You → ' + (to.length > 12 ? to.slice(0,8)+'...'+to.slice(-4) : to),
+      addr: to,
+      subject: subject,
+      preview: body.slice(0,80) + (body.length > 80 ? '...' : ''),
+      time: 'Just now',
+      tags: ['shelby','aptos'],
+      body: `<p>${body.replace(/\n/g,'</p><p>')}</p>`,
+      blobs: attachedFiles.map(f => ({name:f.name,size:(f.size/1024).toFixed(1)+' KB',hash:'0x'+Math.random().toString(16).slice(2,10)+'...'+Math.random().toString(16).slice(2,6),enc:'8+4'})),
+      color: Math.floor(Math.random()*COLORS.length)
+    };
+    if (currentView === 'sent') { filteredMails.unshift(newMail); renderMailList(filteredMails); }
+  }, 3000);
+}
+
+// ===== ACTIONS =====
+function replyMail() {
+  if (!selectedMailId) return;
+  const mail = mails.find(m => m.id === selectedMailId);
+  document.getElementById('composeTo').value = mail.addr;
+  document.getElementById('composeSubject').value = 'Re: ' + mail.subject;
+  openCompose();
+}
+
+function forwardMail() {
+  if (!selectedMailId) return;
+  const mail = mails.find(m => m.id === selectedMailId);
+  document.getElementById('composeSubject').value = 'Fwd: ' + mail.subject;
+  openCompose();
+}
+
+function viewOnChain() {
+  showToast('Opening Aptos Explorer...', 'info');
+  setTimeout(() => showToast('⛓ Transaction: 0x' + Math.random().toString(16).slice(2,18), 'success'), 800);
+}
+
+function copyAddr() {
+  const addr = document.getElementById('viewAddr').textContent;
+  navigator.clipboard?.writeText(addr).catch(()=>{});
+  showToast('Address copied', 'success');
+}
+
+function refresh() {
+  showToast('↻ Syncing with Shelby RPC...', 'info');
+  setTimeout(() => showToast('✓ Inbox up to date', 'success'), 1000);
+}
+
+// ===== TOAST =====
+function showToast(msg, type='info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ===== INIT =====
+renderMailList(mails);
+
+// Animate storage bar
+setTimeout(() => {
+  document.getElementById('storageFill').style.width = '34%';
+}, 500);
+</script>
+</body>
+</html>
