@@ -49,6 +49,3 @@ A decentralized, Web3-native email client prototype built on top of the **Aptos 
    npm run dev
    ```
    Open `http://localhost:5173` to test the Web3 app!
-
-## 📝 Disclaimer
-This app interfaces deeply with the **Aptos Testnet** and **Shelby Testnet Nodes**. Due to the experimental beta nature of the Shelby RPC routing, Geomi API Key synchronization may periodically face downtime or throw `401 Unauthorized` errors. Should this happen, please regenerate your Geomi token or contact the Shelby dev team.
