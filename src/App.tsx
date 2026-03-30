@@ -140,8 +140,8 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           ? 'https://api.shelbynet.shelby.xyz/v1'
           : `https://api.${mappedNet}.aptoslabs.com/v1`
         const shelbyNode = currentNetwork === 'shelbynet'
-          ? 'https://api.shelbynet.shelby.xyz/shelby'
-          : `https://api.testnet.shelby.xyz/shelby`
+          ? 'https://api.shelbynet.shelby.xyz/v1'
+          : `https://api.testnet.shelby.xyz/v1`
 
         const startAptos = Date.now()
         await fetch(aptosNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
