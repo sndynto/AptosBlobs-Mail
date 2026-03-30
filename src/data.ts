@@ -10,6 +10,8 @@ export type Mail = {
   body: string
   blobs: any[]
   color: number
+  pending?: boolean   // true = blob belum dikonfirmasi on-chain
+  timestamp?: number  // Untuk sorting berdasarkan waktu terbaru
 }
 
 export const COLORS = [

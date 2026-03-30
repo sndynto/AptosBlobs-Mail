@@ -879,8 +879,6 @@
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
   }
 
-  .mail-from-info {}
-
   .mail-from-name {
     font-size: 14px;
     font-weight: 600;
@@ -1026,8 +1024,6 @@
     flex-shrink: 0;
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
-
-  .blob-details {}
 
   .blob-name {
     font-size: 13px;
@@ -1561,4 +1557,623 @@
     color: var(--danger);
   }
 
-  </style>
+  /* ===== BLOB PENDING SKELETON ===== */
+  .blob-pending-skeleton {
+    max-width: 560px;
+    padding: 8px 0;
+    animation: fadeSlideIn 0.3s ease;
+  }
+
+  .skeleton-line {
+    height: 13px;
+    background: linear-gradient(
+      90deg,
+      rgba(37, 99, 235, 0.08) 0%,
+      rgba(0, 229, 184, 0.15) 40%,
+      rgba(37, 99, 235, 0.08) 80%
+    );
+    background-size: 200% 100%;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    animation: skeletonShimmer 1.6s ease-in-out infinite;
+  }
+
+  .skeleton-loading-label {
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--shelby);
+    letter-spacing: 1.2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .skeleton-loading-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--shelby);
+    box-shadow: 0 0 8px var(--shelby);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes skeletonShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ===== PENDING STATE ===== */
+  .tag-pending {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.1);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .pending-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #f59e0b;
+    letter-spacing: 0.3px;
+    animation: fadeSlideIn 0.3s ease;
+  }
+
+  .pending-banner b {
+    color: #fbbf24;
+  }
+
+  .pending-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    border-top-color: #f59e0b;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+/* ============================================================
+   MOBILE RESPONSIVE — AptosBlobs Mail
+   Breakpoints: 768px (tablet/phone), 480px (small phone)
+   ============================================================ */
+
+/* Desktop only elements hidden on mobile */
+.desktop-only {
+  display: flex;
+}
+
+/* Mobile UI elements — hidden on desktop by default */
+.mobile-menu-btn,
+.mobile-back-btn,
+.mobile-bottom-nav,
+.mobile-sidebar-close,
+.mobile-overlay {
+  display: none;
+}
+
+/* ───────────────────────────────────────────────
+   TABLET & MOBILE (≤ 768px)
+─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Body: allow scroll, safe area for iPhone notch */
+  body {
+    overflow: auto;
+    height: auto;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    padding: 0 12px;
+    height: 52px;
+    gap: 8px;
+  }
+
+  .logo {
+    font-size: 14px;
+    letter-spacing: 1px;
+    gap: 7px;
+  }
+
+  .logo-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .logo-tag {
+    display: none; /* hemat ruang */
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .network-info {
+    flex: 1;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .chain-badge {
+    font-size: 9px;
+    padding: 4px 8px;
+    clip-path: none;
+    border-radius: 4px;
+  }
+
+  .separator {
+    display: none;
+  }
+
+  .btn-connect {
+    padding: 6px 10px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    clip-path: none;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* ── STATS BAR: sembunyikan di mobile ── */
+  .stats-bar {
+    display: none;
+  }
+
+  /* ── HAMBURGER MENU BUTTON ── */
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 229, 184, 0.06);
+    border: 1px solid rgba(0, 229, 184, 0.18);
+    border-radius: 6px;
+    color: var(--aptos);
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-menu-btn:active {
+    background: rgba(0, 229, 184, 0.14);
+  }
+
+  /* ── LAYOUT: stack vertical ── */
+  .layout {
+    flex-direction: column;
+    overflow: auto;
+    position: relative;
+    flex: 1;
+    /* Beri ruang untuk bottom nav */
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  /* ── SIDEBAR DRAWER (slide dari kiri) ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 80vw;
+    max-width: 300px;
+    z-index: 500;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    padding-top: 60px; /* jangan ketutup status bar */
+    box-shadow: 4px 0 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Tombol tutup sidebar di dalam drawer */
+  .mobile-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 10px 0;
+    padding: 10px;
+    background: rgba(244, 63, 94, 0.08);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    border-radius: 4px;
+    color: var(--danger);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    width: calc(100% - 20px);
+    transition: background 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-sidebar-close:active {
+    background: rgba(244, 63, 94, 0.16);
+  }
+
+  /* Backdrop overlay saat drawer terbuka */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 490;
+    backdrop-filter: blur(4px);
+  }
+
+  /* ── MAIL LIST ── */
+  .mail-list {
+    width: 100%;
+    flex-shrink: 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+    min-height: calc(100dvh - 52px - 64px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  /* Hide mail list ketika sedang buka email (mobile) */
+  .mail-list.mobile-hidden {
+    display: none;
+  }
+
+  /* ── MAIL VIEW ── */
+  .mail-view {
+    width: 100%;
+    min-height: calc(100dvh - 52px - 64px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  /* Hide mail view di list panel */
+  .mail-view.mobile-hidden {
+    display: none;
+  }
+
+  /* ── MOBILE BACK BUTTON ── */
+  .mobile-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(0, 229, 184, 0.05);
+    border-bottom: 1px solid rgba(0, 229, 184, 0.1);
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    color: var(--aptos);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-back-btn:active {
+    background: rgba(0, 229, 184, 0.12);
+  }
+
+  /* ── MAIL VIEW HEADER ── */
+  .mail-view-header {
+    padding: 14px 16px;
+  }
+
+  .mail-view-subject {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .mail-view-meta {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .mail-view-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .btn-action {
+    padding: 8px 10px;
+    font-size: 11px;
+    clip-path: none;
+    border-radius: 4px;
+    flex: 1;
+    justify-content: center;
+    min-height: 36px; /* touch target */
+  }
+
+  .mail-view-body {
+    padding: 16px;
+  }
+
+  .blob-info {
+    clip-path: none;
+    border-radius: 6px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .blob-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .verify-badge {
+    clip-path: none;
+    border-radius: 4px;
+    min-height: 36px;
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+
+  /* ── MAIL LIST ITEMS ── */
+  .nav-item {
+    padding: 12px 14px;
+    min-height: 44px; /* touch-friendly */
+  }
+
+  .mail-item {
+    padding: 14px 14px;
+    min-height: 72px;
+  }
+
+  .mail-item-from {
+    max-width: 55vw;
+  }
+
+  /* ── BOTTOM NAVIGATION TAB BAR ── */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: linear-gradient(180deg, rgba(11, 15, 26, 0.97) 0%, rgba(6, 8, 16, 0.99) 100%);
+    border-top: 1px solid rgba(0, 229, 184, 0.12);
+    z-index: 300;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 8px 4px;
+    transition: color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .mobile-tab:active {
+    background: rgba(0, 229, 184, 0.05);
+  }
+
+  .mobile-tab.active {
+    color: var(--aptos);
+  }
+
+  .mobile-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: var(--aptos);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 8px var(--aptos);
+  }
+
+  .mobile-tab-icon {
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 0.18s;
+  }
+
+  .mobile-tab.active .mobile-tab-icon {
+    transform: scale(1.1);
+  }
+
+  .mobile-tab-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Compose tab special styling — highlighted */
+  .compose-tab {
+    position: relative;
+  }
+
+  .compose-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.8), rgba(0, 180, 140, 0.7));
+    border: 1px solid rgba(0, 229, 184, 0.35);
+    border-radius: 50%;
+    font-size: 18px;
+    box-shadow: 0 0 16px rgba(0, 229, 184, 0.25);
+    margin-top: -16px;
+    transition: transform 0.2s;
+  }
+
+  .compose-tab:active .compose-icon {
+    transform: scale(0.95);
+  }
+
+  /* ── COMPOSE PANEL: full screen di mobile ── */
+  .compose-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .compose-panel {
+    width: 100%;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    clip-path: none;
+    transform: translateY(100%);
+    border: none;
+    border-top: 1px solid rgba(0, 229, 184, 0.2);
+  }
+
+  .compose-overlay.open .compose-panel {
+    transform: translateY(0);
+  }
+
+  .compose-body-area {
+    min-height: 200px;
+  }
+
+  .body-textarea {
+    min-height: 180px;
+    font-size: 14px; /* lebih mudah dibaca di mobile */
+  }
+
+  .field-input {
+    font-size: 14px;
+    padding: 4px 0;
+  }
+
+  /* ── Disable clip-path effects di mobile (performa) ── */
+  .btn-compose,
+  .btn-send,
+  .btn-connect,
+  .btn-action,
+  .icon-btn,
+  .close-btn,
+  .tag,
+  .verify-badge,
+  .file-upload-btn,
+  .attached-file {
+    clip-path: none !important;
+  }
+
+  /* ── TOAST: lebih lebar di mobile ── */
+  .toast {
+    white-space: normal;
+    text-align: center;
+    max-width: 90vw;
+    clip-path: none;
+    border-radius: 8px;
+  }
+
+  .toast-container {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    width: 100%;
+    padding: 0 16px;
+  }
+
+  /* ── SEARCH INPUT ── */
+  .search-input {
+    font-size: 13px;
+    padding: 9px 12px 9px 32px;
+    border-radius: 6px;
+  }
+
+  /* ── AVATAR ── */
+  .avatar {
+    clip-path: none;
+    border-radius: 6px;
+  }
+
+  .avatar-lg {
+    clip-path: none;
+    border-radius: 8px;
+  }
+
+  /* ── SIDEBAR NAV items touch-friendly ── */
+  .btn-compose {
+    clip-path: none !important;
+    border-radius: 6px;
+    padding: 13px 14px;
+  }
+}
+
+/* ───────────────────────────────────────────────
+   SMALL PHONES (≤ 480px)
+─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  .logo {
+    font-size: 12px;
+  }
+
+  .chain-badge {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+
+  .btn-connect {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+
+  .mail-view-subject {
+    font-size: 14px;
+  }
+
+  .btn-action {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+
+  .mail-item-from {
+    max-width: 45vw;
+  }
+
+  .mail-view-header {
+    padding: 10px 12px;
+  }
+
+  .mail-view-body {
+    padding: 12px;
+  }
+
+  .blob-info {
+    padding: 10px 12px;
+  }
+}
+

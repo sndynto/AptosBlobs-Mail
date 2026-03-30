@@ -1,15 +1,38 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { useUploadBlobs, useAccountBlobs, useDeleteBlobs } from '@shelby-protocol/react'
+import { useQuery } from '@tanstack/react-query'
 import { ShelbyClient } from '@shelby-protocol/sdk/browser'
 import { AptosConfig, Network } from '@aptos-labs/ts-sdk'
 import { COLORS, Mail } from './data'
 
-const API_KEY = import.meta.env.VITE_SHELBY_API_KEY || '' // Wajib diisi di .env lalu restart terminal
+const API_KEY = import.meta.env.VITE_SHELBY_API_KEY || ''
+const IS_API_KEY_MISSING = !API_KEY || API_KEY === 'masukkan_api_key_anda_disini'
 
 export default function App() {
-  const [currentNetwork, setCurrentNetwork] = useState<any>(Network.TESTNET)
-  return <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} />
+  const [currentNetwork, setCurrentNetwork] = useState<any>('shelbynet')
+  return (
+    <>
+      {IS_API_KEY_MISSING && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.4)',
+          padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 10,
+          fontFamily: 'monospace', fontSize: 12, color: '#fbbf24',
+          backdropFilter: 'blur(8px)'
+        }}>
+          <span>⚠️</span>
+          <span>
+            <b>VITE_SHELBY_API_KEY</b> is not set.
+            Copy <code style={{background:'rgba(245,158,11,0.15)',padding:'1px 6px',borderRadius:3}}>.env.example</code> → <code style={{background:'rgba(245,158,11,0.15)',padding:'1px 6px',borderRadius:3}}>.env</code> and add your API key from{' '}
+            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#f59e0b'}}>geomi.dev</a>.
+            Sending blobs will fail without it.
+          </span>
+        </div>
+      )}
+      <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} />
+    </>
+  )
 }
 
 function MailApp({ currentNetwork, setCurrentNetwork }: any) {
@@ -39,6 +62,27 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
     pagination: { limit: 50 }
   })
   
+  // Custom fetch for incoming blobs destined to our address
+  const myAddress = account?.address?.toString()?.toLowerCase();
+  const { data: incomingBlobs, refetch: refetchIncoming } = useQuery({
+    queryKey: ['incomingBlobs', currentNetwork, myAddress],
+    queryFn: async () => {
+      if (!myAddress) return [];
+      try {
+        const res = await shelbyClient.coordination.getBlobs({
+          where: { blob_name: { _ilike: `%to_${myAddress}_%` } },
+          pagination: { limit: 100 }
+        });
+        return res;
+      } catch (err) {
+        console.warn("Failed fetching incoming blobs:", err);
+        return [];
+      }
+    },
+    enabled: !!myAddress && !!shelbyClient,
+    refetchInterval: 10000
+  })
+
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
   
   const cacheKey = `aptosblobs_cache_${currentNetwork}`
@@ -66,30 +110,45 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMailId, setSelectedMailId] = useState<number | null>(null)
   
+  // Mobile-specific state
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'detail'>('list')
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
   const [composeOpen, setComposeOpen] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
   const [previewBlob, setPreviewBlob] = useState<{ url: string, name: string, type: 'image' | 'unknown' } | null>(null)
-  
+
+  // Auto-fetch blob content state
+  const [blobLoading, setBlobLoading] = useState(false)
+  const [blobBodyCache, setBlobBodyCache] = useState<Record<number, string>>({})
+
   const [aptosPing, setAptosPing] = useState('--')
   const [shelbyPing, setShelbyPing] = useState('--')
+
+  // Deteksi apakah user membuka via Petra mobile dApp browser
+  const isPetraApp = typeof window !== 'undefined' && !!(window as any).aptos
 
   useEffect(() => {
     const ping = async () => {
       try {
-        const mappedNet = currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork;
-        const shelbyNet = currentNetwork === 'shelbynet' ? 'shelbynet' : currentNetwork;
-        
+        // Per docs: Aptos testnet URL, shelbynet uses api.shelbynet.shelby.xyz
+        const mappedNet = currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork
+        const aptosNode = currentNetwork === 'shelbynet'
+          ? 'https://api.shelbynet.shelby.xyz/v1'
+          : `https://api.${mappedNet}.aptoslabs.com/v1`
+        const shelbyNode = currentNetwork === 'shelbynet'
+          ? 'https://api.shelbynet.shelby.xyz/shelby'
+          : `https://api.testnet.shelby.xyz/shelby`
+
         const startAptos = Date.now()
-        const aptosNode = `https://fullnode.${mappedNet}.aptoslabs.com/v1`
-        await fetch(aptosNode, { method: 'HEAD', mode: 'no-cors' }).catch(()=>null)
+        await fetch(aptosNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
         setAptosPing(String(Date.now() - startAptos))
-        
+
         const startShelby = Date.now()
-        const shelbyNode = `https://rpc.${shelbyNet}.shelby.xyz`
-        await fetch(shelbyNode, { method: 'HEAD', mode: 'no-cors' }).catch(()=>null)
+        await fetch(shelbyNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
         setShelbyPing(String(Date.now() - startShelby))
       } catch (e) {}
     }
@@ -97,6 +156,20 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
     const interval = setInterval(ping, 10000)
     return () => clearInterval(interval)
   }, [currentNetwork])
+
+  // Auto-refresh pending blobs every 5s until all are confirmed
+  useEffect(() => {
+    if (!onchainBlobs) return
+    const hasPending = onchainBlobs.some((b: any) => {
+      const st = ((b as any).status || '').toLowerCase()
+      return !b.blobMerkleRoot
+        || b.blobMerkleRoot.every((byte: number) => byte === 0)
+        || st === 'pending' || st === 'processing' || st === 'unconfirmed'
+    })
+    if (!hasPending) return
+    const timer = setInterval(() => refetchBlobs(), 5000)
+    return () => clearInterval(timer)
+  }, [onchainBlobs])
 
   // Auto-save drafts
   useEffect(() => {
@@ -131,11 +204,28 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
       disconnect()
       showToast('Wallet disconnected', 'info')
     } else {
+      // Di Petra mobile dApp browser, wallet inject otomatis sebagai window.aptos
+      if (isPetraApp) {
+        const petraWallet = wallets?.find(w => w.name === 'Petra')
+        if (petraWallet) {
+          connect(petraWallet.name)
+          return
+        }
+      }
+      // Di browser biasa: cari Petra dulu, fallback ke wallet pertama
       const targetWallet = wallets?.find(w => w.name === 'Petra') || wallets?.[0]
       if (targetWallet) {
         connect(targetWallet.name)
       } else {
-        showToast('Aptos wallet not found. Please install Petra or Martian.', 'error')
+        // Mobile: arahkan ke Petra deep link atau halaman download
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        if (isMobile) {
+          showToast('Open this dApp in Petra Wallet app browser', 'info')
+          // Deep link ke Petra mobile
+          window.open('https://petra.app', '_blank')
+        } else {
+          showToast('Aptos wallet not found. Please install Petra or Martian.', 'error')
+        }
       }
     }
   }
@@ -143,65 +233,204 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
   useEffect(() => {
     let list = [...mails]
     
-    // Merge onchain blobs into the inbox view
-    if (onchainBlobs && onchainBlobs.length > 0) {
-      const mappedBlobs: Mail[] = onchainBlobs.map((b, i) => {
-        const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : 'Unknown';
-        
-        let sTags = ['shelby', 'blobs'];
-        const lowerName = (b.blobNameSuffix || '').toLowerCase();
-        if (lowerName.includes('swap') || lowerName.includes('yield') || lowerName.includes('defi')) sTags.push('defi');
-        if (lowerName.includes('vote') || lowerName.includes('proposal') || lowerName.includes('dao')) sTags.push('dao');
-        if (lowerName.includes('mint') || lowerName.includes('collection') || lowerName.includes('nft')) sTags.push('nft');
+    // Merge onchain blobs into the inbox view — grouped by send operation (same timestamp in name)
+    if (incomingBlobs && incomingBlobs.length > 0) {
+      // Helper: extract group key = "to_<addr>_<timestamp>" from blob name
+      const getGroupKey = (rawName: string) => {
+        let name = rawName
+        if (name.startsWith('@')) name = name.split('/').slice(1).join('/')
+        // format: to_<addr>_<ts>-<filename>
+        const match = name.match(/^(to_[^_]+_\d+)/i)
+        return match ? match[1] : name
+      }
 
+      // Group all blobs by their send-operation key
+      const groups = new Map<string, typeof incomingBlobs>()
+      for (const b of incomingBlobs) {
+        let rawName = (b as any).blobNameSuffix || b.name || ''
+        const key = getGroupKey(rawName)
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key)!.push(b)
+      }
+
+      const mappedBlobs: Mail[] = Array.from(groups.entries()).map(([groupKey, blobs], i) => {
+        // Sort: .json first so it becomes the primary blob
+        blobs.sort((a: any, b: any) => {
+          const aJson = (a.blobNameSuffix || a.name || '').endsWith('.json')
+          const bJson = (b.blobNameSuffix || b.name || '').endsWith('.json')
+          return aJson === bJson ? 0 : aJson ? -1 : 1
+        })
+        const primary = blobs[0] as any
+        const isPending = !primary.blobMerkleRoot || primary.blobMerkleRoot.every((byte: number) => byte === 0)
+        const senderAddr = (primary.owner || primary.account || primary.creator || '').toString() || 'Unknown Sender'
+        const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
+
+        // Extract subject from .json blob name suffix: to_<addr>_<ts>-<subject>.json
+        let subject = groupKey
+        const jsonBlob = blobs.find((b: any) => (b.blobNameSuffix || b.name || '').endsWith('.json')) as any
+        if (jsonBlob) {
+          const rawN = jsonBlob.blobNameSuffix || jsonBlob.name || ''
+          const after = rawN.replace(/^to_[^_]+_\d+-/, '').replace(/\.json$/, '')
+          if (after) subject = after
+        }
+
+        let sTags = ['shelby', 'blobs']
+        const lowerSubject = subject.toLowerCase()
+        if (lowerSubject.includes('swap') || lowerSubject.includes('yield') || lowerSubject.includes('defi')) sTags.push('defi')
+        if (lowerSubject.includes('vote') || lowerSubject.includes('proposal') || lowerSubject.includes('dao')) sTags.push('dao')
+        if (lowerSubject.includes('mint') || lowerSubject.includes('collection') || lowerSubject.includes('nft')) sTags.push('nft')
+        if (isPending) sTags.push('pending')
+        if (blobs.length > 1) sTags.push('attachment')
+
+        const blobItems = blobs.map((b: any) => {
+          let bn = b.blobNameSuffix || b.name || ''
+          if (bn.startsWith('@')) bn = bn.split('/').slice(1).join('/')
+          const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot as number[]).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
+          const bPending = !b.blobMerkleRoot || (b.blobMerkleRoot as number[]).every((byte: number) => byte === 0)
+          return {
+            name: bn,
+            size: ((b.size || 0) / 1024).toFixed(1) + ' KB',
+            hash: bPending ? '⏳ Pending...' : '0x' + hexHash,
+            enc: '8+4',
+            pending: bPending
+          }
+        })
+
+        const hasAttachments = blobs.length > 1
         return {
-          id: -i - 1, // Negarif agar tidak bertumpuk
-          unread: false,
-          from: 'Shelby Network',
-          addr: account?.address?.toString() || '0x',
-          subject: b.blobNameSuffix || 'Unnamed Blob',
-          preview: `Commitment Hash: 0x${hexHash.slice(0, 16)}...`,
-          time: new Date((b.creationMicros / 1000) || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          id: -2000 - i,
+          unread: isPending,
+          pending: isPending,
+          from: `From: ${senderAddr.slice(0,8)}...`,
+          addr: senderAddr,
+          subject,
+          preview: isPending
+            ? '🕐 Awaiting confirmation...'
+            : hasAttachments
+              ? `📎 ${blobs.length - 1} attachment(s) · ${senderAddr.slice(0,6)}...`
+              : `From ${senderAddr.slice(0,6)}...`,
+          time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: tsMs,
           tags: sTags,
-          body: `<p>This original payload (Blob) is permanently stored on the decentralized Shelby Protocol Testnet.</p>`,
-          blobs: [{
-            name: b.blobNameSuffix || 'blob',
-            size: (b.size / 1024).toFixed(1) + ' KB',
-            hash: '0x' + hexHash,
-            enc: '8+4'
-          }],
-          color: i % COLORS.length
+          body: isPending
+            ? `<p>⏳ This message is <b>pending on-chain confirmation</b>.</p>`
+            : `<p>Loading message body...</p>`,
+          blobs: blobItems,
+          color: (i + 1) % COLORS.length
         }
       })
-      
-      // Jika di inbox atau di folder on-chain Blobs, tampilkan blob asli
-      if (currentView === 'inbox' || currentView === 'blobs') {
-        const existingNames = new Set(list.map(m => m.subject)) // Hindari duplikasi jika ada email buatan lokal dengan nama sama
-        list = [...mappedBlobs.filter(mb => !existingNames.has(mb.subject)), ...list]
+
+      if (currentView === 'inbox') {
+        const existingKeys = new Set(list.map(m => m.subject))
+        list = [...mappedBlobs.filter(mb => !existingKeys.has(mb.subject)), ...list]
       }
+    }
+    
+    // Blobs list (all raw)
+    if (currentView === 'blobs' && onchainBlobs && onchainBlobs.length > 0) {
+      const mappedBlobs: Mail[] = onchainBlobs.map((b, i) => {
+        const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
+        let bName = (b as any).blobNameSuffix || b.name || '';
+        if (bName.startsWith('@')) {
+          bName = bName.split('/').slice(1).join('/');
+        }
+        const tsMs = ((b as any).creationMicros ? Math.floor((b as any).creationMicros / 1000) : 0) || Date.now()
+        return {
+          id: -100 - i,
+          unread: false, pending: false, from: 'Raw Blob',
+          addr: account?.address?.toString() || '0x',
+          subject: bName || 'Unnamed Blob',
+          preview: `Raw Blob Hash...`,
+          time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: tsMs,
+          tags: ['blobs'],
+          body: `<p>Raw on-chain Blob data.</p>`,
+          blobs: [{ name: bName || 'blob', size: 'Unknown', hash: '0x' + hexHash, enc: '8+4', pending: false }], color: 0
+        }
+      })
+      list = [...mappedBlobs, ...list]
     }
 
     if (currentView === 'sent') {
-      // Pesan yang dikirim = blob yang di-upload oleh akun sendiri (on-chain)
+      // Sent view: group blobs by timestamp prefix (same send operation)
       if (onchainBlobs && onchainBlobs.length > 0) {
-        list = onchainBlobs.map((b, i) => {
-          const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : 'Unknown'
-          const lowerName = (b.blobNameSuffix || '').toLowerCase()
+        const getSentGroupKey = (rawName: string) => {
+          let name = rawName
+          if (name.startsWith('@')) name = name.split('/').slice(1).join('/')
+          // format: to_<addr>_<ts>-<filename>  OR any other blob name
+          const match = name.match(/^(to_[^_]+_\d+)/i)
+          return match ? match[1] : name
+        }
+        const sentGroups = new Map<string, typeof onchainBlobs>()
+        for (const b of onchainBlobs) {
+          const rawName = (b as any).blobNameSuffix || b.name || ''
+          const key = getSentGroupKey(rawName)
+          if (!sentGroups.has(key)) sentGroups.set(key, [])
+          sentGroups.get(key)!.push(b)
+        }
+        list = Array.from(sentGroups.entries()).map(([groupKey, blobs], i) => {
+          blobs.sort((a: any, b: any) => {
+            const aJson = (a.blobNameSuffix || a.name || '').endsWith('.json')
+            const bJson = (b.blobNameSuffix || b.name || '').endsWith('.json')
+            return aJson === bJson ? 0 : aJson ? -1 : 1
+          })
+          const primary = blobs[0] as any
+          const blobStatus = (primary.status || '').toLowerCase()
+          const isPending = !primary.blobMerkleRoot
+            || (primary.blobMerkleRoot as number[]).every((byte: number) => byte === 0)
+            || blobStatus === 'pending' || blobStatus === 'processing' || blobStatus === 'unconfirmed'
+          const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
+
+          let subject = groupKey
+          const jsonBlob = blobs.find((b: any) => (b.blobNameSuffix || b.name || '').endsWith('.json')) as any
+          if (jsonBlob) {
+            const rawN = jsonBlob.blobNameSuffix || jsonBlob.name || ''
+            const after = rawN.replace(/^to_[^_]+_\d+-/, '').replace(/\.json$/, '')
+            if (after) subject = after
+          }
+
           let sTags = ['shelby', 'aptos']
-          if (lowerName.includes('swap') || lowerName.includes('yield') || lowerName.includes('defi')) sTags.push('defi')
-          if (lowerName.includes('vote') || lowerName.includes('proposal') || lowerName.includes('dao')) sTags.push('dao')
-          if (lowerName.includes('mint') || lowerName.includes('collection') || lowerName.includes('nft')) sTags.push('nft')
+          const lowerSubject = subject.toLowerCase()
+          if (lowerSubject.includes('swap') || lowerSubject.includes('yield') || lowerSubject.includes('defi')) sTags.push('defi')
+          if (lowerSubject.includes('vote') || lowerSubject.includes('proposal') || lowerSubject.includes('dao')) sTags.push('dao')
+          if (lowerSubject.includes('mint') || lowerSubject.includes('collection') || lowerSubject.includes('nft')) sTags.push('nft')
+          if (isPending) sTags.push('pending')
+          if (blobs.length > 1) sTags.push('attachment')
+
+          const blobItems = blobs.map((b: any) => {
+            let bn = b.blobNameSuffix || b.name || ''
+            if (bn.startsWith('@')) bn = bn.split('/').slice(1).join('/')
+            const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot as number[]).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
+            const bPending = !b.blobMerkleRoot || (b.blobMerkleRoot as number[]).every((byte: number) => byte === 0)
+              || (b.status || '').toLowerCase() === 'pending'
+            return {
+              name: bn,
+              size: ((b.size || 0) / 1024).toFixed(1) + ' KB',
+              hash: bPending ? '⏳ Pending...' : '0x' + hexHash,
+              enc: '8+4',
+              pending: bPending
+            }
+          })
+
           return {
             id: -1000 - i,
-            unread: false,
+            unread: isPending,
+            pending: isPending,
             from: 'You (sent)',
             addr: account?.address?.toString() || '0x',
-            subject: b.blobNameSuffix || 'Unnamed Blob',
-            preview: `On-chain blob · 0x${hexHash.slice(0, 16)}...`,
-            time: new Date((b.creationMicros / 1000) || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            subject,
+            preview: isPending
+              ? '🕐 Awaiting on-chain confirmation...'
+              : blobs.length > 1
+                ? `📎 ${blobs.length - 1} attachment(s) · Sent`
+                : `On-chain message · Sent`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: tsMs,
             tags: sTags,
-            body: `<p>This message was sent by your wallet and stored permanently on Shelby Protocol.</p>`,
-            blobs: [{ name: b.blobNameSuffix || 'blob', size: (b.size / 1024).toFixed(1) + ' KB', hash: '0x' + hexHash, enc: '8+4' }],
+            body: isPending
+              ? `<p>⏳ This message is <b>pending on-chain confirmation</b>.</p><p>Shelby Protocol is committing your data to Aptos. Usually takes 10–30 seconds.</p>`
+              : `<p>Loading message body...</p>`,
+            blobs: blobItems,
             color: i % COLORS.length
           }
         })
@@ -223,20 +452,64 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
         m.preview.toLowerCase().includes(q)
       )
     }
+    // Sort: terbaru paling atas
+    list = [...list].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
     setFilteredMails(list)
   }, [currentView, mails, searchQuery, onchainBlobs, account])
+
+  // Auto-fetch blob content when an on-chain mail is selected
+  useEffect(() => {
+    if (selectedMailId === null) return
+    if (selectedMailId >= 0) return // only on-chain blobs have negative IDs
+    if (blobBodyCache[selectedMailId]) return // already fetched
+
+    const mail = filteredMails.find(m => m.id === selectedMailId)
+    if (!mail) return
+
+    const jsonBlob = mail.blobs?.find((b: any) => b.name?.endsWith('.json'))
+    if (!jsonBlob) return
+
+    const fetchBlobBody = async () => {
+      setBlobLoading(true)
+      try {
+        const ownerAddr = mail.from.startsWith('You') ? account?.address?.toString() : mail.addr
+        const blob = await shelbyClient.download({ account: ownerAddr as any, blobName: jsonBlob.name })
+        const response = new Response((blob as any).readable)
+        const data = await response.blob()
+        const text = await data.text()
+        const parsed = JSON.parse(text)
+        const pureAddr = ownerAddr?.replace('to_', '').split('_')[0] || ownerAddr;
+        const decodedBody = `<p><b>Sender (From):</b> ${pureAddr}</p><p><b>To:</b> ${parsed.to}</p><p><b>Subject:</b> ${parsed.subject}</p><hr/>${(parsed.body || '').replace(/\n/g, '<br/>')}`
+        setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: decodedBody }))
+      } catch (e) {
+        // silently fail — user can still click manually
+      } finally {
+        setBlobLoading(false)
+      }
+    }
+
+    fetchBlobBody()
+  }, [selectedMailId, filteredMails])
 
   const selectNav = (view: string) => {
     setCurrentView(view)
     setSelectedMailId(null)
+    setMobilePanel('list')
+    setMobileSidebarOpen(false)
   }
   
   const handleOpenMail = (id: number) => {
     setSelectedMailId(id)
+    setMobilePanel('detail') // Di mobile: switch ke panel detail
     // Only update unread for local mails (positive ids)
     if (id > 0) {
       setMails(mails.map(m => m.id === id ? { ...m, unread: false } : m))
     }
+  }
+
+  const handleMobileBack = () => {
+    setMobilePanel('list')
+    setSelectedMailId(null)
   }
 
   const handleSend = async () => {
@@ -252,29 +525,47 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
       const payloadData = textEncoder.encode(payloadString)
       
       const timestamp = Date.now()
+      let safeComposeTo = composeTo.trim().toLowerCase()
+      if (!safeComposeTo.startsWith('0x')) safeComposeTo = '0x' + safeComposeTo
+      
       const formattedBlobs = [
-        { blobName: `${timestamp}-mail.json`, blobData: payloadData }
+        { blobName: `to_${safeComposeTo}_${timestamp}-mail.json`, blobData: payloadData }
       ]
       
       for (const file of attachedFiles) {
         const arrayBuf = await file.arrayBuffer()
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-        formattedBlobs.push({ blobName: `${timestamp}-${safeName}`, blobData: new Uint8Array(arrayBuf) })
+        formattedBlobs.push({ blobName: `to_${safeComposeTo}_${timestamp}-${safeName}`, blobData: new Uint8Array(arrayBuf) })
       }
       
+      // Per docs: signer must use account.accountAddress (AccountAddress), not account object
+      // Per wallet adapter docs: AccountInfo.address is the AccountAddress
       const signer = {
-        account,
+        account: account.address,
         signAndSubmitTransaction
       }
 
       await uploadBlobs({
         signer: signer as any,
         blobs: formattedBlobs,
-        expirationMicros: Date.now() * 1000 + 86400 * 1000000,
-        options: { }
+        expirationMicros: Date.now() * 1000 + 86400000000, // 1 day in microseconds per docs
       })
+      
+      // Sending native Aptos notification transfer logic: Option 2
+      showToast('Shelby Upload complete! Sending native Aptos notification...', 'info');
+      try {
+        await signAndSubmitTransaction({
+          data: {
+            function: "0x1::aptos_account::transfer",
+            typeArguments: [],
+            functionArguments: [composeTo, "100"], // Send 100 Octa ping
+          } as any
+        });
+        showToast('✓ Message sent & recipient notified on-chain!', 'success')
+      } catch (e: any) {
+        showToast('✓ Message stored on Shelby, but notification tx skipped.', 'info')
+      }
 
-      showToast('✓ Message sent! Waiting for on-chain confirmation...', 'success')
       setComposeOpen(false)
       
       setComposeTo(''); setComposeSubject(''); setComposeBody(''); setAttachedFiles([])
@@ -294,7 +585,12 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
     }
   }
 
-  const handleDownloadBlob = async (addr: string, blobName: string) => {
+  const handleDownloadBlob = async (addr: string, blobName: string, isPending?: boolean) => {
+    // Guard: jangan download blob yang masih pending
+    if (isPending) {
+      showToast('⏳ Blob is still pending confirmation. Please wait...', 'info')
+      return
+    }
     try {
       showToast(`Downloading ${blobName}...`, 'info')
       const blob = await shelbyClient.download({ account: addr as any, blobName })
@@ -327,7 +623,13 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
       URL.revokeObjectURL(url)
       showToast('Download complete', 'success')
     } catch (e: any) {
-      showToast(`Download failed: ${e.message}`, 'error')
+      const errMsg: string = e?.message || String(e)
+      if (errMsg.includes('404') || errMsg.toLowerCase().includes('not found')) {
+        showToast('⏳ Blob syncing to download nodes. Retrying in 5s...', 'info')
+        setTimeout(() => handleDownloadBlob(addr, blobName), 5000)
+      } else {
+        showToast(`Download failed: ${errMsg}`, 'error')
+      }
     }
   }
 
@@ -366,6 +668,10 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
   return (
     <>
       <div className="topbar">
+        {/* Mobile: hamburger menu */}
+        <button className="mobile-menu-btn" onClick={() => setMobileSidebarOpen(true)} aria-label="Open menu">
+          ☰
+        </button>
         <div className="logo">
           <div className="logo-icon">✉</div>
           AptosBlobs<span className="logo-tag">MAIL</span>
@@ -391,13 +697,16 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
             <div className="chain-dot"></div>
             <span>Aptos {String(currentNetwork)}</span>
           </div>
-          <div className="shelby-badge">
+          <div className="shelby-badge desktop-only">
             ⬡ Shelby v0.3
           </div>
         </div>
         <div className="topbar-right">
           <button className={`btn-connect ${connected ? 'connected' : ''}`} onClick={handleConnect}>
-            {connected && account ? `${account.address.toString().substring(0,6)}...${account.address.toString().substring(account.address.toString().length-4)}` : 'Connect Petra Wallet'}
+            {connected && account
+              ? `${account.address.toString().substring(0,6)}...${account.address.toString().substring(account.address.toString().length-4)}`
+              : isPetraApp ? 'Connect Petra' : 'Connect Wallet'
+            }
           </button>
         </div>
       </div>
@@ -427,9 +736,14 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
 
       {/* LAYOUT */}
       <div className="layout">
+
+        {/* Mobile Sidebar Drawer Overlay */}
+        {mobileSidebarOpen && (
+          <div className="mobile-overlay" onClick={() => setMobileSidebarOpen(false)} />
+        )}
         
         {/* SIDEBAR */}
-        <div className="sidebar">
+        <div className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
           <button className="btn-compose" onClick={() => setComposeOpen(true)}>
             New Message
           </button>
@@ -488,10 +802,12 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
               <span>100 MB</span>
             </div>
           </div>
+          {/* Mobile: close sidebar button */}
+          <button className="mobile-sidebar-close" onClick={() => setMobileSidebarOpen(false)}>✕ Close</button>
         </div>
 
         {/* MAIL LIST */}
-        <div className="mail-list">
+        <div className={`mail-list ${mobilePanel === 'detail' ? 'mobile-hidden' : ''}`}>
           <div className="mail-list-header">
             <span className="mail-list-title">{titles[currentView] || currentView}</span>
             <div className="mail-list-actions">
@@ -528,7 +844,10 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                         <div className="mail-item-preview">{m.preview}</div>
                         {m.tags.length > 0 && (
                           <div className="mail-item-tags">
-                            {m.tags.map(t => (
+                            {m.pending && (
+                              <span className="tag tag-pending">⏳ Pending</span>
+                            )}
+                            {m.tags.filter(t => t !== 'pending').map(t => (
                               <span key={t} className={`tag tag-${t}`}>
                                 {t === 'shelby' ? '⬡ Shelby' : t === 'aptos' ? '⬡ Aptos' : '🔒 Enc'}
                               </span>
@@ -545,7 +864,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
         </div>
 
         {/* MAIL VIEW */}
-        <div className="mail-view">
+        <div className={`mail-view ${mobilePanel === 'list' ? 'mobile-hidden' : ''}`}>
           {!selectedMail ? (
             <div className="empty-state">
               <div className="empty-icon">✉</div>
@@ -554,7 +873,15 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              {/* Mobile back button */}
+              <button className="mobile-back-btn" onClick={handleMobileBack}>← Back</button>
               <div className="mail-view-header">
+                {selectedMail.pending && (
+                  <div className="pending-banner">
+                    <div className="pending-spinner" />
+                    <span>Blob is <b>Pending</b> — awaiting on-chain confirmation. Auto-refreshing every 5s...</span>
+                  </div>
+                )}
                 <div className="mail-view-subject">{selectedMail.subject}</div>
                 <div className="mail-view-meta">
                   <div className="mail-meta-left">
@@ -577,11 +904,32 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                 </div>
               </div>
               <div className="mail-view-body">
-                <div className="mail-content" dangerouslySetInnerHTML={{ __html: selectedMail.body }} />
+                {/* Show decoded body from cache, or loading skeleton, or original body */}
+                {blobLoading && selectedMail.id < 0 ? (
+                  <div className="blob-pending-skeleton">
+                    <div className="skeleton-line" style={{ width: '60%' }} />
+                    <div className="skeleton-line" style={{ width: '40%' }} />
+                    <div className="skeleton-line" style={{ width: '80%', marginTop: 16 }} />
+                    <div className="skeleton-line" style={{ width: '70%' }} />
+                    <div className="skeleton-line" style={{ width: '55%' }} />
+                    <div className="skeleton-loading-label">⬡ Fetching blob from Shelby...</div>
+                  </div>
+                ) : (
+                  <div className="mail-content" dangerouslySetInnerHTML={{ __html: blobBodyCache[selectedMail.id] || selectedMail.body }} />
+                )}
                 <div id="viewBlobs">
                   {selectedMail.blobs.map((b, idx) => (
-                    <div className="blob-info" key={idx} style={{ cursor: 'pointer' }} onClick={() => handleDownloadBlob(selectedMail.from.startsWith('You') ? account?.address?.toString() || selectedMail.addr : selectedMail.addr, b.name)}>
-                      <div className="blob-icon">⬡</div>
+                    <div
+                      className={`blob-info${b.pending ? ' blob-pending' : ''}`}
+                      key={idx}
+                      style={{ cursor: b.pending ? 'not-allowed' : 'pointer', opacity: b.pending ? 0.6 : 1 }}
+                      onClick={() => handleDownloadBlob(
+                        selectedMail.from.startsWith('You') ? account?.address?.toString() || selectedMail.addr : selectedMail.addr,
+                        b.name,
+                        b.pending
+                      )}
+                    >
+                      <div className="blob-icon">{b.pending ? '⏳' : '⬡'}</div>
                       <div className="blob-details">
                         <div className="blob-name">{b.name}</div>
                         <div className="blob-meta">
@@ -590,7 +938,15 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                           <span>⚙ Erasure {b.enc}</span>
                         </div>
                       </div>
-                      <div className="verify-badge">{b.name.endsWith('.json') ? '👁 Read Body' : '⬇ Download'}</div>
+                      <div className="verify-badge" style={b.pending ? { color: '#f59e0b', borderColor: 'rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' } : {}}>
+                        {b.pending
+                          ? '⏳ Pending...'
+                          : blobLoading && b.name.endsWith('.json')
+                          ? '⏳ Loading...'
+                          : b.name.endsWith('.json')
+                          ? (blobBodyCache[selectedMail.id] ? '✓ Loaded' : '👁 Read Body')
+                          : '⬇ Download'}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -599,6 +955,45 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           )}
         </div>
       </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="mobile-bottom-nav">
+        <button
+          className={`mobile-tab ${currentView === 'inbox' ? 'active' : ''}`}
+          onClick={() => selectNav('inbox')}
+        >
+          <span className="mobile-tab-icon">📥</span>
+          <span className="mobile-tab-label">Inbox</span>
+        </button>
+        <button
+          className={`mobile-tab ${currentView === 'sent' ? 'active' : ''}`}
+          onClick={() => selectNav('sent')}
+        >
+          <span className="mobile-tab-icon">📤</span>
+          <span className="mobile-tab-label">Sent</span>
+        </button>
+        <button
+          className="mobile-tab compose-tab"
+          onClick={() => setComposeOpen(true)}
+        >
+          <span className="mobile-tab-icon compose-icon">✏️</span>
+          <span className="mobile-tab-label">Compose</span>
+        </button>
+        <button
+          className={`mobile-tab ${currentView === 'blobs' ? 'active' : ''}`}
+          onClick={() => selectNav('blobs')}
+        >
+          <span className="mobile-tab-icon">⬡</span>
+          <span className="mobile-tab-label">Blobs</span>
+        </button>
+        <button
+          className="mobile-tab"
+          onClick={() => setMobileSidebarOpen(true)}
+        >
+          <span className="mobile-tab-icon">☰</span>
+          <span className="mobile-tab-label">More</span>
+        </button>
+      </nav>
 
       {/* COMPOSE OVERLAY */}
       <div className={`compose-overlay ${composeOpen ? 'open' : ''}`} onClick={(e) => e.target === e.currentTarget && setComposeOpen(false)}>

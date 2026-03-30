@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# File debug, test, dan output sementara (jangan commit!)
+debug.ts
+debug*.ts
+test*.ts
+out.txt
+*.scratch.ts
+old_*.html
