@@ -58,11 +58,12 @@ cp .env.example .env
 Then edit `.env`:
 
 ```env
-VITE_SHELBY_API_KEY=your_shelby_api_key_here
+VITE_SHELBY_API_KEY_SHELBYNET=your_shelbynet_api_key_here
+VITE_SHELBY_API_KEY_TESTNET=your_testnet_api_key_here
 ```
 
 > **Get your API key** → [https://geomi.dev](https://geomi.dev)  
-> Without a valid API key, uploading blobs will fail. The inbox can still show received messages.
+> Obtain separate keys for Shelbynet and Aptos Testnet if needed. Without a valid API key, uploading blobs will fail. The inbox can still show received messages.
 
 ### 4. Run locally
 
@@ -142,7 +143,7 @@ Output is in the `dist/` folder. You can deploy to:
 - [Netlify](https://netlify.com)
 - Any static file host
 
-> ⚠️ Remember to set `VITE_SHELBY_API_KEY` as an environment variable in your hosting dashboard.
+> ⚠️ Remember to set `VITE_SHELBY_API_KEY_SHELBYNET` and `VITE_SHELBY_API_KEY_TESTNET` as environment variables in your hosting dashboard.
 
 ---
 
@@ -150,7 +151,8 @@ Output is in the `dist/` folder. You can deploy to:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_SHELBY_API_KEY` | Yes | API key from [geomi.dev](https://geomi.dev) for Shelby Protocol access |
+| `VITE_SHELBY_API_KEY_SHELBYNET` | Yes | API key for Shelbynet access ([geomi.dev](https://geomi.dev)) |
+| `VITE_SHELBY_API_KEY_TESTNET` | Yes | API key for Aptos Testnet access ([geomi.dev](https://geomi.dev)) |
 
 ---
 

@@ -3,7 +3,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { useUploadBlobs, useAccountBlobs, useDeleteBlobs } from '@shelby-protocol/react'
 import { useQuery } from '@tanstack/react-query'
 import { ShelbyClient } from '@shelby-protocol/sdk/browser'
-import { AptosConfig, Network } from '@aptos-labs/ts-sdk'
+import { AptosConfig, Network, AccountAddress } from '@aptos-labs/ts-sdk'
 import { COLORS, Mail } from './data'
 
 const API_KEY_SHELBYNET = import.meta.env.VITE_SHELBY_API_KEY_SHELBYNET || ''
@@ -38,11 +38,25 @@ export default function App() {
   )
 }
 
-// UI helpers
+// -------------------------------------------------------------------------
+//  Utilities & Formatting
+// -------------------------------------------------------------------------
 const formatAddr = (addr: string) => {
   if (!addr || addr === '0x') return 'Unknown'
   const clean = addr.replace(/^to_/, '').split('_')[0]
   return `${clean.slice(0, 6)}...${clean.slice(-4)}`
+}
+
+// Helper to normalize address to 64-hex canonical form (0x + 64 chars)
+const normalizeAddr = (addr: string) => {
+  try {
+    if (!addr || addr === '0x') return addr;
+    let clean = addr.trim().toLowerCase();
+    if (!clean.startsWith('0x')) clean = '0x' + clean;
+    return AccountAddress.from(clean).toString();
+  } catch (e) {
+    return addr.toLowerCase().trim(); 
+  }
 }
 
 const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) => {
@@ -106,9 +120,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     queryKey: ['incomingBlobs', currentNetwork, myAddress],
     queryFn: async () => {
       if (!myAddress) return [];
+      const normalizedMyAddr = normalizeAddr(myAddress);
       try {
         const res = await shelbyClient.coordination.getBlobs({
-          where: { blob_name: { _ilike: `%to_${myAddress}_%` } },
+          where: { blob_name: { _ilike: `%to_${normalizedMyAddr}_%` } },
           pagination: { limit: 100 }
         });
         return res;
@@ -573,8 +588,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       const payloadData = textEncoder.encode(payloadString)
       
       const timestamp = Date.now()
-      let safeComposeTo = composeTo.trim().toLowerCase()
-      if (!safeComposeTo.startsWith('0x')) safeComposeTo = '0x' + safeComposeTo
+      const safeComposeTo = normalizeAddr(composeTo)
       
       const formattedBlobs = [
         { blobName: `to_${safeComposeTo}_${timestamp}-mail.json`, blobData: payloadData }
@@ -710,8 +724,21 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     setMails(mails.map(m => m.id === id ? { ...m, tags: m.tags.includes('starred') ? m.tags.filter(t => t !== 'starred') : [...m.tags, 'starred'] } : m))
   }
 
+  // Derive context for the currently selected message
   const selectedMail = filteredMails.find(m => m.id === selectedMailId)
-  const titles: Record<string, string> = { inbox:'Inbox', sent:'Sent', drafts:'Drafts', starred:'Starred', blobs:'Blobs', transactions:'Transactions', defi:'DeFi', dao:'DAO', nft:'NFT' }
+  
+  // Display titles for different navigation views
+  const titles: Record<string, string> = { 
+    inbox: 'Inbox', 
+    sent: 'Sent Messages', 
+    drafts: 'Drafts', 
+    starred: 'Starred', 
+    blobs: 'On-Chain Blobs', 
+    transactions: 'Recent Activity', 
+    defi: 'DeFi Hub', 
+    dao: 'Governance', 
+    nft: 'Collectibles' 
+  }
 
   return (
     <>
