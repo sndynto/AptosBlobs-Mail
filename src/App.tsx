@@ -97,14 +97,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       network: mappedNet
     })
     
-    // Define explicit endpoints based on network
+    // Define official endpoints based on SDK constants
     const indexerUrl = currentNetwork === 'shelbynet'
-      ? 'https://api.shelbynet.shelby.xyz/v1/graphql'
-      : 'https://api.testnet.shelby.xyz/v1/graphql';
+      ? 'https://api.shelbynet.aptoslabs.com/nocode/v1/public/alias/shelby/shelbynet/v1/graphql'
+      : 'https://api.testnet.aptoslabs.com/nocode/v1/public/alias/shelby/testnet/v1/graphql';
     
+    // RPC base URLs (without /shelby suffix, as the SDK appends it or uses it as base)
+    // Looking at constants, RPC base is "https://api.shelbynet.shelby.xyz/shelby"
     const rpcUrl = currentNetwork === 'shelbynet'
-      ? 'https://api.shelbynet.shelby.xyz/v1'
-      : 'https://api.testnet.shelby.xyz/v1';
+      ? 'https://api.shelbynet.shelby.xyz/shelby'
+      : 'https://api.testnet.shelby.xyz/shelby';
 
     const shelby = new ShelbyClient({ 
       network: shelbyNet as any,
