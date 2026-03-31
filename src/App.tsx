@@ -10,7 +10,7 @@ const API_KEY_SHELBYNET = import.meta.env.VITE_SHELBY_API_KEY_SHELBYNET || ''
 const API_KEY_TESTNET = import.meta.env.VITE_SHELBY_API_KEY_TESTNET || ''
 
 export default function App() {
-  const [currentNetwork, setCurrentNetwork] = useState<any>('shelbynet')
+  const [currentNetwork, setCurrentNetwork] = useState<any>('testnet') // shelbynet, testnet
   
   const key = currentNetwork === 'shelbynet' ? API_KEY_SHELBYNET : API_KEY_TESTNET
   const noKey = !key || key.startsWith('masukkan_api_key')
@@ -76,7 +76,7 @@ const TAG_ICONS: Record<string, string> = {
 }
 
 const TAG_LABELS: Record<string, string> = {
-  shelby: 'Shelby', aptos: 'Aptos', blobs: 'Blob', blob: 'Blob',
+  shelby: 'Shelby', aptos: 'Aptos', blobs: 'Blob',
   nft: 'NFT', defi: 'DeFi', dao: 'DAO', attachment: 'Attach',
   pending: 'Pending', starred: 'Starred'
 }
@@ -97,26 +97,23 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       network: mappedNet
     })
     
-    // Define official endpoints based on SDK constants
-    const indexerUrl = currentNetwork === 'shelbynet'
+    // Official endpoints based on SDK constants (testnet/shelbynet)
+    const indexerUrl = currentNetwork === 'shelbynet' 
       ? 'https://api.shelbynet.aptoslabs.com/nocode/v1/public/alias/shelby/shelbynet/v1/graphql'
       : 'https://api.testnet.aptoslabs.com/nocode/v1/public/alias/shelby/testnet/v1/graphql';
     
-    // RPC base URLs (without /shelby suffix, as the SDK appends it or uses it as base)
-    // Looking at constants, RPC base is "https://api.shelbynet.shelby.xyz/shelby"
     const rpcUrl = currentNetwork === 'shelbynet'
       ? 'https://api.shelbynet.shelby.xyz/shelby'
       : 'https://api.testnet.shelby.xyz/shelby';
 
-    const shelby = new ShelbyClient({ 
+    const client = new ShelbyClient({
       network: shelbyNet as any,
-      apiKey: apiKey,
-      // Explicitly set URLs to avoid SDK default mismatch
-      rpc: { apiKey: apiKey, baseUrl: rpcUrl },
+      aptos: aptos,
       indexer: { apiKey: apiKey, baseUrl: indexerUrl },
-      aptos: aptos
+      rpc: { apiKey: apiKey, baseUrl: rpcUrl }
     })
-    return { aptosConfig: aptos, shelbyClient: shelby }
+    
+    return { aptosConfig: aptos, shelbyClient: client }
   }, [currentNetwork, apiKey])
 
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
@@ -131,7 +128,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   // Custom fetch for incoming blobs destined to our address
   const myAddress = account?.address?.toString()?.toLowerCase();
   const { data: incomingBlobs, refetch: refetchIncoming } = useQuery({
-    queryKey: ['incomingBlobs', currentNetwork, myAddress],
+    queryKey: ['incomingBlobs', 'testnet', myAddress],
     queryFn: async () => {
       if (!myAddress) return [];
       
@@ -144,7 +141,6 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       try {
         if (import.meta.env.DEV) console.log(`Fetching inbox for: ${normalizedMyAddr} (${shortAddr})`);
         
-        // Use '_or' to match both pattern versions. Field name is 'blob_name' per SDK types.
         const res = await shelbyClient.coordination.getBlobs({
           where: {
             _or: [
@@ -165,6 +161,24 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     enabled: !!myAddress && !!shelbyClient,
     refetchInterval: 10000
   })
+
+  // Network validation logic
+  const isWrongNetwork = useMemo(() => {
+    if (!connected || !walletNetwork) return false;
+    // Both Shelbynet and Testnet modes in this app expect the wallet to be on Testnet
+    const currentWalletNet = (walletNetwork.name || '').toLowerCase();
+    // Broaden matching for different wallet name formats (e.g., 'Aptos Testnet', 'testnet')
+    return !currentWalletNet.includes('testnet');
+  }, [connected, walletNetwork]);
+
+  const [hiddenMailIds, setHiddenMailIds] = useState<number[]>(() => {
+    const saved = localStorage.getItem(`aptosblobs_hidden_${currentNetwork}`)
+    try { return saved ? JSON.parse(saved) : [] } catch (e) { return [] }
+  })
+
+  useEffect(() => {
+    localStorage.setItem(`aptosblobs_hidden_${currentNetwork}`, JSON.stringify(hiddenMailIds))
+  }, [hiddenMailIds, currentNetwork])
 
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
   
@@ -523,7 +537,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         m.preview.toLowerCase().includes(q)
       )
     }
-    // Sort: terbaru paling atas
+
+    // Final Sort: terbaru paling atas
     list = [...list].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
     setFilteredMails(list)
   }, [currentView, mails, searchQuery, onchainBlobs, incomingBlobs, account])
@@ -784,26 +799,24 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         <div className="network-info">
           <div className="separator"></div>
           <div className="chain-badge" onClick={async () => {
-            const nets = [Network.TESTNET, 'shelbynet' as any]
+            const nets = ['shelbynet', 'testnet']
             const next = nets[(nets.indexOf(currentNetwork) + 1) % nets.length]
             setCurrentNetwork(next)
             if (changeNetwork) {
               try {
-                const targetNet = next === 'shelbynet' ? Network.TESTNET : next;
-                if (walletNetwork?.name?.toLowerCase() !== String(targetNet).toLowerCase()) {
-                  await changeNetwork(targetNet);
+                const targetNet = Network.TESTNET;
+                const currentWalletNet = (walletNetwork?.name || '').toLowerCase();
+                if (!currentWalletNet.includes('testnet')) {
+                  await changeNetwork(targetNet as any);
                 }
               } catch (e) {
                 if (import.meta.env.DEV) console.warn("Wallet changeNetwork failed", e)
               }
             }
-            showToast(`Switched to ${next}`, 'info')
+            showToast(`Switched UI to ${next}`, 'info')
           }}>
-            <div className="chain-dot"></div>
+            <div className="chain-dot" style={{ background: isWrongNetwork ? '#ef4444' : '#10b981' }}></div>
             <span>Aptos {String(currentNetwork)}</span>
-          </div>
-          <div className="shelby-badge desktop-only">
-            ⬡ Shelby v0.3
           </div>
         </div>
         <div className="topbar-right">
@@ -815,6 +828,53 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           </button>
         </div>
       </div>
+
+      {isWrongNetwork && (
+        <div style={{
+          background: '#fff1f2',
+          borderBottom: '1px solid #fecaca',
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          color: '#991b1b',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '13px',
+          fontWeight: 500,
+          zIndex: 100
+        }}>
+          <span style={{ fontSize: '16px' }}>⚠️</span>
+          <span>You are connected to the wrong network, the application may not work as expected. Please switch to <b>testnet</b>.</span>
+          <button 
+            onClick={async () => {
+              if (changeNetwork) {
+                try {
+                  const target = Network.TESTNET;
+                  await changeNetwork(target as any);
+                } catch (e) {
+                  showToast(`Please switch to Aptos Testnet manually in your wallet`, 'error');
+                }
+              }
+            }}
+            style={{
+              background: '#991b1b',
+              color: 'white',
+              border: 'none',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '11px',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = '0.9')}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            Switch to Testnet
+          </button>
+        </div>
+      )}
 
       {/* STATS BAR */}
       <div className="stats-bar">
