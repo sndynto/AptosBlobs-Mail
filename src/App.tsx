@@ -89,17 +89,29 @@ const Tag = ({ type }: { type: string }) => (
 
 function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   const { aptosConfig, shelbyClient } = useMemo(() => {
+    // Shelbynet runs on Aptos Testnet, others use their direct names
     const mappedNet = currentNetwork === 'shelbynet' ? Network.TESTNET : currentNetwork;
     const shelbyNet = currentNetwork === 'shelbynet' ? 'shelbynet' : currentNetwork;
     
     const aptos = new AptosConfig({
       network: mappedNet
     })
+    
+    // Define explicit endpoints based on network
+    const indexerUrl = currentNetwork === 'shelbynet'
+      ? 'https://api.shelbynet.shelby.xyz/v1/graphql'
+      : 'https://api.testnet.shelby.xyz/v1/graphql';
+    
+    const rpcUrl = currentNetwork === 'shelbynet'
+      ? 'https://api.shelbynet.shelby.xyz/v1'
+      : 'https://api.testnet.shelby.xyz/v1';
+
     const shelby = new ShelbyClient({ 
       network: shelbyNet as any,
       apiKey: apiKey,
-      rpc: { apiKey: apiKey },
-      indexer: { apiKey: apiKey },
+      // Explicitly set URLs to avoid SDK default mismatch
+      rpc: { apiKey: apiKey, baseUrl: rpcUrl },
+      indexer: { apiKey: apiKey, baseUrl: indexerUrl },
       aptos: aptos
     })
     return { aptosConfig: aptos, shelbyClient: shelby }
@@ -120,13 +132,27 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     queryKey: ['incomingBlobs', currentNetwork, myAddress],
     queryFn: async () => {
       if (!myAddress) return [];
+      
+      // We search for both normalized (canonical 64-char) and likely short forms
+      // Some wallets or users might use 'to_0x1...' instead of full 'to_0x00000...1...'
       const normalizedMyAddr = normalizeAddr(myAddress);
+      // Short form: removing leading zeros after 0x if any, or just using input if raw
+      const shortAddr = myAddress.startsWith('0x') ? '0x' + myAddress.substring(2).replace(/^0+/, '') : myAddress;
+
       try {
-        if (import.meta.env.DEV) console.log("Fetching incoming blobs for:", normalizedMyAddr);
+        if (import.meta.env.DEV) console.log(`Fetching inbox for: ${normalizedMyAddr} (${shortAddr})`);
+        
+        // Use '_or' to match both pattern versions. Field name is 'blob_name' per SDK types.
         const res = await shelbyClient.coordination.getBlobs({
-          where: { blob_name: { _ilike: `%to_${normalizedMyAddr}%` } },
+          where: {
+            _or: [
+              { blob_name: { _ilike: `%to_${normalizedMyAddr}%` } },
+              { blob_name: { _ilike: `%to_${shortAddr}%` } }
+            ]
+          },
           pagination: { limit: 100 }
         });
+        
         if (import.meta.env.DEV) console.log("Incoming blobs count:", res?.length || 0);
         return res;
       } catch (err) {
