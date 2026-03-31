@@ -122,13 +122,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       if (!myAddress) return [];
       const normalizedMyAddr = normalizeAddr(myAddress);
       try {
+        if (import.meta.env.DEV) console.log("Fetching incoming blobs for:", normalizedMyAddr);
         const res = await shelbyClient.coordination.getBlobs({
-          where: { blob_name: { _ilike: `%to_${normalizedMyAddr}_%` } },
+          where: { blob_name: { _ilike: `%to_${normalizedMyAddr}%` } },
           pagination: { limit: 100 }
         });
+        if (import.meta.env.DEV) console.log("Incoming blobs count:", res?.length || 0);
         return res;
       } catch (err) {
-        if (import.meta.env.DEV) console.warn("Failed fetching incoming blobs:", err);
+        if (import.meta.env.DEV) console.error("Failed fetching incoming blobs:", err);
         return [];
       }
     },
@@ -496,7 +498,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     // Sort: terbaru paling atas
     list = [...list].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
     setFilteredMails(list)
-  }, [currentView, mails, searchQuery, onchainBlobs, account])
+  }, [currentView, mails, searchQuery, onchainBlobs, incomingBlobs, account])
 
   // Auto-fetch blob content when an on-chain mail is selected
   useEffect(() => {
