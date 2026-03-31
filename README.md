@@ -1,38 +1,25 @@
-# 📬 AptosBlobs Mail
+# 📬 AptosPulse Mail
 
-A decentralized Web3 email client powered by **Shelby Protocol** blob storage, settled on the **Aptos** blockchain. Send, receive, and store messages entirely on-chain — no central servers.
+A simple, decentralized email client. It uses **Shelby Protocol** for storage and settles everything on the **Aptos** blockchain. No servers, just on-chain data.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Built with Aptos](https://img.shields.io/badge/Blockchain-Aptos-00e5b8)](https://aptos.dev)
-[![Shelby Protocol](https://img.shields.io/badge/Storage-Shelby_Protocol-f59e0b)](https://shelby.xyz)
+## Features
 
----
-
-## ✨ Features
-
-- 📩 **Send messages** — stored as blobs on Shelby Protocol, settled on Aptos
-- 📥 **Inbox** — receive messages from any Aptos wallet address
-- 📤 **Sent** — view all your on-chain sent messages
-- 📎 **File attachments** — attach any file as a blob alongside your message
-- ⭐ **Starred / Labels** — DeFi, DAO, NFT auto-tagging
-- 🔍 **Search** — filter by address, subject, preview
-- 📱 **Mobile-first** — works on Android & iOS, including Petra Wallet dApp browser
-- 🌐 **Network switcher** — Aptos Testnet ↔ Shelbynet
-- ⚡ **Real-time sync** — auto-refresh every 10s, pending blob polling every 5s
-- 💾 **Auto-save drafts** — saved to localStorage while you type
+- **Send messages** — Stored as blobs, settled on Aptos.
+- **Inbox & Sent** — Standard mail views for your wallet address.
+- **Attachments** — You can attach files directly to your on-chain messages.
+- **Tags** — Automatic tagging for DeFi, DAO, and NFT related subjects.
+- **Mobile Friendly** — Works great on Android/iOS and inside Petra Wallet.
+- **Drafts** — Automatically saves what you're typing to local storage.
 
 ---
 
-## 🧱 Tech Stack
+## Tech
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + TypeScript + Vite |
-| Blockchain | Aptos (Testnet / Shelbynet) |
-| Blob Storage | [Shelby Protocol](https://shelby.xyz) |
-| Wallet | Petra Wallet (browser extension + mobile dApp) |
-| State / Query | TanStack React Query v5 |
-| Styling | Vanilla CSS (dark, glassmorphism) |
+- **Frontend**: React 18 + Vite
+- **Chain**: Aptos (Testnet / Shelbynet)
+- **Storage**: [Shelby Protocol](https://shelby.xyz)
+- **State**: React Query 
+- **Style**: Pure CSS
 
 ---
 

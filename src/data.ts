@@ -14,8 +14,15 @@ export type Mail = {
   timestamp?: number  // Untuk sorting berdasarkan waktu terbaru
 }
 
+// [background, text] — vivid solid for circle avatars on white bg
 export const COLORS = [
-  ['#1a3a6b', '#60a5fa'], ['#1a4a3b', '#34d399'], ['#4a2a1a', '#fb923c'],
-  ['#3a1a4a', '#c084fc'], ['#4a3a1a', '#fbbf24'], ['#1a3a4a', '#38bdf8']
+  ['#F040B0', '#ffffff'], // Shelby pink
+  ['#0073e6', '#ffffff'], // Blue
+  ['#00875a', '#ffffff'], // Green
+  ['#d97706', '#ffffff'], // Amber
+  ['#8B0050', '#ffffff'], // Deep pink
+  ['#0891b2', '#ffffff'], // Cyan
+  ['#7c3aed', '#ffffff'], // Violet
+  ['#be185d', '#ffffff'], // Rose
 ]
 

@@ -6,36 +6,74 @@ import { ShelbyClient } from '@shelby-protocol/sdk/browser'
 import { AptosConfig, Network } from '@aptos-labs/ts-sdk'
 import { COLORS, Mail } from './data'
 
-const API_KEY = import.meta.env.VITE_SHELBY_API_KEY || ''
-const IS_API_KEY_MISSING = !API_KEY || API_KEY === 'masukkan_api_key_anda_disini'
+const API_KEY_SHELBYNET = import.meta.env.VITE_SHELBY_API_KEY_SHELBYNET || ''
+const API_KEY_TESTNET = import.meta.env.VITE_SHELBY_API_KEY_TESTNET || ''
 
 export default function App() {
   const [currentNetwork, setCurrentNetwork] = useState<any>('shelbynet')
+  
+  const key = currentNetwork === 'shelbynet' ? API_KEY_SHELBYNET : API_KEY_TESTNET
+  const noKey = !key || key.startsWith('masukkan_api_key')
+  const envVar = currentNetwork === 'shelbynet' ? 'VITE_SHELBY_API_KEY_SHELBYNET' : 'VITE_SHELBY_API_KEY_TESTNET'
+
   return (
     <>
-      {IS_API_KEY_MISSING && (
+      {noKey && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.4)',
+          background: '#fffbeb', borderBottom: '1px solid #fde68a',
           padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 10,
-          fontFamily: 'monospace', fontSize: 12, color: '#fbbf24',
-          backdropFilter: 'blur(8px)'
+          fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#92400e',
         }}>
           <span>⚠️</span>
           <span>
-            <b>VITE_SHELBY_API_KEY</b> is not set.
-            Copy <code style={{background:'rgba(245,158,11,0.15)',padding:'1px 6px',borderRadius:3}}>.env.example</code> → <code style={{background:'rgba(245,158,11,0.15)',padding:'1px 6px',borderRadius:3}}>.env</code> and add your API key from{' '}
-            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#f59e0b'}}>geomi.dev</a>.
-            Sending blobs will fail without it.
+            <b>{envVar}</b> not found for {currentNetwork}.
+            Check your <code style={{background:'#fef3c7',padding:'1px 6px',borderRadius:4,border:'1px solid #fde68a'}}>.env</code> file.
+            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#6001D2', fontWeight:600, marginLeft: 8}}>Get Key →</a>
           </span>
         </div>
       )}
-      <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} />
+      <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} apiKey={key} />
     </>
   )
 }
 
-function MailApp({ currentNetwork, setCurrentNetwork }: any) {
+// UI helpers
+const formatAddr = (addr: string) => {
+  if (!addr || addr === '0x') return 'Unknown'
+  const clean = addr.replace(/^to_/, '').split('_')[0]
+  return `${clean.slice(0, 6)}...${clean.slice(-4)}`
+}
+
+const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) => {
+  let tags = ['shelby', 'blobs']
+  const lower = subject.toLowerCase()
+  if (lower.includes('swap') || lower.includes('yield') || lower.includes('defi')) tags.push('defi')
+  if (lower.includes('vote') || lower.includes('proposal') || lower.includes('dao')) tags.push('dao')
+  if (lower.includes('mint') || lower.includes('collection') || lower.includes('nft')) tags.push('nft')
+  if (isPending) tags.push('pending')
+  return tags
+}
+
+const TAG_ICONS: Record<string, string> = {
+  shelby: '⬡', aptos: '⬡', blobs: '⬡', blob: '⬡',
+  nft: '🖼', defi: '💱', dao: '🏛', attachment: '📎',
+  pending: '⏳', starred: '⭐'
+}
+
+const TAG_LABELS: Record<string, string> = {
+  shelby: 'Shelby', aptos: 'Aptos', blobs: 'Blob', blob: 'Blob',
+  nft: 'NFT', defi: 'DeFi', dao: 'DAO', attachment: 'Attach',
+  pending: 'Pending', starred: 'Starred'
+}
+
+const Tag = ({ type }: { type: string }) => (
+  <span className={`tag tag-${type}`}>
+    {TAG_ICONS[type] || ''} {TAG_LABELS[type] || type}
+  </span>
+)
+
+function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   const { aptosConfig, shelbyClient } = useMemo(() => {
     const mappedNet = currentNetwork === 'shelbynet' ? Network.TESTNET : currentNetwork;
     const shelbyNet = currentNetwork === 'shelbynet' ? 'shelbynet' : currentNetwork;
@@ -45,13 +83,13 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
     })
     const shelby = new ShelbyClient({ 
       network: shelbyNet as any,
-      apiKey: API_KEY,
-      rpc: { apiKey: API_KEY },
-      indexer: { apiKey: API_KEY },
+      apiKey: apiKey,
+      rpc: { apiKey: apiKey },
+      indexer: { apiKey: apiKey },
       aptos: aptos
     })
     return { aptosConfig: aptos, shelbyClient: shelby }
-  }, [currentNetwork])
+  }, [currentNetwork, apiKey])
 
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
   const { mutateAsync: uploadBlobs, isPending } = useUploadBlobs({ client: shelbyClient })
@@ -75,7 +113,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
         });
         return res;
       } catch (err) {
-        console.warn("Failed fetching incoming blobs:", err);
+        if (import.meta.env.DEV) console.warn("Failed fetching incoming blobs:", err);
         return [];
       }
     },
@@ -274,13 +312,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           if (after) subject = after
         }
 
-        let sTags = ['shelby', 'blobs']
-        const lowerSubject = subject.toLowerCase()
-        if (lowerSubject.includes('swap') || lowerSubject.includes('yield') || lowerSubject.includes('defi')) sTags.push('defi')
-        if (lowerSubject.includes('vote') || lowerSubject.includes('proposal') || lowerSubject.includes('dao')) sTags.push('dao')
-        if (lowerSubject.includes('mint') || lowerSubject.includes('collection') || lowerSubject.includes('nft')) sTags.push('nft')
-        if (isPending) sTags.push('pending')
-        if (blobs.length > 1) sTags.push('attachment')
+        const sTags = getTags(subject, isPending, blobs.length > 1)
 
         const blobItems = blobs.map((b: any) => {
           let bn = b.blobNameSuffix || b.name || ''
@@ -301,14 +333,14 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           id: -2000 - i,
           unread: isPending,
           pending: isPending,
-          from: `From: ${senderAddr.slice(0,8)}...`,
+          from: `From: ${formatAddr(senderAddr)}`,
           addr: senderAddr,
           subject,
           preview: isPending
             ? '🕐 Awaiting confirmation...'
             : hasAttachments
-              ? `📎 ${blobs.length - 1} attachment(s) · ${senderAddr.slice(0,6)}...`
-              : `From ${senderAddr.slice(0,6)}...`,
+              ? `📎 ${blobs.length - 1} attachment(s) · ${formatAddr(senderAddr)}`
+              : `From ${formatAddr(senderAddr)}`,
           time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           timestamp: tsMs,
           tags: sTags,
@@ -389,13 +421,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
             if (after) subject = after
           }
 
-          let sTags = ['shelby', 'aptos']
-          const lowerSubject = subject.toLowerCase()
-          if (lowerSubject.includes('swap') || lowerSubject.includes('yield') || lowerSubject.includes('defi')) sTags.push('defi')
-          if (lowerSubject.includes('vote') || lowerSubject.includes('proposal') || lowerSubject.includes('dao')) sTags.push('dao')
-          if (lowerSubject.includes('mint') || lowerSubject.includes('collection') || lowerSubject.includes('nft')) sTags.push('nft')
-          if (isPending) sTags.push('pending')
-          if (blobs.length > 1) sTags.push('attachment')
+          const sTags = getTags(subject, isPending, blobs.length > 1)
 
           const blobItems = blobs.map((b: any) => {
             let bn = b.blobNameSuffix || b.name || ''
@@ -473,16 +499,38 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
       setBlobLoading(true)
       try {
         const ownerAddr = mail.from.startsWith('You') ? account?.address?.toString() : mail.addr
+        if (!ownerAddr) throw new Error('Owner address not found')
+
         const blob = await shelbyClient.download({ account: ownerAddr as any, blobName: jsonBlob.name })
         const response = new Response((blob as any).readable)
         const data = await response.blob()
         const text = await data.text()
-        const parsed = JSON.parse(text)
-        const pureAddr = ownerAddr?.replace('to_', '').split('_')[0] || ownerAddr;
-        const decodedBody = `<p><b>Sender (From):</b> ${pureAddr}</p><p><b>To:</b> ${parsed.to}</p><p><b>Subject:</b> ${parsed.subject}</p><hr/>${(parsed.body || '').replace(/\n/g, '<br/>')}`
+        
+        let decodedBody = ''
+        try {
+          const parsed = JSON.parse(text)
+          const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
+          decodedBody = `
+            <div class="decoded-mail">
+              <div class="mail-header-info">
+                <p><b>From:</b> <code>${pureAddr}</code></p>
+                <p><b>To:</b> <code>${parsed.to || 'Unknown'}</code></p>
+                <p><b>Subject:</b> ${parsed.subject || 'No Subject'}</p>
+              </div>
+              <hr/>
+              <div class="mail-text-body">${(parsed.body || '').replace(/\n/g, '<br/>')}</div>
+            </div>
+          `
+        } catch (jsonErr) {
+          // Fallback if not valid JSON mail format
+          decodedBody = `<div class="raw-blob-view"><h3>Raw Blob Data</h3><pre>${text.slice(0, 1000)}${text.length > 1000 ? '...' : ''}</pre></div>`
+        }
+        
         setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: decodedBody }))
-      } catch (e) {
-        // silently fail — user can still click manually
+      } catch (e: any) {
+        if (import.meta.env.DEV) console.error("Fetch blob error:", e)
+        const errMsg = e?.message || String(e)
+        setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: `<div class="fetch-error">⚠️ <b>Failed to fetch message body:</b> ${errMsg}<br/><button onclick="window.location.reload()" style="margin-top:10px; cursor:pointer; padding:4px 12px; background:var(--brand-color); color:white; border:none; border-radius:4px; font-size:11px;">Retry Sync</button></div>` }))
       } finally {
         setBlobLoading(false)
       }
@@ -689,7 +737,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                   await changeNetwork(targetNet);
                 }
               } catch (e) {
-                console.warn("Wallet changeNetwork failed", e)
+                if (import.meta.env.DEV) console.warn("Wallet changeNetwork failed", e)
               }
             }
             showToast(`Switched to ${next}`, 'info')
@@ -747,7 +795,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           <button className="btn-compose" onClick={() => setComposeOpen(true)}>
             New Message
           </button>
-          <button className="btn-compose" style={{ background: 'var(--bg2)', color: 'var(--text2)', marginTop: 8 }} onClick={loadDraft}>
+          <button className="btn-compose" style={{ marginTop: 4 }} onClick={loadDraft}>
             Load Draft
           </button>
 
@@ -762,7 +810,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
             </div>
             <div className={`nav-item ${currentView === 'drafts' ? 'active' : ''}`} onClick={() => selectNav('drafts')}>
               <div className="nav-item-left"><span className="nav-icon">📋</span> Drafts</div>
-              <span className="nav-count" style={{ background: 'var(--text3)' }}>1</span>
+              <span className="nav-count" style={{ background: 'rgba(255,255,255,0.15)' }}>1</span>
             </div>
             <div className={`nav-item ${currentView === 'starred' ? 'active' : ''}`} onClick={() => selectNav('starred')}>
               <div className="nav-item-left"><span className="nav-icon">⭐</span> Starred</div>
@@ -782,13 +830,13 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           <div className="nav-section">
             <div className="nav-label">Labels</div>
             <div className={`nav-item ${currentView === 'defi' ? 'active' : ''}`} onClick={() => selectNav('defi')}>
-              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#00d4aa' }}>●</span> DeFi</div>
+              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#6ee7b7' }}>●</span> DeFi</div>
             </div>
             <div className={`nav-item ${currentView === 'dao' ? 'active' : ''}`} onClick={() => selectNav('dao')}>
-              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#f59e0b' }}>●</span> DAO</div>
+              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#fcd34d' }}>●</span> DAO</div>
             </div>
             <div className={`nav-item ${currentView === 'nft' ? 'active' : ''}`} onClick={() => selectNav('nft')}>
-              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#8b5cf6' }}>●</span> NFT</div>
+              <div className="nav-item-left"><span className="nav-icon" style={{ color: '#c4b5fd' }}>●</span> NFT</div>
             </div>
           </div>
 
@@ -824,7 +872,35 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
           </div>
           <div className="mail-items">
             {filteredMails.length === 0 ? (
-              <div className="empty-state"><div className="empty-icon">📭</div><div>No messages</div></div>
+              <div className="empty-state">
+                <div className="empty-icon">📭</div>
+                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-secondary)' }}>No messages yet</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 200, lineHeight: 1.6 }}>
+                  {connected
+                    ? 'Connect wallet and send blobs to see messages here'
+                    : 'Connect your Aptos wallet to get started'}
+                </div>
+                {!connected && (
+                  <button
+                    onClick={handleConnect}
+                    style={{
+                      marginTop: 12,
+                      padding: '8px 20px',
+                      background: 'var(--brand-color)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 'var(--radius-full)',
+                      fontFamily: 'var(--sans)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(240,64,176,0.35)',
+                    }}
+                  >
+                    Connect Wallet
+                  </button>
+                )}
+              </div>
             ) : (
               filteredMails.map(m => {
                 const [bg, fg] = COLORS[m.color] || COLORS[0]
@@ -844,13 +920,9 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                         <div className="mail-item-preview">{m.preview}</div>
                         {m.tags.length > 0 && (
                           <div className="mail-item-tags">
-                            {m.pending && (
-                              <span className="tag tag-pending">⏳ Pending</span>
-                            )}
-                            {m.tags.filter(t => t !== 'pending').map(t => (
-                              <span key={t} className={`tag tag-${t}`}>
-                                {t === 'shelby' ? '⬡ Shelby' : t === 'aptos' ? '⬡ Aptos' : '🔒 Enc'}
-                              </span>
+                            {m.pending && <Tag type="pending" />}
+                            {m.tags.filter(t => t !== 'pending').slice(0, 3).map(t => (
+                              <Tag key={t} type={t} />
                             ))}
                           </div>
                         )}
@@ -866,10 +938,40 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
         {/* MAIL VIEW */}
         <div className={`mail-view ${mobilePanel === 'list' ? 'mobile-hidden' : ''}`}>
           {!selectedMail ? (
-            <div className="empty-state">
-              <div className="empty-icon">✉</div>
-              <div>Select a message to read</div>
-              <div style={{ fontSize: 10, marginTop: 4, color: 'var(--text3)' }}>Stored on Shelby · Settled on Aptos</div>
+            <div className="empty-state" style={{ gap: 0 }}>
+              <div style={{
+                width: 72, height: 72,
+                background: 'linear-gradient(135deg, var(--brand-color) 0%, var(--brand-color-light) 100%)',
+                borderRadius: 20,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 32, marginBottom: 20,
+                boxShadow: '0 8px 28px rgba(240,64,176,0.35)',
+                animation: 'pulse 3s ease-in-out infinite',
+              }}>✉️</div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text-primary)', marginBottom: 8 }}>
+                AptosBlobs Mail
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.7, maxWidth: 320, textAlign: 'center' }}>
+                Decentralized email powered by{' '}
+                <span style={{ color: 'var(--brand-color)', fontWeight: 600 }}>Shelby Protocol</span>
+                {' '}— stored on-chain, settles on Aptos.
+              </div>
+              <div className="welcome-features">
+                {[
+                  { icon: '⬡', label: 'Blobs stored on Shelby Protocol' },
+                  { icon: '⛓', label: 'Settled on Aptos blockchain' },
+                  { icon: '🔒', label: 'Erasure-coded 8+4 encryption' },
+                  { icon: '📬', label: 'Send to any wallet address' },
+                ].map(f => (
+                  <div key={f.label} className="welcome-feature-item">
+                    <span className="welcome-feature-icon">{f.icon}</span>
+                    {f.label}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 20, fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
+                Stored on Shelby · Settled on Aptos
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -898,7 +1000,7 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
                   <div className="mail-view-actions">
                     <button className="btn-action" onClick={() => { setComposeTo(selectedMail.addr); setComposeSubject(selectedMail.subject.startsWith('Re:') ? selectedMail.subject : 'Re: ' + selectedMail.subject); setComposeBody(`\n\n> On ${selectedMail.time}, ${selectedMail.from} wrote:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↩ Reply</button>
                     <button className="btn-action" onClick={() => { setComposeSubject(selectedMail.subject.startsWith('Fwd:') ? selectedMail.subject : 'Fwd: ' + selectedMail.subject); setComposeBody(`\n\n> Forwarded message from ${selectedMail.from}:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↪ Forward</button>
-                    <button className="btn-action" style={{ color: '#ef4444' }} disabled={isDeleting} onClick={() => handleDeleteMail(selectedMail)}>🗑 {isDeleting ? 'Deleting...' : 'Delete'}</button>
+                    <button className="btn-action" style={{ color: '#de385d', borderColor: '#fecdd3' }} disabled={isDeleting} onClick={() => handleDeleteMail(selectedMail)}>🗑 {isDeleting ? 'Deleting...' : 'Delete'}</button>
                     <button className="btn-action primary" onClick={() => window.open(`https://explorer.aptoslabs.com/account/${account?.address}?network=${currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork}`, '_blank')}>⛓ On-Chain Explorer</button>
                   </div>
                 </div>
@@ -1061,17 +1163,17 @@ function MailApp({ currentNetwork, setCurrentNetwork }: any) {
 
       {/* PREVIEW MODAL */}
       {previewBlob && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>
-          <div style={{ background: 'var(--bg1)', padding: 20, borderRadius: 12, maxWidth: '90vw', maxHeight: '90vh', minWidth: 400, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
-              <h3 style={{ margin: 0, color: 'var(--text1)' }}>{previewBlob.name}</h3>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 24, lineHeight: 1 }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>&times;</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 12, maxWidth: '90vw', maxHeight: '90vh', minWidth: 400, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e5e5', paddingBottom: 14 }}>
+              <h3 style={{ margin: 0, color: '#1a1a1a', fontSize: 16, fontWeight: 700 }}>{previewBlob.name}</h3>
+              <button style={{ background: '#f5f5f5', border: '1px solid #e5e5e5', borderRadius: 8, color: '#666', cursor: 'pointer', fontSize: 18, lineHeight: 1, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>&times;</button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-              {previewBlob.type === 'image' && <img src={previewBlob.url} alt="Preview" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 6 }} />}
+              {previewBlob.type === 'image' && <img src={previewBlob.url} alt="Preview" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} />}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-              <button className="btn-compose" style={{ background: 'var(--bg2)', color: 'var(--text2)' }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>Close</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 14, borderTop: '1px solid #e5e5e5' }}>
+              <button className="btn-action" onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>Close</button>
               <button className="btn-action primary" onClick={() => {
                 const a = document.createElement('a')
                 a.href = previewBlob.url
