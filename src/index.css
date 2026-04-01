@@ -1944,6 +1944,58 @@
     font-size: 14px;
   }
 
+  /* Secure Attachments */
+  .secure-attachments {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed #f1e0f0;
+  }
+
+  .secure-attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .secure-attachment-item {
+    background: #fdfbff;
+    border: 1px solid #f1e0f0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+  }
+
+  .secure-attachment-item span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a3a4a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-secure-download {
+    background: #fff;
+    border: 1px solid var(--brand-color);
+    color: var(--brand-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secure-download:hover {
+    background: var(--brand-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(240, 64, 176, 0.2);
+  }
+
   @media (min-width: 769px) and (max-width: 1100px) {
     .sidebar { width: 180px; }
     .mail-list { width: 280px; }

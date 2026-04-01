@@ -101,6 +101,16 @@ const decryptBody = (text: string) => {
   return text;
 }
 
+/**
+ * Encrypts/Decrypts binary data for attachments.
+ */
+const cryptBinary = (data: Uint8Array) => {
+  const key = 0x53; // Simple XOR mask for 'coba' privacy
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) result[i] = data[i] ^ key;
+  return result;
+}
+
 const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) => {
   let tags = ['shelby', 'blobs']
   const lower = subject.toLowerCase()
@@ -282,6 +292,38 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     localStorage.setItem('aptosblobs_access_mode', accessMode)
     localStorage.setItem('aptosblobs_autosync', String(autoSyncSentHistory))
   }, [accessMode, autoSyncSentHistory])
+
+  // GLOBAL SECURE DOWNLOAD HANDLER
+  useEffect(() => {
+    (window as any).handleSecureDownload = async (owner: string, blobName: string, fileName: string) => {
+      try {
+        showToast(`Decrypting ${fileName}...`, 'info');
+        const blobObj = await shelbyClient.download({ account: owner as any, blobName });
+        const response = new Response((blobObj as any).readable);
+        const data = await response.blob();
+        const arrayBuffer = await data.arrayBuffer();
+        let uint8 = new Uint8Array(arrayBuffer);
+        
+        // Only decrypt if it's a private mail (ends with .bin in this implementation)
+        if (blobName.endsWith('.bin')) {
+          uint8 = cryptBinary(uint8);
+        }
+        
+        const decryptedBlob = new Blob([uint8], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(decryptedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Download complete', 'success');
+      } catch (e: any) {
+        showToast(`Download failed: ${e.message}`, 'error');
+      }
+    };
+  }, [shelbyClient]);
 
   const [aptosPing, setAptosPing] = useState('--')
   const [shelbyPing, setShelbyPing] = useState('--')
@@ -687,8 +729,11 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           }
           const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
           
-          // Legacy support: if only body was encrypted
+          // PRIVACY: Decrypt body if needed
           const finalBody = decryptBody(parsed.body || '');
+          
+          // PRIVACY: Handle Secure Attachments (Metadata)
+          const attachments = parsed.attachments || [];
 
           decodedBody = `
             <div class="decoded-mail ${text.startsWith('🔐') || parsed.body?.startsWith('🔐') ? 'is-private' : ''}">
@@ -700,6 +745,22 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
               </div>
               <hr/>
               <div class="mail-text-body">${(finalBody || '').replace(/\n/g, '<br/>')}</div>
+              
+              ${attachments.length > 0 ? `
+                <div class="secure-attachments">
+                  <p><b>Attachments (Decrypted):</b></p>
+                  <div class="secure-attachment-list">
+                    ${attachments.map((at: any) => `
+                      <div class="secure-attachment-item">
+                        <span>📎 ${at.originalName}</span>
+                        <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}')">
+                          Secure Download
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
             </div>
           `
         } catch (jsonErr) {
@@ -754,29 +815,47 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       
       // PRIVACY: Hash the recipient for the blob name if Mode != Public
       let blobPrefix = `to_${safeComposeTo}`
-      let payloadString = JSON.stringify({ to: composeTo, subject: composeSubject, body: composeBody })
+      let attachmentsMeta = []
       
       if (accessMode !== 'public') {
-        // 1. Hash the blob name
         const hashedTo = await getPrivacyHash(safeComposeTo)
         blobPrefix = `to_${hashedTo}`
+      }
+
+      // 1. Prepare Attachments
+      const formattedBlobs = []
+      for (let i = 0; i < attachedFiles.length; i++) {
+        const file = attachedFiles[i]
+        const arrayBuf = await file.arrayBuffer()
+        let blobData = new Uint8Array(arrayBuf)
+        let blobNameSuffix = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
         
-        // 2. Encrypt the ENTIRE JSON string (Full Privacy)
+        if (accessMode !== 'public') {
+          // Encrypt file binary
+          blobData = cryptBinary(blobData)
+          // Hide filename
+          blobNameSuffix = `part${i}.bin`
+          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}` })
+        } else {
+          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}` })
+        }
+        
+        formattedBlobs.push({ blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}`, blobData })
+      }
+
+      // 2. Prepare Main Mail Payload
+      let payloadObj = { to: composeTo, subject: composeSubject, body: composeBody, attachments: attachmentsMeta }
+      let payloadString = JSON.stringify(payloadObj)
+      
+      if (accessMode !== 'public') {
         payloadString = encryptBody(payloadString)
       }
 
       const textEncoder = new TextEncoder()
       const payloadData = textEncoder.encode(payloadString)
       
-      const formattedBlobs = [
-        { blobName: `${blobPrefix}_${timestamp}-mail.json`, blobData: payloadData }
-      ]
-      
-      for (const file of attachedFiles) {
-        const arrayBuf = await file.arrayBuffer()
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-        formattedBlobs.push({ blobName: `${blobPrefix}_${timestamp}-${safeName}`, blobData: new Uint8Array(arrayBuf) })
-      }
+      // Add the mail.json as the first blob
+      formattedBlobs.unshift({ blobName: `${blobPrefix}_${timestamp}-mail.json`, blobData: payloadData })
       
       // Per docs: signer must use account.accountAddress (AccountAddress), not account object
       // Per wallet adapter docs: AccountInfo.address is the AccountAddress
