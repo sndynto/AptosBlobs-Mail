@@ -225,6 +225,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   // Auto-fetch blob content state
   const [blobLoading, setBlobLoading] = useState(false)
   const [blobBodyCache, setBlobBodyCache] = useState<Record<number, string>>({})
+  const [realSubjects, setRealSubjects] = useState<Record<number, string>>({})
 
   const [aptosPing, setAptosPing] = useState('--')
   const [shelbyPing, setShelbyPing] = useState('--')
@@ -233,23 +234,19 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   const isPetraApp = typeof window !== 'undefined' && !!(window as any).aptos
 
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
     const ping = async () => {
       try {
-        // Per docs: Aptos testnet URL, shelbynet uses api.shelbynet.shelby.xyz
         const mappedNet = currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork
         const aptosNode = currentNetwork === 'shelbynet'
           ? 'https://api.shelbynet.shelby.xyz/v1'
           : `https://api.${mappedNet}.aptoslabs.com/v1`
-        const shelbyNode = currentNetwork === 'shelbynet'
-          ? 'https://api.shelbynet.shelby.xyz/v1'
-          : `https://api.testnet.shelby.xyz/v1`
-
         const startAptos = Date.now()
         await fetch(aptosNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
         setAptosPing(String(Date.now() - startAptos))
-
+        
         const startShelby = Date.now()
-        await fetch(shelbyNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
+        await fetch(currentNetwork === 'shelbynet' ? 'https://api.shelbynet.shelby.xyz/v1' : 'https://api.testnet.shelby.xyz/v1', { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
         setShelbyPing(String(Date.now() - startShelby))
       } catch (e) {}
     }
@@ -582,6 +579,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         let decodedBody = ''
         try {
           const parsed = JSON.parse(text)
+          if (parsed.subject) {
+            setRealSubjects(prev => ({ ...prev, [selectedMailId]: parsed.subject }))
+          }
           const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
           decodedBody = `
             <div class="decoded-mail">
@@ -889,28 +889,30 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         </div>
       )}
 
-      {/* STATS BAR */}
-      <div className="stats-bar">
-        <div className="stat-item ok">
-          <div className="dot"></div>
-          Aptos RPC <span className="stat-val">{aptosPing}ms</span>
+      {/* STATS BAR (Dev only) */}
+      {import.meta.env.DEV && (
+        <div className="stats-bar">
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Aptos RPC <span className="stat-val">{aptosPing}ms</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Shelby RPC <span className="stat-val">{shelbyPing}ms</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item warn">
+            <div className="dot" style={{ background: 'var(--shelby)' }}></div>
+            Storage Providers <span className="stat-val">7 active</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Erasure Coding <span className="stat-val">8+4</span>
+          </div>
         </div>
-        <div className="separator"></div>
-        <div className="stat-item ok">
-          <div className="dot"></div>
-          Shelby RPC <span className="stat-val">{shelbyPing}ms</span>
-        </div>
-        <div className="separator"></div>
-        <div className="stat-item warn">
-          <div className="dot" style={{ background: 'var(--shelby)' }}></div>
-          Storage Providers <span className="stat-val">7 active</span>
-        </div>
-        <div className="separator"></div>
-        <div className="stat-item ok">
-          <div className="dot"></div>
-          Erasure Coding <span className="stat-val">8+4</span>
-        </div>
-      </div>
+      )}
 
       {/* LAYOUT */}
       <div className="layout">
@@ -1114,7 +1116,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                     <span>Blob is <b>Pending</b> — awaiting on-chain confirmation. Auto-refreshing every 5s...</span>
                   </div>
                 )}
-                <div className="mail-view-subject">{selectedMail.subject}</div>
+                <div className="mail-view-subject">{realSubjects[selectedMail.id] || selectedMail.subject}</div>
                 <div className="mail-view-meta">
                   <div className="mail-meta-left">
                     <div className="avatar-lg" style={{ background: COLORS[selectedMail.color]![0], color: COLORS[selectedMail.color]![1] }}>
