@@ -1017,20 +1017,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         expirationMicros: Date.now() * 1000 + 86400000000, // 1 day in microseconds per docs
       })
       
-      // Sending native Aptos notification transfer logic: Option 2
-      showToast('Shelby Upload complete! Sending native Aptos notification...', 'info');
-      try {
-        await signAndSubmitTransaction({
-          data: {
-            function: "0x1::aptos_account::transfer",
-            typeArguments: [],
-            functionArguments: [composeTo, "100"], // Send 100 Octa ping
-          } as any
-        });
-        showToast('✓ Message sent & recipient notified on-chain!', 'success')
-      } catch (e: any) {
-        showToast('✓ Message stored on Shelby, but notification tx skipped.', 'info')
-      }
+      showToast('✓ Message sent successfully to Shelby Storage!', 'success')
 
       setComposeOpen(false)
       
