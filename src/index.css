@@ -1907,9 +1907,355 @@
     .mail-list-title { font-size: 16px; }
   }
 
+  /* Privacy Indicators */
+  .mail-item.private::after {
+    content: '🔒';
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  .decoded-mail.is-private {
+    border: 1px solid rgba(240, 64, 176, 0.1);
+    background: linear-gradient(180deg, #fffcfd 0%, #fff 100%);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .privacy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fdf2f8;
+    color: #be185d;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+    border: 1px solid #fbcfe8;
+  }
+
+  .mail-text-body {
+    line-height: 1.6;
+    color: #333;
+    font-size: 14px;
+  }
+
   @media (min-width: 769px) and (max-width: 1100px) {
     .sidebar { width: 180px; }
     .mail-list { width: 280px; }
     .nav-item { font-size: 12.5px; }
     .logo { font-size: 18px; }
+  }
+
+  /* ===========================
+     ACCESS CONTROL (ALLOWLIST)
+     =========================== */
+  .access-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .access-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .access-modal {
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: #ffffff;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .access-overlay.open .access-modal {
+    transform: translateY(0);
+  }
+
+  .access-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 480px;
+  }
+
+  /* Left Sidebar Tabs */
+  .access-sidebar {
+    width: 240px;
+    background: #fdfbff;
+    border-right: 1px solid #f1e0f0;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .access-tab {
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    user-select: none;
+    text-align: left;
+    background: transparent;
+  }
+
+  .access-tab:hover {
+    background: #fef0f7;
+    border-color: #fce4f3;
+  }
+
+  .access-tab.active {
+    background: #fff;
+    border-color: #fce4f3;
+    box-shadow: 0 4px 12px rgba(240, 64, 176, 0.08);
+  }
+
+  .access-tab-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .access-radio {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .access-tab.active .access-radio {
+    border-color: var(--brand-color);
+  }
+
+  .access-tab.active .access-radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: var(--brand-color);
+    border-radius: 50%;
+  }
+
+  .access-tab-label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #4a3a4a;
+  }
+
+  .access-tab-desc {
+    font-size: 11px;
+    color: #888;
+    margin-left: 30px;
+  }
+
+  /* Right Side Content */
+  .access-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .access-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #331d30;
+    margin-bottom: 8px;
+  }
+
+  .access-subtitle {
+    font-size: 13px;
+    color: #776a75;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .access-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #4a3a4a;
+  }
+
+  .btn-add-addr {
+    background: transparent;
+    border: none;
+    color: #c0007a;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-add-addr:hover {
+    color: var(--brand-color);
+  }
+
+  .addr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .addr-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .addr-input-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .addr-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #f9f7f9;
+    border: 2px solid #f1edf1;
+    border-radius: 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .addr-input:focus {
+    background: #fff;
+    border-color: #e8d7e8;
+    box-shadow: 0 4px 12px rgba(192, 0, 122, 0.05);
+  }
+
+  .btn-remove-addr {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #f1edf1;
+    border-radius: 8px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-remove-addr:hover {
+    background: #fff0f0;
+    color: #de385d;
+    border-color: #fecaca;
+  }
+
+  .auto-sync-banner {
+    background: #fdf5ff;
+    border: 1px dashed #e8d0e8;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .auto-sync-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #8a5a8a;
+    font-weight: 500;
+  }
+
+  .access-footer {
+    padding: 20px 40px;
+    border-top: 1px solid #f1edf1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #ffffff;
+    flex-shrink: 0;
+  }
+
+  .btn-access-cancel {
+    padding: 10px 24px;
+    background: #fff;
+    border: 1px solid #f1edf1;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #776a75;
+    cursor: pointer;
+  }
+
+  .btn-access-save {
+    padding: 10px 32px;
+    background: var(--brand-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(240, 64, 176, 0.3);
+  }
+
+  .btn-access-save:hover {
+    background: var(--brand-color-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(240, 64, 176, 0.4);
+  }
+
+  /* Mobile adjustments for access control */
+  @media (max-width: 768px) {
+    .access-modal {
+      max-height: 100vh;
+      border-radius: 0;
+    }
+    .access-body {
+      flex-direction: column;
+    }
+    .access-sidebar {
+      width: 100%;
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 10px;
+      white-space: nowrap;
+    }
+    .access-tab {
+      padding: 8px 12px;
+    }
+    .access-tab-desc { display: none; }
+    .access-content { padding: 20px; }
   }

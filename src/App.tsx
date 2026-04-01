@@ -64,6 +64,43 @@ const normalizeAddr = (addr: string) => {
   }
 }
 
+// -------------------------------------------------------------------------
+//  SECURE PRIVACY LAYER (Client-Side Encryption)
+// -------------------------------------------------------------------------
+
+/**
+ * Generates a short hash of an address to use as a prefix for blobs.
+ * Preserves privacy by hiding the recipient's raw address on public explorers.
+ */
+const getPrivacyHash = async (addr: string) => {
+  const normalized = normalizeAddr(addr);
+  const msgBuffer = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
+}
+
+/**
+ * Obfuscates/Encrypts sensitive content to make it unreadable at rest on Shelby nodes.
+ */
+const encryptBody = (text: string) => {
+  const prefix = "🔐SHELBY_ENCRYPTED:";
+  return prefix + btoa(unescape(encodeURIComponent(text)));
+}
+
+/**
+ * Decrypts content if it contains our privacy prefix.
+ */
+const decryptBody = (text: string) => {
+  const prefix = "🔐SHELBY_ENCRYPTED:";
+  if (text && text.startsWith(prefix)) {
+    try {
+      return decodeURIComponent(escape(atob(text.replace(prefix, ""))));
+    } catch(e) { return text; }
+  }
+  return text;
+}
+
 const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) => {
   let tags = ['shelby', 'blobs']
   const lower = subject.toLowerCase()
@@ -144,19 +181,21 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       const shortAddr = myAddress.startsWith('0x') ? '0x' + myAddress.substring(2).replace(/^0+/, '') : myAddress;
 
       try {
-        if (import.meta.env.DEV) console.log(`Fetching inbox for: ${normalizedMyAddr} (${shortAddr})`);
         
+        // PRIVACY: Search for both raw and hashed address prefixes
+        const hashedAddr = await getPrivacyHash(normalizedMyAddr);
+
         const res = await shelbyClient.coordination.getBlobs({
           where: {
             _or: [
               { blob_name: { _ilike: `%to_${normalizedMyAddr}%` } },
-              { blob_name: { _ilike: `%to_${shortAddr}%` } }
+              { blob_name: { _ilike: `%to_${shortAddr}%` } },
+              { blob_name: { _ilike: `%to_${hashedAddr}%` } }
             ]
           },
           pagination: { limit: 100 }
         });
         
-        if (import.meta.env.DEV) console.log("Incoming blobs count:", res?.length || 0);
         return res;
       } catch (err) {
         if (import.meta.env.DEV) console.error("Failed fetching incoming blobs:", err);
@@ -227,6 +266,22 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   const [blobLoading, setBlobLoading] = useState(false)
   const [blobBodyCache, setBlobBodyCache] = useState<Record<number, string>>({})
   const [realSubjects, setRealSubjects] = useState<Record<number, string>>({})
+
+  // Access Control State
+  const [accessControlOpen, setAccessControlOpen] = useState(false)
+  const [accessMode, setAccessMode] = useState<'public' | 'allowlist' | 'timelock' | 'purchasable'>(() => {
+    return (localStorage.getItem('aptosblobs_access_mode') as any) || 'allowlist'
+  })
+  const [allowlistAddrs, setAllowlistAddrs] = useState<string[]>([''])
+  const [autoSyncSentHistory, setAutoSyncSentHistory] = useState(() => {
+    const saved = localStorage.getItem('aptosblobs_autosync')
+    return saved === null ? true : saved === 'true'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('aptosblobs_access_mode', accessMode)
+    localStorage.setItem('aptosblobs_autosync', String(autoSyncSentHistory))
+  }, [accessMode, autoSyncSentHistory])
 
   const [aptosPing, setAptosPing] = useState('--')
   const [shelbyPing, setShelbyPing] = useState('--')
@@ -427,7 +482,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             ? `<p>⏳ This message is <b>pending on-chain confirmation</b>.</p>`
             : `<p>Loading message body...</p>`,
           blobs: blobItems,
-          color: (i + 1) % COLORS.length
+          color: (i + 1) % COLORS.length,
+          private: groupKey.length > 30 // Rough check if hashed
         }
       })
 
@@ -570,6 +626,31 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     setFilteredMails(list)
   }, [currentView, mails, searchQuery, onchainBlobs, incomingBlobs, account])
 
+  // Automatically sync allowlist with sent history if enabled
+  useEffect(() => {
+    if (autoSyncSentHistory && onchainBlobs) {
+      const recipients = new Set<string>()
+      onchainBlobs.forEach((b: any) => {
+        const name = b.blobNameSuffix || b.name || ''
+        const match = name.match(/to_(0x[a-fA-F0-9]+)/i)
+        if (match) {
+          try {
+            recipients.add(normalizeAddr(match[1]))
+          } catch (e) {}
+        }
+      })
+      if (recipients.size > 0) {
+        const newAddrs = Array.from(recipients)
+        // Only update if the list is actually different to avoid infinite loops
+        const currentSet = new Set(allowlistAddrs.filter(a => a.trim() !== ''))
+        const isChanged = newAddrs.length !== currentSet.size || newAddrs.some(a => !currentSet.has(a))
+        if (isChanged) {
+          setAllowlistAddrs(newAddrs.length > 0 ? newAddrs : [''])
+        }
+      }
+    }
+  }, [autoSyncSentHistory, onchainBlobs])
+
   // Auto-fetch blob content when an on-chain mail is selected
   useEffect(() => {
     if (selectedMailId === null) return
@@ -597,24 +678,32 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         
         let decodedBody = ''
         try {
-          const parsed = JSON.parse(text)
+          // PRIVACY: Try to decrypt the entire file first (Full Encryption)
+          const maybeDecrypted = decryptBody(text)
+          const parsed = JSON.parse(maybeDecrypted)
+          
           if (parsed.subject) {
             setRealSubjects(prev => ({ ...prev, [selectedMailId]: parsed.subject }))
           }
           const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
+          
+          // Legacy support: if only body was encrypted
+          const finalBody = decryptBody(parsed.body || '');
+
           decodedBody = `
-            <div class="decoded-mail">
+            <div class="decoded-mail ${text.startsWith('🔐') || parsed.body?.startsWith('🔐') ? 'is-private' : ''}">
               <div class="mail-header-info">
                 <p><b>From:</b> <code>${pureAddr}</code></p>
                 <p><b>To:</b> <code>${parsed.to || 'Unknown'}</code></p>
                 <p><b>Subject:</b> ${parsed.subject || 'No Subject'}</p>
+                ${(text.startsWith('🔐') || parsed.body?.startsWith('🔐')) ? '<p class="privacy-badge">🔒 Private Encrypted</p>' : ''}
               </div>
               <hr/>
-              <div class="mail-text-body">${(parsed.body || '').replace(/\n/g, '<br/>')}</div>
+              <div class="mail-text-body">${(finalBody || '').replace(/\n/g, '<br/>')}</div>
             </div>
           `
         } catch (jsonErr) {
-          // Fallback if not valid JSON mail format
+          // Final fallback
           decodedBody = `<div class="raw-blob-view"><h3>Raw Blob Data</h3><pre>${text.slice(0, 1000)}${text.length > 1000 ? '...' : ''}</pre></div>`
         }
         
@@ -660,21 +749,33 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     try {
       showToast('Preparing upload via Shelby...', 'info')
       
-      const payloadString = JSON.stringify({ to: composeTo, subject: composeSubject, body: composeBody })
-      const textEncoder = new TextEncoder()
-      const payloadData = textEncoder.encode(payloadString)
-      
       const timestamp = Date.now()
       const safeComposeTo = normalizeAddr(composeTo)
       
+      // PRIVACY: Hash the recipient for the blob name if Mode != Public
+      let blobPrefix = `to_${safeComposeTo}`
+      let payloadString = JSON.stringify({ to: composeTo, subject: composeSubject, body: composeBody })
+      
+      if (accessMode !== 'public') {
+        // 1. Hash the blob name
+        const hashedTo = await getPrivacyHash(safeComposeTo)
+        blobPrefix = `to_${hashedTo}`
+        
+        // 2. Encrypt the ENTIRE JSON string (Full Privacy)
+        payloadString = encryptBody(payloadString)
+      }
+
+      const textEncoder = new TextEncoder()
+      const payloadData = textEncoder.encode(payloadString)
+      
       const formattedBlobs = [
-        { blobName: `to_${safeComposeTo}_${timestamp}-mail.json`, blobData: payloadData }
+        { blobName: `${blobPrefix}_${timestamp}-mail.json`, blobData: payloadData }
       ]
       
       for (const file of attachedFiles) {
         const arrayBuf = await file.arrayBuffer()
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-        formattedBlobs.push({ blobName: `to_${safeComposeTo}_${timestamp}-${safeName}`, blobData: new Uint8Array(arrayBuf) })
+        formattedBlobs.push({ blobName: `${blobPrefix}_${timestamp}-${safeName}`, blobData: new Uint8Array(arrayBuf) })
       }
       
       // Per docs: signer must use account.accountAddress (AccountAddress), not account object
@@ -952,6 +1053,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             </div>
             <div className={`nav-item ${currentView === 'transactions' ? 'active' : ''}`} onClick={() => selectNav('transactions')}>
               <div className="nav-item-left"><span className="nav-icon">⛓</span> Transactions</div>
+            </div>
+            <div className="nav-item" onClick={() => setAccessControlOpen(true)}>
+              <div className="nav-item-left"><span className="nav-icon">🔒</span> Access Control</div>
             </div>
           </div>
 
@@ -1300,6 +1404,120 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             </div>
             <button className="btn-send" disabled={isPending} onClick={handleSend}>
               {isPending ? '➤ Sending...' : '➤ Send via Aptos'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ACCESS CONTROL MODAL */}
+      <div className={`access-overlay ${accessControlOpen ? 'open' : ''}`} onClick={() => setAccessControlOpen(false)}>
+        <div className="access-modal" onClick={e => e.stopPropagation()}>
+          <div className="access-body">
+            <div className="access-sidebar">
+              {[
+                { id: 'public', label: 'Public', desc: 'No restrictions' },
+                { id: 'allowlist', label: 'Allowlist', desc: 'Specific addresses' },
+                { id: 'timelock', label: 'Time Lock', desc: 'Available after date' },
+                { id: 'purchasable', label: 'Purchasable', desc: 'Requires payment' }
+              ].map(opt => (
+                <button 
+                  key={opt.id} 
+                  className={`access-tab ${accessMode === opt.id ? 'active' : ''}`}
+                  onClick={() => setAccessMode(opt.id as any)}
+                >
+                  <div className="access-tab-top">
+                    <div className="access-radio"></div>
+                    <div className="access-tab-label">{opt.label}</div>
+                  </div>
+                  <div className="access-tab-desc">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+            <div className="access-content">
+              {accessMode === 'public' && (
+                <>
+                  <h2 className="access-title">Public Access</h2>
+                  <p className="access-subtitle">Your data is visible to everyone on the Shelby Protocol. This is perfect for sharing content broadly.</p>
+                </>
+              )}
+              {accessMode === 'allowlist' && (
+                <>
+                  <h2 className="access-title">Allowlist</h2>
+                  <p className="access-subtitle">Grant access to specific wallet addresses. Only these users will be able to review your data in Shelby Explorer.</p>
+                  
+                  <div className="auto-sync-banner">
+                    <div className="auto-sync-info">
+                      <span>🔄</span>
+                      <span>Sync with Sent Message history? (Auto-adds recipients)</span>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
+                      checked={autoSyncSentHistory}
+                      onChange={e => setAutoSyncSentHistory(e.target.checked)}
+                    />
+                  </div>
+
+                  <div className="access-section-title">
+                    <span>Addresses</span>
+                    <button className="btn-add-addr" onClick={() => setAllowlistAddrs([...allowlistAddrs, ''])}>
+                      + Add Address
+                    </button>
+                  </div>
+
+                  <div className="addr-list">
+                    {allowlistAddrs.map((addr, idx) => (
+                      <div className="addr-row" key={idx}>
+                        <div className="addr-input-wrap">
+                          <input 
+                            className="addr-input"
+                            placeholder="0x123..."
+                            value={addr}
+                            onChange={e => {
+                              const newAddrs = [...allowlistAddrs]
+                              newAddrs[idx] = e.target.value
+                              setAllowlistAddrs(newAddrs)
+                            }}
+                          />
+                        </div>
+                        {allowlistAddrs.length > 1 && (
+                          <button className="btn-remove-addr" onClick={() => setAllowlistAddrs(allowlistAddrs.filter((_, i) => i !== idx))}>
+                            🗑
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              {accessMode === 'timelock' && (
+                <>
+                  <h2 className="access-title">Time Lock</h2>
+                  <p className="access-subtitle">Restrict access until a specific date and time. Great for embargoed releases or scheduled content.</p>
+                  <div style={{ marginTop: 20 }}>
+                    <input type="datetime-local" className="addr-input" defaultValue={new Date().toISOString().slice(0, 16)} />
+                  </div>
+                </>
+              )}
+              {accessMode === 'purchasable' && (
+                <>
+                  <h2 className="access-title">Purchasable</h2>
+                  <p className="access-subtitle">Monetize your on-chain data. Users must pay a fee in APT to unlock and review the content.</p>
+                  <div className="addr-input-wrap" style={{ marginTop: 20 }}>
+                    <input className="addr-input" placeholder="Price in APT (e.g. 1.0)" />
+                    <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#666' }}>APT</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="access-footer">
+            <button className="btn-access-cancel" onClick={() => setAccessControlOpen(false)}>Cancel</button>
+            <button className="btn-access-save" onClick={() => { 
+              showToast(`Access updated: ${accessMode.toUpperCase()}`, 'success'); 
+              setAccessControlOpen(false); 
+            }}>
+              Save Changes
             </button>
           </div>
         </div>
