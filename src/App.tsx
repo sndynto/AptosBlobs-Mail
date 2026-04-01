@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import gsap from 'gsap'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { useUploadBlobs, useAccountBlobs, useDeleteBlobs } from '@shelby-protocol/react'
 import { useQuery } from '@tanstack/react-query'
@@ -254,6 +255,22 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     const interval = setInterval(ping, 10000)
     return () => clearInterval(interval)
   }, [currentNetwork])
+
+  // Premium Entry Animation with GSAP (All-Device optimized)
+  const mainRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!mainRef.current) return
+    const ctx = gsap.context(() => {
+      gsap.from(".layout", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        delay: 0.2
+      })
+    }, mainRef)
+    return () => ctx.revert()
+  }, [])
 
   // Auto-refresh pending blobs every 5s until all are confirmed
   useEffect(() => {
@@ -801,7 +818,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   }
 
   return (
-    <>
+    <div ref={mainRef} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <div className="topbar">
         {/* Mobile: hamburger menu */}
         <button className="mobile-menu-btn" onClick={() => setMobileSidebarOpen(true)} aria-label="Open menu">
@@ -891,30 +908,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         </div>
       )}
 
-      {/* STATS BAR (Dev only) */}
-      {import.meta.env.DEV && (
-        <div className="stats-bar">
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Aptos RPC <span className="stat-val">{aptosPing}ms</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Shelby RPC <span className="stat-val">{shelbyPing}ms</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item warn">
-            <div className="dot" style={{ background: 'var(--shelby)' }}></div>
-            Storage Providers <span className="stat-val">7 active</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Erasure Coding <span className="stat-val">8+4</span>
-          </div>
-        </div>
-      )}
+
 
       {/* LAYOUT */}
       <div className="layout">
@@ -1231,6 +1225,31 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         </button>
       </nav>
 
+      {/* STATS BAR (Dev only - moved to bottom) */}
+      {import.meta.env.DEV && (
+        <div className="stats-bar" style={{ borderTop: '1px solid #f0e8f5', borderBottom: 'none' }}>
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Aptos RPC <span className="stat-val">{aptosPing}ms</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Shelby RPC <span className="stat-val">{shelbyPing}ms</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item warn">
+            <div className="dot" style={{ background: 'var(--shelby)' }}></div>
+            Storage Providers <span className="stat-val">7 active</span>
+          </div>
+          <div className="separator"></div>
+          <div className="stat-item ok">
+            <div className="dot"></div>
+            Erasure Coding <span className="stat-val">8+4</span>
+          </div>
+        </div>
+      )}
+
       {/* COMPOSE OVERLAY */}
       <div className={`compose-overlay ${composeOpen ? 'open' : ''}`} onClick={(e) => e.target === e.currentTarget && setComposeOpen(false)}>
         <div className="compose-panel">
@@ -1318,6 +1337,6 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

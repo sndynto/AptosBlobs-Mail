@@ -916,7 +916,7 @@
 
   .mail-view-subject {
     font-family: var(--sans);
-    font-size: 22px;
+    font-size: clamp(18px, 2.5vw, 22px);
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 14px;
@@ -1839,7 +1839,7 @@
       padding: 16px;
     }
 
-    /* Bottom nav */
+    /* Bottom nav with Safe Area support */
     .mobile-bottom-nav {
       display: flex;
       position: relative;
@@ -1847,6 +1847,7 @@
       background: white;
       border-top: 1px solid var(--border-light);
       padding: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0); 
       flex-shrink: 0;
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
