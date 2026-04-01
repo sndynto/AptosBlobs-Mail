@@ -329,7 +329,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   }
 
   useEffect(() => {
-    let list = [...mails]
+    // Only show mock/local messages if wallet is NOT connected
+    let list = connected ? [] : [...mails]
     
     // Merge onchain blobs into the inbox view — grouped by send operation (same timestamp in name)
     if (incomingBlobs && incomingBlobs.length > 0) {
