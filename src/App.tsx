@@ -797,9 +797,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           // ACCESS CONTROL: Check if this message was for us or we are in the allowlist
           const effectiveAllowlist = parsed.allowlist || [];
           const isOwner = mail.from.startsWith('You') || normalizeAddr(mail.addr || '') === normalizeAddr(myAddress || '');
-          const isAllowlisted = effectiveAllowlist.some((a: string) => normalizeAddr(a) === normalizeAddr(myAddress || ''));
+          const isRecipient = normalizeAddr(parsed.to || '') === normalizeAddr(myAddress || '');
+          const isAllowlisted = Array.isArray(effectiveAllowlist) && effectiveAllowlist.some((a: string) => normalizeAddr(a) === normalizeAddr(myAddress || ''));
           
-          if (parsed.accessMode === 'allowlist' && !isOwner && !isAllowlisted) {
+          if (parsed.accessMode === 'allowlist' && !isOwner && !isRecipient && !isAllowlisted) {
             decodedBody = `
               <div class="access-denied">
                 <h3>🔴 Access Denied</h3>
@@ -947,7 +948,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         subject: composeSubject, 
         body: composeBody, 
         attachments: attachmentsMeta,
-        allowlist: accessMode === 'allowlist' ? allowlistAddrs.filter(a => !!a.trim()) : null,
+        allowlist: accessMode === 'allowlist' 
+          ? Array.from(new Set([safeComposeTo, ...allowlistAddrs.filter(a => !!a.trim()).map(a => normalizeAddr(a))]))
+          : null,
         accessMode
       }
       let payloadString = JSON.stringify(payloadObj)
@@ -1641,6 +1644,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                 <>
                   <h2 className="access-title">Allowlist</h2>
                   <p className="access-subtitle">Grant access to specific wallet addresses. Only these users will be able to review your data in Shelby Explorer.</p>
+                  
+                  <div style={{ padding: '8px 12px', background: 'rgba(96,1,210,0.06)', borderRadius: 8, fontSize: 11, color: '#6001D2', marginBottom: 16, border: '1px dashed rgba(96,1,210,0.2)' }}>
+                    <b>Pro-Tip:</b> The recipient in your "To" field is automatically allowlisted.
+                  </div>
                   
                   <div className="auto-sync-banner">
                     <div className="auto-sync-info">
