@@ -52,10 +52,14 @@ const normalizeAddr = (addr: string) => {
   try {
     if (!addr || addr === '0x') return addr;
     let clean = addr.trim().toLowerCase();
+    // Strip common prefixes like 'to_0x...' or internal routing labels
+    clean = clean.replace(/^to_/, '').split('_')[0];
     if (!clean.startsWith('0x')) clean = '0x' + clean;
+    // Ensure 64-character canonical form for Shelby Indexer
     return AccountAddress.from(clean).toString();
   } catch (e) {
-    return addr.toLowerCase().trim(); 
+    // If it fails, strip known prefix anyway but return as is
+    return addr.replace(/^to_/, '').split('_')[0].toLowerCase().trim();
   }
 }
 
@@ -121,8 +125,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   const { mutateAsync: deleteBlobs, isPending: isDeleting } = useDeleteBlobs({ client: shelbyClient })
   const { data: onchainBlobs, isLoading: isBlobsLoading, refetch: refetchBlobs } = useAccountBlobs({ 
     client: shelbyClient, 
-    account: account?.address?.toString() || '0x0000000000000000000000000000000000000000000000000000000000000001', 
-    pagination: { limit: 50 }
+    account: normalizeAddr(account?.address?.toString() || '0x0000000000000000000000000000000000000000000000000000000000000001'), 
+    pagination: { limit: 100 }
   })
   
   // Custom fetch for incoming blobs destined to our address
@@ -445,17 +449,23 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     if (currentView === 'sent') {
       // Sent view: group blobs by timestamp prefix (same send operation)
       if (onchainBlobs && onchainBlobs.length > 0) {
-        const getSentGroupKey = (rawName: string) => {
+        const getSentGroupKey = (b: any) => {
+          const rawName = b.blobNameSuffix || b.name || ''
+          const ts = b.creationMicros || 0
+          const owner = b.owner || b.account || ''
+          
           let name = rawName
           if (name.startsWith('@')) name = name.split('/').slice(1).join('/')
-          // format: to_<addr>_<ts>-<filename>  OR any other blob name
+          
           const match = name.match(/^(to_[^_]+_\d+)/i)
-          return match ? match[1] : name
+          if (match) return `prefix_${match[1]}`
+          
+          if (ts) return `ts_${Math.floor(Number(ts)/1000000)}_${owner}`
+          return name
         }
         const sentGroups = new Map<string, typeof onchainBlobs>()
         for (const b of onchainBlobs) {
-          const rawName = (b as any).blobNameSuffix || b.name || ''
-          const key = getSentGroupKey(rawName)
+          const key = getSentGroupKey(b)
           if (!sentGroups.has(key)) sentGroups.set(key, [])
           sentGroups.get(key)!.push(b)
         }
@@ -472,12 +482,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             || blobStatus === 'pending' || blobStatus === 'processing' || blobStatus === 'unconfirmed'
           const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
 
-          let subject = groupKey
+          let subject = groupKey.replace(/^prefix_to_[^_]+_\d+-?/, '').replace(/^prefix_/, '').replace(/^ts_\d+_/, '')
           const jsonBlob = blobs.find((b: any) => (b.blobNameSuffix || b.name || '').endsWith('.json')) as any
           if (jsonBlob) {
             const rawN = jsonBlob.blobNameSuffix || jsonBlob.name || ''
-            const after = rawN.replace(/^to_[^_]+_\d+-/, '').replace(/\.json$/, '')
-            if (after) subject = after
+            // Enhanced cleanup: remove to_0x..._timestamp- from the start
+            const cleaner = rawN.replace(/^to_[^_]+_\d+-?/, '').replace(/\.json$/, '')
+            if (cleaner) subject = cleaner
           }
 
           const sTags = getTags(subject, isPending, blobs.length > 1)
@@ -538,8 +549,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       )
     }
 
-    // Final Sort: terbaru paling atas
-    list = [...list].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+    // Final Sort: terbaru paling atas (Strict timestamp first)
+    list = [...list].sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0))
     setFilteredMails(list)
   }, [currentView, mails, searchQuery, onchainBlobs, incomingBlobs, account])
 
@@ -558,8 +569,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     const fetchBlobBody = async () => {
       setBlobLoading(true)
       try {
-        const ownerAddr = mail.from.startsWith('You') ? account?.address?.toString() : mail.addr
-        if (!ownerAddr) throw new Error('Owner address not found')
+        const ownerAddr = mail.from.startsWith('You') 
+          ? normalizeAddr(account?.address?.toString() || '') 
+          : normalizeAddr(mail.addr || '')
+        if (!ownerAddr || ownerAddr === '0x') throw new Error('Owner address not found')
 
         const blob = await shelbyClient.download({ account: ownerAddr as any, blobName: jsonBlob.name })
         const response = new Response((blob as any).readable)
