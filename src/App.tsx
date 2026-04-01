@@ -356,6 +356,31 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     localStorage.setItem('aptosblobs_autosync', String(autoSyncSentHistory))
   }, [accessMode, autoSyncSentHistory])
 
+  // Smart Discovery: Gather all potential salt addresses from interaction history
+  const [knownSalts, setKnownSalts] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    const salts = new Set<string>()
+    if (myAddress) salts.add(normalizeAddr(myAddress))
+    
+    // 1. All senders from Inbox
+    if (incomingBlobs) {
+      incomingBlobs.forEach((b: any) => {
+        const s = (b.owner || b.account || b.creator || '').toString()
+        if (s && s !== '0x') { try { salts.add(normalizeAddr(s)) } catch (e) {} }
+      })
+    }
+    
+    // 2. All recipients from unhashed sent blobs
+    if (onchainBlobs) {
+      onchainBlobs.forEach((b: any) => {
+        const name = b.blobNameSuffix || b.name || ''
+        const match = name.match(/to_(0x[a-fA-F0-9]+)/i)
+        if (match && match[1].length >= 30) { try { salts.add(normalizeAddr(match[1])) } catch (e) {} }
+      })
+    }
+    setKnownSalts(salts)
+  }, [incomingBlobs, onchainBlobs, myAddress])
+
   // GLOBAL SECURE DOWNLOAD HANDLER
   useEffect(() => {
     (window as any).handleSecureDownload = async (owner: string, blobName: string, fileName: string, iv?: string, saltAddr?: string) => {
@@ -369,8 +394,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         
         // Only decrypt if it's a private mail (ends with .bin in this implementation)
         if (blobName.endsWith('.bin') && iv) {
-          // Use saltAddr (recipient) if provided, otherwise fallback to owner (sender)
-          uint8 = await decryptBinary(uint8, saltAddr || owner, iv);
+          // AUTO-DECRYPT: Always use the sender (owner) as the salt
+          uint8 = await decryptBinary(uint8, owner, iv);
         } else if (blobName.endsWith('.bin') && !iv) {
           // Legacy XOR fallback for old messages
           const key = 0x53;
@@ -694,7 +719,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             id: -1000 - i,
             unread: isPending,
             pending: isPending,
-            from: 'You (sent)',
+            // NORMALIZATION: Show the recipient if known from metadata, otherwise fall back
+            from: `To: ${formatAddr(groupKey.replace('prefix_to_', '').split('_')[0])}`,
             addr: account?.address?.toString() || '0x',
             subject,
             preview: isPending
@@ -789,9 +815,21 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         
         let decodedBody = ''
         try {
-          // PRIVACY: Try to decrypt the entire file first (Full Encryption)
-          // We use the recipient address (which is US) as the salt for the thread key
-          const maybeDecrypted = await decryptBody(text, myAddress || '0x')
+          // AUTO-DECRYPT: First try the SENDER (new protocol)
+          let maybeDecrypted = await decryptBody(text, ownerAddr)
+          
+          // RECOVERY: If decryption failed (likely an old message), try known salts (Inbox senders, etc.)
+          if (maybeDecrypted.includes('Decryption Error')) {
+            for (const salt of Array.from(knownSalts)) {
+              if (normalizeAddr(salt) === normalizeAddr(ownerAddr)) continue;
+              const d = await decryptBody(text, salt);
+              if (!d.includes('Decryption Error')) {
+                maybeDecrypted = d;
+                break;
+              }
+            }
+          }
+          
           const parsed = JSON.parse(maybeDecrypted)
           
           // ACCESS CONTROL: Check if this message was for us or we are in the allowlist
@@ -845,7 +883,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                     ${attachments.map((at: any) => `
                       <div class="secure-attachment-item">
                         <span>📎 ${at.originalName}</span>
-                        <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}', '${at.iv || ''}', '${finalTo}')">
+                        <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}', '${at.iv || ''}', '${ownerAddr}')">
                           Secure Download
                         </button>
                       </div>
@@ -924,8 +962,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         let finalSuffix = ""
         
         if (isPrivate) {
-          // Encrypt file binary with AES-GCM
-          const { encrypted, iv } = await encryptBinary(blobData, safeComposeTo)
+          // AUTO-DECRYPT: Encrypt file binary using our own address (sender) as the salt
+          const { encrypted, iv } = await encryptBinary(blobData, normalizeAddr(account.address.toString()))
           blobData = encrypted
           // Hide filename COMPLETELY
           finalSuffix = `part${i}.bin`
@@ -956,8 +994,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       let payloadString = JSON.stringify(payloadObj)
       
       if (isPrivate) {
-        // Encrypt using the recipient's address as a salt for the key
-        payloadString = await encryptBody(payloadString, safeComposeTo)
+        // AUTO-DECRYPT: Use our own address (sender) as the salt for the key
+        payloadString = await encryptBody(payloadString, normalizeAddr(account.address.toString()))
       }
 
       const textEncoder = new TextEncoder()
