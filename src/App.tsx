@@ -812,12 +812,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       
       const timestamp = Date.now()
       const safeComposeTo = normalizeAddr(composeTo)
+      const isPrivate = accessMode !== 'public'
       
       // PRIVACY: Hash the recipient for the blob name if Mode != Public
       let blobPrefix = `to_${safeComposeTo}`
       let attachmentsMeta = []
       
-      if (accessMode !== 'public') {
+      if (isPrivate) {
         const hashedTo = await getPrivacyHash(safeComposeTo)
         blobPrefix = `to_${hashedTo}`
       }
@@ -828,26 +829,27 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         const file = attachedFiles[i]
         const arrayBuf = await file.arrayBuffer()
         let blobData = new Uint8Array(arrayBuf)
-        let blobNameSuffix = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        let finalSuffix = ""
         
-        if (accessMode !== 'public') {
+        if (isPrivate) {
           // Encrypt file binary
           blobData = cryptBinary(blobData)
-          // Hide filename
-          blobNameSuffix = `part${i}.bin`
-          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}` })
+          // Hide filename COMPLETELY
+          finalSuffix = `part${i}.bin`
+          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${finalSuffix}` })
         } else {
-          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}` })
+          finalSuffix = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${finalSuffix}` })
         }
         
-        formattedBlobs.push({ blobName: `${blobPrefix}_${timestamp}-${blobNameSuffix}`, blobData })
+        formattedBlobs.push({ blobName: `${blobPrefix}_${timestamp}-${finalSuffix}`, blobData })
       }
 
       // 2. Prepare Main Mail Payload
       let payloadObj = { to: composeTo, subject: composeSubject, body: composeBody, attachments: attachmentsMeta }
       let payloadString = JSON.stringify(payloadObj)
       
-      if (accessMode !== 'public') {
+      if (isPrivate) {
         payloadString = encryptBody(payloadString)
       }
 
@@ -1331,7 +1333,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                   <div className="mail-content" dangerouslySetInnerHTML={{ __html: blobBodyCache[selectedMail.id] || selectedMail.body }} />
                 )}
                 <div id="viewBlobs">
-                  {selectedMail.blobs.map((b, idx) => (
+                  {selectedMail.blobs.filter(b => {
+                    // Filter out private attachment blobs from the raw list
+                    // (They are already handled by the Secure Attachments UI)
+                    if (selectedMail.private && b.name.includes('-part')) return false;
+                    return true;
+                  }).map((b, idx) => (
                     <div
                       className={`blob-info${b.pending ? ' blob-pending' : ''}`}
                       key={idx}
