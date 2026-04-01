@@ -329,8 +329,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
   }
 
   useEffect(() => {
-    // Only show mock/local messages if wallet is NOT connected
-    let list = connected ? [] : [...mails]
+    // Universal Filter: Only use mock/local messages if wallet is NOT connected
+    const baseMails = connected ? [] : [...mails]
+    let list = [...baseMails]
     
     // Merge onchain blobs into the inbox view — grouped by send operation (same timestamp in name)
     if (incomingBlobs && incomingBlobs.length > 0) {
@@ -534,7 +535,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     } else if (currentView === 'drafts') {
       list = []
     } else if (currentView !== 'inbox') {
-      list = mails.filter(m => m.tags.includes(currentView))
+      list = baseMails.filter(m => m.tags.includes(currentView))
     }
     
     if (searchQuery) {
