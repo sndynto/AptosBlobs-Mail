@@ -304,8 +304,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         const arrayBuffer = await data.arrayBuffer();
         let uint8 = new Uint8Array(arrayBuffer);
         
-        // Only decrypt if it's a private mail (ends with .bin in this implementation)
-        if (blobName.endsWith('.bin')) {
+        // Only decrypt if it's a private mail (ends with .bin or .enc in this implementation)
+        if (blobName.endsWith('.bin') || blobName.endsWith('.enc')) {
           uint8 = cryptBinary(uint8);
         }
         
@@ -730,7 +730,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
           
           // PRIVACY: Decrypt body if needed
-          const finalBody = decryptBody(parsed.body || '');
+          const finalBody = decryptBody(text) || decryptBody(parsed.body || '');
           
           // PRIVACY: Handle Secure Attachments (Metadata)
           const attachments = parsed.attachments || [];
@@ -814,6 +814,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       const safeComposeTo = normalizeAddr(composeTo)
       const isPrivate = accessMode !== 'public'
       
+      if (isPrivate) {
+        showToast('🔐 Encrypting full payload & attachments...', 'info')
+      }
+      
       // PRIVACY: Hash the recipient for the blob name if Mode != Public
       let blobPrefix = `to_${safeComposeTo}`
       let attachmentsMeta = []
@@ -832,10 +836,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         let finalSuffix = ""
         
         if (isPrivate) {
-          // Encrypt file binary
+          // Encrypt file binary securely
           blobData = cryptBinary(blobData)
-          // Hide filename COMPLETELY
-          finalSuffix = `part${i}.bin`
+          // Use a completely unique naming scheme to avoid cache
+          finalSuffix = `vault-asset-${i}.enc`
           attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${finalSuffix}` })
         } else {
           finalSuffix = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
@@ -1488,8 +1492,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                 </div>
               )}
             </div>
-            <button className="btn-send" disabled={isPending} onClick={handleSend}>
-              {isPending ? '➤ Sending...' : '➤ Send via Aptos'}
+            <button className={`btn-send ${accessMode !== 'public' ? 'private' : ''}`} disabled={isPending} onClick={handleSend}>
+              {isPending ? '➤ Sending...' : (
+                <>
+                  {accessMode !== 'public' && <span style={{ marginRight: 6 }}>🔒</span>}
+                  ➤ Send via Aptos
+                </>
+              )}
             </button>
           </div>
         </div>
