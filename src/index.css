@@ -2311,3 +2311,62 @@
     .access-tab-desc { display: none; }
     .access-content { padding: 20px; }
   }
+/* --- Privacy & Access Control Extensions --- */
+.privacy-config-indicator {
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+.privacy-config-indicator:hover {
+  transform: scale(1.05);
+}
+.privacy-status {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.privacy-status.public {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
+}
+.privacy-status.private {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #ffe4e6;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1);
+}
+.access-denied {
+  padding: 30px;
+  text-align: center;
+  background: #fff1f2;
+  border: 2px dashed #fda4af;
+  border-radius: 16px;
+  margin: 20px 0;
+  color: #9f1239;
+  animation: fadeSlideIn 0.4s ease-out;
+}
+.access-denied h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+.access-denied p {
+  font-size: 13px;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+.access-badge-small {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 4px 12px;
+  background: #9f1239;
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}

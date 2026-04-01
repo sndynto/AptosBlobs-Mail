@@ -5,13 +5,11 @@ import './index.css'
 import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+// PRODUCTION CLEANUP: Strip all console noise in final distribution
 if (import.meta.env.PROD) {
-  console.log = () => {}
-  console.debug = () => {}
-  console.info = () => {}
-  console.warn = () => {}
-  // Optional: you can keep console.error if you still want to log errors
-  console.error = () => {}
+  const noop = () => {}
+  console.log = noop; console.debug = noop; console.info = noop;
+  console.warn = noop; console.error = noop;
 }
 
 const queryClient = new QueryClient()

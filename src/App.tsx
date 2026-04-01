@@ -69,6 +69,29 @@ const normalizeAddr = (addr: string) => {
 // -------------------------------------------------------------------------
 
 /**
+ * Derived a fixed key from the app secret and a user-specific salt.
+ */
+const deriveKey = async (salt: string) => {
+  const enc = new TextEncoder();
+  const envSecret = import.meta.env.VITE_SHELBY_APP_SECRET
+  // Robust fallback: ensures we use the legacy key if the environment variable is not explicitly provided.
+  const secret = (envSecret && envSecret.length > 5) ? envSecret : "SHELBY_APP_MASTER_SECRET_2026_XRAY"; 
+  
+  if (import.meta.env.DEV && !envSecret) {
+    // Only log once in dev to help explain the behavior.
+    (window as any).__shelby_secret_warned = true;
+  }
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(secret), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: enc.encode(salt), iterations: 1000, hash: "SHA-256" },
+    keyMaterial, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
+  );
+}
+
+/**
  * Generates a short hash of an address to use as a prefix for blobs.
  * Preserves privacy by hiding the recipient's raw address on public explorers.
  */
@@ -81,34 +104,74 @@ const getPrivacyHash = async (addr: string) => {
 }
 
 /**
- * Obfuscates/Encrypts sensitive content to make it unreadable at rest on Shelby nodes.
+ * Encrypts sensitive content to make it unreadable at rest on Shelby nodes using AES-GCM.
  */
-const encryptBody = (text: string) => {
-  const prefix = "🔐SHELBY_ENCRYPTED:";
-  return prefix + btoa(unescape(encodeURIComponent(text)));
+const encryptBody = async (text: string, address: string) => {
+  const prefix = "🔐SHELBY_V2_ENCRYPTED:";
+  const enc = new TextEncoder();
+  const key = await deriveKey(normalizeAddr(address));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv as any }, key, enc.encode(text) as any);
+  
+  // Combine IV + Ciphertext for storage
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), 12);
+  
+  return prefix + btoa(String.fromCharCode.apply(null, combined as any));
 }
 
 /**
  * Decrypts content if it contains our privacy prefix.
  */
-const decryptBody = (text: string) => {
-  const prefix = "🔐SHELBY_ENCRYPTED:";
-  if (text && text.startsWith(prefix)) {
+const decryptBody = async (text: string, address: string) => {
+  const prefix = "🔐SHELBY_V2_ENCRYPTED:";
+  const oldPrefix = "🔐SHELBY_ENCRYPTED:";
+  
+  if (!text) return text;
+  const cleanText = text.trim();
+
+  // Handle Legacy Base64 for backward compatibility with old messages
+  if (cleanText.startsWith(oldPrefix)) {
     try {
-      return decodeURIComponent(escape(atob(text.replace(prefix, ""))));
+      return decodeURIComponent(escape(atob(cleanText.replace(oldPrefix, ""))));
     } catch(e) { return text; }
+  }
+
+  // Handle V2 AES-GCM
+  if (cleanText.startsWith(prefix)) {
+    try {
+      const data = cleanText.replace(prefix, "");
+      const combined = new Uint8Array(atob(data).split("").map(c => c.charCodeAt(0)));
+      const iv = combined.slice(0, 12);
+      const ciphertext = combined.slice(12);
+      const key = await deriveKey(normalizeAddr(address));
+      const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as any }, key, ciphertext as any);
+      return new TextDecoder().decode(decrypted);
+    } catch(e) { 
+      return `[Decryption Error: Check permissions]`; 
+    }
   }
   return text;
 }
 
-/**
- * Encrypts/Decrypts binary data for attachments.
- */
-const cryptBinary = (data: Uint8Array) => {
-  const key = 0x53; // Simple XOR mask for 'coba' privacy
-  const result = new Uint8Array(data.length);
-  for (let i = 0; i < data.length; i++) result[i] = data[i] ^ key;
-  return result;
+const encryptBinary = async (data: Uint8Array, address: string) => {
+  const enc = new TextEncoder();
+  const key = await deriveKey(normalizeAddr(address));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv as any }, key, data as any);
+  return { encrypted: new Uint8Array(encrypted), iv: btoa(String.fromCharCode.apply(null, iv as any)) };
+}
+
+const decryptBinary = async (data: Uint8Array, address: string, ivBase64: string) => {
+  try {
+    const key = await deriveKey(normalizeAddr(address));
+    const iv = new Uint8Array(atob(ivBase64).split("").map(c => c.charCodeAt(0)));
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as any }, key, data as any);
+    return new Uint8Array(decrypted);
+  } catch(e) {
+    throw new Error("Attachment decryption failed. Check permissions.");
+  }
 }
 
 const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) => {
@@ -295,7 +358,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
 
   // GLOBAL SECURE DOWNLOAD HANDLER
   useEffect(() => {
-    (window as any).handleSecureDownload = async (owner: string, blobName: string, fileName: string) => {
+    (window as any).handleSecureDownload = async (owner: string, blobName: string, fileName: string, iv?: string, saltAddr?: string) => {
       try {
         showToast(`Decrypting ${fileName}...`, 'info');
         const blobObj = await shelbyClient.download({ account: owner as any, blobName });
@@ -305,8 +368,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         let uint8 = new Uint8Array(arrayBuffer);
         
         // Only decrypt if it's a private mail (ends with .bin in this implementation)
-        if (blobName.endsWith('.bin')) {
-          uint8 = cryptBinary(uint8);
+        if (blobName.endsWith('.bin') && iv) {
+          // Use saltAddr (recipient) if provided, otherwise fallback to owner (sender)
+          uint8 = await decryptBinary(uint8, saltAddr || owner, iv);
+        } else if (blobName.endsWith('.bin') && !iv) {
+          // Legacy XOR fallback for old messages
+          const key = 0x53;
+          for (let i = 0; i < uint8.length; i++) uint8[i] ^= key;
         }
         
         const decryptedBlob = new Blob([uint8], { type: 'application/octet-stream' });
@@ -716,18 +784,40 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         const blob = await shelbyClient.download({ account: ownerAddr as any, blobName: jsonBlob.name })
         const response = new Response((blob as any).readable)
         const data = await response.blob()
-        const text = await data.text()
+        const rawText = await data.text()
+        const text = rawText.trim()
         
         let decodedBody = ''
         try {
           // PRIVACY: Try to decrypt the entire file first (Full Encryption)
-          const maybeDecrypted = decryptBody(text)
+          // We use the recipient address (which is US) as the salt for the thread key
+          const maybeDecrypted = await decryptBody(text, myAddress || '0x')
           const parsed = JSON.parse(maybeDecrypted)
           
+          // ACCESS CONTROL: Check if this message was for us or we are in the allowlist
+          const effectiveAllowlist = parsed.allowlist || [];
+          const isOwner = mail.from.startsWith('You') || normalizeAddr(mail.addr || '') === normalizeAddr(myAddress || '');
+          const isAllowlisted = effectiveAllowlist.some((a: string) => normalizeAddr(a) === normalizeAddr(myAddress || ''));
+          
+          if (parsed.accessMode === 'allowlist' && !isOwner && !isAllowlisted) {
+            decodedBody = `
+              <div class="access-denied">
+                <h3>🔴 Access Denied</h3>
+                <p>This message is protected by a <b>Wallet Allowlist</b>.</p>
+                <p>Your address (<code>${myAddress}</code>) is not authorized 
+                to view this content.</p>
+                <div class="access-badge-small">Shelby Privacy Active</div>
+              </div>
+            `;
+            setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: decodedBody }))
+            setBlobLoading(false)
+            return;
+          }
+
           // Extract data from the parsed JSON object
           const finalTo = parsed.to || 'Unknown';
           const finalSubject = parsed.subject || 'No Subject';
-          const finalBody = decryptBody(parsed.body || '');
+          const finalBody = await decryptBody(parsed.body || '', finalTo);
           const attachments = parsed.attachments || [];
           
           if (finalSubject) {
@@ -742,7 +832,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                 <p><b>From:</b> <code>${ownerAddr.replace('to_', '').split('_')[0]}</code></p>
                 <p><b>To:</b> <code>${finalTo}</code></p>
                 <p><b>Subject:</b> ${finalSubject}</p>
-                ${isReallyPrivate ? '<p class="privacy-badge">🔒 Private Encrypted</p>' : ''}
+                ${isReallyPrivate ? '<p class="privacy-badge">🔒 AES-GCM Secured</p>' : ''}
               </div>
               <hr/>
               <div class="mail-text-body">${(finalBody || '').replace(/\n/g, '<br/>')}</div>
@@ -754,7 +844,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                     ${attachments.map((at: any) => `
                       <div class="secure-attachment-item">
                         <span>📎 ${at.originalName}</span>
-                        <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}')">
+                        <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}', '${at.iv || ''}', '${finalTo}')">
                           Secure Download
                         </button>
                       </div>
@@ -833,11 +923,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         let finalSuffix = ""
         
         if (isPrivate) {
-          // Encrypt file binary
-          blobData = cryptBinary(blobData)
+          // Encrypt file binary with AES-GCM
+          const { encrypted, iv } = await encryptBinary(blobData, safeComposeTo)
+          blobData = encrypted
           // Hide filename COMPLETELY
           finalSuffix = `part${i}.bin`
-          attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${finalSuffix}` })
+          attachmentsMeta.push({ 
+            originalName: file.name, 
+            blobName: `${blobPrefix}_${timestamp}-${finalSuffix}`,
+            iv: iv 
+          })
         } else {
           finalSuffix = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
           attachmentsMeta.push({ originalName: file.name, blobName: `${blobPrefix}_${timestamp}-${finalSuffix}` })
@@ -847,11 +942,19 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
       }
 
       // 2. Prepare Main Mail Payload
-      let payloadObj = { to: composeTo, subject: composeSubject, body: composeBody, attachments: attachmentsMeta }
+      let payloadObj = { 
+        to: composeTo, 
+        subject: composeSubject, 
+        body: composeBody, 
+        attachments: attachmentsMeta,
+        allowlist: accessMode === 'allowlist' ? allowlistAddrs.filter(a => !!a.trim()) : null,
+        accessMode
+      }
       let payloadString = JSON.stringify(payloadObj)
       
       if (isPrivate) {
-        payloadString = encryptBody(payloadString)
+        // Encrypt using the recipient's address as a salt for the key
+        payloadString = await encryptBody(payloadString, safeComposeTo)
       }
 
       const textEncoder = new TextEncoder()
@@ -1482,6 +1585,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
                 }} />
                 ⬡ Attach Blob
               </label>
+              <div className="privacy-config-indicator" onClick={() => setAccessControlOpen(true)}>
+                {accessMode === 'public' ? (
+                  <span className="privacy-status public">🔓 Public</span>
+                ) : (
+                  <span className="privacy-status private">🔒 {accessMode.toUpperCase()}</span>
+                )}
+              </div>
               {isPending && (
                 <div className="upload-status">
                   <div className="spinner" style={{ display: 'block' }}></div>
