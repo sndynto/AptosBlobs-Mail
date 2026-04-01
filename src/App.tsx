@@ -724,24 +724,25 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           const maybeDecrypted = decryptBody(text)
           const parsed = JSON.parse(maybeDecrypted)
           
-          if (parsed.subject) {
-            setRealSubjects(prev => ({ ...prev, [selectedMailId]: parsed.subject }))
-          }
-          const pureAddr = ownerAddr.replace('to_', '').split('_')[0]
-          
-          // PRIVACY: Decrypt body if needed
-          const finalBody = decryptBody(text) || decryptBody(parsed.body || '');
-          
-          // PRIVACY: Handle Secure Attachments (Metadata)
+          // Extract data from the parsed JSON object
+          const finalTo = parsed.to || 'Unknown';
+          const finalSubject = parsed.subject || 'No Subject';
+          const finalBody = decryptBody(parsed.body || '');
           const attachments = parsed.attachments || [];
+          
+          if (finalSubject) {
+            setRealSubjects(prev => ({ ...prev, [selectedMailId]: finalSubject }))
+          }
 
+          const isReallyPrivate = text.startsWith('🔐') || (parsed.body && parsed.body.startsWith('🔐'));
+          
           decodedBody = `
-            <div class="decoded-mail ${text.startsWith('🔐') || parsed.body?.startsWith('🔐') ? 'is-private' : ''}">
+            <div class="decoded-mail ${isReallyPrivate ? 'is-private' : ''}">
               <div class="mail-header-info">
-                <p><b>From:</b> <code>${pureAddr}</code></p>
-                <p><b>To:</b> <code>${parsed.to || 'Unknown'}</code></p>
-                <p><b>Subject:</b> ${parsed.subject || 'No Subject'}</p>
-                ${(text.startsWith('🔐') || parsed.body?.startsWith('🔐')) ? '<p class="privacy-badge">🔒 Private Encrypted</p>' : ''}
+                <p><b>From:</b> <code>${ownerAddr.replace('to_', '').split('_')[0]}</code></p>
+                <p><b>To:</b> <code>${finalTo}</code></p>
+                <p><b>Subject:</b> ${finalSubject}</p>
+                ${isReallyPrivate ? '<p class="privacy-badge">🔒 Private Encrypted</p>' : ''}
               </div>
               <hr/>
               <div class="mail-text-body">${(finalBody || '').replace(/\n/g, '<br/>')}</div>
