@@ -231,6 +231,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     return { aptosConfig: aptos, shelbyClient: client }
   }, [currentNetwork, apiKey])
 
+  // Identifying the Shelby Protocol contract address to filter transactions
+  // This is the core protocol address for AptosBlobs-Mail
+  const SHELBY_MODULE = currentNetwork === 'shelbynet' 
+    ? "0x1::shelby"
+    : "0x1cb6d22b64dd8b98f24419cb7aa7d620583b482a201b1aae357a62725ad50ea1::shelby";
+
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
   const { mutateAsync: uploadBlobs, isPending } = useUploadBlobs({ client: shelbyClient })
   const { mutateAsync: deleteBlobs, isPending: isDeleting } = useDeleteBlobs({ client: shelbyClient })
@@ -277,6 +283,38 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     },
     enabled: !!myAddress && !!shelbyClient,
     refetchInterval: 10000
+  })
+
+  // Fetch real account transactions to filter for AptosBlobs-Mail (Shelby) interactions
+  const { data: accountTransactions, refetch: refetchTransactions, isLoading: isTxnsLoading } = useQuery({
+    queryKey: ['accountTransactions', currentNetwork, myAddress],
+    queryFn: async () => {
+      if (!myAddress) return [];
+      try {
+        // Fetch last 50 transactions for the account
+        // We use the raw fetch or SDK to get transactions from the node
+        const nodeUrl = currentNetwork === 'shelbynet'
+          ? 'https://api.shelbynet.shelby.xyz/v1'
+          : `https://api.testnet.aptoslabs.com/v1`;
+        
+        const res = await fetch(`${nodeUrl}/accounts/${myAddress}/transactions?limit=50`);
+        if (!res.ok) return [];
+        const txns = await res.json();
+        
+        // Filter: only transactions interacting with Shelby Protocol (AptosBlobs-Mail)
+        return txns.filter((t: any) => {
+          const payload = t.payload;
+          if (!payload || payload.type !== 'entry_function_payload') return false;
+          const func = payload.function || '';
+          // Filter by the module address or common Shelby function patterns
+          return func.includes('shelby') || func.includes('blob');
+        });
+      } catch (e) {
+        return [];
+      }
+    },
+    enabled: !!myAddress,
+    refetchInterval: 15000
   })
 
   // Network validation logic
@@ -560,67 +598,69 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
         groups.get(key)!.push(b)
       }
 
-      const mappedBlobs: Mail[] = Array.from(groups.entries()).map(([groupKey, blobs], i) => {
-        // Sort: .json first so it becomes the primary blob
-        blobs.sort((a: any, b: any) => {
-          const aJson = (a.blobNameSuffix || a.name || '').endsWith('.json')
-          const bJson = (b.blobNameSuffix || b.name || '').endsWith('.json')
-          return aJson === bJson ? 0 : aJson ? -1 : 1
-        })
-        const primary = blobs[0] as any
-        const isPending = !primary.blobMerkleRoot || primary.blobMerkleRoot.every((byte: number) => byte === 0)
-        const senderAddr = (primary.owner || primary.account || primary.creator || '').toString() || 'Unknown Sender'
-        const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
+      const mappedBlobs: Mail[] = Array.from(groups.entries())
+        .filter(([_, blobs]) => blobs.some((b: any) => (b.blobNameSuffix || b.name || '').endsWith('-mail.json')))
+        .map(([groupKey, blobs], i) => {
+          // Sort: .json first so it becomes the primary blob
+          blobs.sort((a: any, b: any) => {
+            const aJson = (a.blobNameSuffix || a.name || '').endsWith('.json')
+            const bJson = (b.blobNameSuffix || b.name || '').endsWith('.json')
+            return aJson === bJson ? 0 : aJson ? -1 : 1
+          })
+          const primary = blobs[0] as any
+          const isPending = !primary.blobMerkleRoot || primary.blobMerkleRoot.every((byte: number) => byte === 0)
+          const senderAddr = (primary.owner || primary.account || primary.creator || '').toString() || 'Unknown Sender'
+          const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
 
-        // Extract subject from .json blob name suffix: to_<addr>_<ts>-<subject>.json
-        let subject = groupKey
-        const jsonBlob = blobs.find((b: any) => (b.blobNameSuffix || b.name || '').endsWith('.json')) as any
-        if (jsonBlob) {
-          const rawN = jsonBlob.blobNameSuffix || jsonBlob.name || ''
-          const after = rawN.replace(/^to_[^_]+_\d+-/, '').replace(/\.json$/, '')
-          if (after) subject = after
-        }
+          // Extract subject from .json blob name suffix: to_<addr>_<ts>-<subject>.json
+          let subject = groupKey
+          const jsonBlob = blobs.find((b: any) => (b.blobNameSuffix || b.name || '').endsWith('.json')) as any
+          if (jsonBlob) {
+            const rawN = jsonBlob.blobNameSuffix || jsonBlob.name || ''
+            const after = rawN.replace(/^to_[^_]+_\d+-/, '').replace(/\.json$/, '')
+            if (after) subject = after
+          }
 
-        const sTags = getTags(subject, isPending, blobs.length > 1)
+          const sTags = getTags(subject, isPending, blobs.length > 1)
 
-        const blobItems = blobs.map((b: any) => {
-          let bn = b.blobNameSuffix || b.name || ''
-          if (bn.startsWith('@')) bn = bn.split('/').slice(1).join('/')
-          const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot as number[]).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
-          const bPending = !b.blobMerkleRoot || (b.blobMerkleRoot as number[]).every((byte: number) => byte === 0)
+          const blobItems = blobs.map((b: any) => {
+            let bn = b.blobNameSuffix || b.name || ''
+            if (bn.startsWith('@')) bn = bn.split('/').slice(1).join('/')
+            const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot as number[]).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
+            const bPending = !b.blobMerkleRoot || (b.blobMerkleRoot as number[]).every((byte: number) => byte === 0)
+            return {
+              name: bn,
+              size: ((b.size || 0) / 1024).toFixed(1) + ' KB',
+              hash: bPending ? '⏳ Pending...' : '0x' + hexHash,
+              enc: '8+4',
+              pending: bPending
+            }
+          })
+
+          const hasAttachments = blobs.length > 1
           return {
-            name: bn,
-            size: ((b.size || 0) / 1024).toFixed(1) + ' KB',
-            hash: bPending ? '⏳ Pending...' : '0x' + hexHash,
-            enc: '8+4',
-            pending: bPending
+            id: -2000 - i,
+            unread: isPending,
+            pending: isPending,
+            from: `From: ${formatAddr(senderAddr)}`,
+            addr: senderAddr,
+            subject,
+            preview: isPending
+              ? '🕐 Awaiting confirmation...'
+              : hasAttachments
+                ? `📎 ${blobs.length - 1} attachment(s) · ${formatAddr(senderAddr)}`
+                : `From ${formatAddr(senderAddr)}`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: tsMs,
+            tags: sTags,
+            body: isPending
+              ? `<p>⏳ This message is <b>pending on-chain confirmation</b>.</p>`
+              : `<p>Loading message body...</p>`,
+            blobs: blobItems,
+            color: (i + 1) % COLORS.length,
+            private: groupKey.length > 30 // Rough check if hashed
           }
         })
-
-        const hasAttachments = blobs.length > 1
-        return {
-          id: -2000 - i,
-          unread: isPending,
-          pending: isPending,
-          from: `From: ${formatAddr(senderAddr)}`,
-          addr: senderAddr,
-          subject,
-          preview: isPending
-            ? '🕐 Awaiting confirmation...'
-            : hasAttachments
-              ? `📎 ${blobs.length - 1} attachment(s) · ${formatAddr(senderAddr)}`
-              : `From ${formatAddr(senderAddr)}`,
-          time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          timestamp: tsMs,
-          tags: sTags,
-          body: isPending
-            ? `<p>⏳ This message is <b>pending on-chain confirmation</b>.</p>`
-            : `<p>Loading message body...</p>`,
-          blobs: blobItems,
-          color: (i + 1) % COLORS.length,
-          private: groupKey.length > 30 // Rough check if hashed
-        }
-      })
 
       if (currentView === 'inbox') {
         const existingKeys = new Set(list.map(m => m.subject))
@@ -676,7 +716,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           if (!sentGroups.has(key)) sentGroups.set(key, [])
           sentGroups.get(key)!.push(b)
         }
-        list = Array.from(sentGroups.entries()).map(([groupKey, blobs], i) => {
+        list = Array.from(sentGroups.entries())
+          .filter(([_, blobs]) => blobs.some((b: any) => (b.blobNameSuffix || b.name || '').endsWith('-mail.json')))
+          .map(([groupKey, blobs], i) => {
           blobs.sort((a: any, b: any) => {
             const aJson = (a.blobNameSuffix || a.name || '').endsWith('.json')
             const bJson = (b.blobNameSuffix || b.name || '').endsWith('.json')
@@ -736,6 +778,49 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
               : `<p>Loading message body...</p>`,
             blobs: blobItems,
             color: i % COLORS.length
+          }
+        })
+      } else {
+        list = []
+      }
+    } else if (currentView === 'transactions') {
+      if (accountTransactions && accountTransactions.length > 0) {
+        list = accountTransactions.map((tx: any, i: number) => {
+          const tsMs = Math.floor(Number(tx.timestamp || 0) / 1000) || Date.now();
+          const func = tx.payload?.function || 'Unknown Function';
+          const shortFunc = func.split('::').pop();
+          const success = tx.success;
+          return {
+            id: -5000 - i,
+            unread: false,
+            pending: false,
+            from: `Hash: ${tx.hash.substring(0, 10)}...`,
+            addr: tx.hash,
+            subject: `Activity: ${shortFunc}`,
+            preview: `${success ? '✅ Success' : '❌ Failed'} · Version ${tx.version}`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: tsMs,
+            tags: ['transactions', success ? 'success' : 'failed'],
+            body: `
+              <div class="txn-detail" style="font-family:var(--sans); color:var(--text-primary);">
+                <h3 style="margin-top:0; color:var(--brand-color); font-size:18px;">Transaction Details</h3>
+                <p style="margin:8px 0;"><b>Hash:</b> <code style="font-size:11px; color:var(--text-muted); word-break:break-all; background:#f8f9fa; padding:2px 4px; border-radius:4px;">${tx.hash}</code></p>
+                <p style="margin:8px 0;"><b>Version:</b> <span style="color:#6001D2; font-weight:600;">${tx.version}</span></p>
+                <p style="margin:8px 0;"><b>Function:</b> <code style="font-size:11px; color:#6001D2; background:rgba(96,1,210,0.05); padding:2px 6px; border-radius:4px;">${func}</code></p>
+                <p style="margin:8px 0;"><b>Status:</b> ${success ? '<span style="color:#10b981; font-weight:600;">✅ Success</span>' : '<span style="color:#ef4444; font-weight:600;">❌ Failed</span>'}</p>
+                <p style="margin:8px 0;"><b>Sender:</b> <code style="font-size:11px;">${tx.sender}</code></p>
+                <hr style="border:none; border-top:1px solid #f0f0f0; margin:15px 0;"/>
+                <p style="margin:8px 0; font-weight:600; color:var(--text-secondary);">Payload Data:</p>
+                <pre style="background:#fafafa; padding:12px; border:1px solid #eee; border-radius:8px; font-size:10px; overflow-x:auto; line-height:1.5;">${JSON.stringify(tx.payload, null, 2)}</pre>
+                <div style="margin-top:20px; display:flex; gap:12px;">
+                  <a href="https://explorer.aptoslabs.com/txn/${tx.version}?network=${currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork}" target="_blank" class="btn-secure-download" style="text-decoration:none; display:inline-block; text-align:center; flex:1;">
+                    View on Aptos Explorer
+                  </a>
+                </div>
+              </div>
+            `,
+            blobs: [],
+            color: success ? 2 : 7
           }
         })
       } else {
@@ -1266,6 +1351,11 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
             </div>
             <div className={`nav-item ${currentView === 'transactions' ? 'active' : ''}`} onClick={() => selectNav('transactions')}>
               <div className="nav-item-left"><span className="nav-icon">⛓</span> Transactions</div>
+              {accountTransactions && accountTransactions.length > 0 && (
+                <span className="nav-count" style={{ background: 'rgba(96,1,210,0.2)', color: '#6001D2' }}>
+                  {accountTransactions.length}
+                </span>
+              )}
             </div>
             <div className="nav-item" onClick={() => setAccessControlOpen(true)}>
               <div className="nav-item-left"><span className="nav-icon">🔒</span> Access Control</div>
@@ -1304,7 +1394,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
           <div className="mail-list-header">
             <span className="mail-list-title">{titles[currentView] || currentView}</span>
             <div className="mail-list-actions">
-              <div className="icon-btn" title="Refresh" onClick={() => { showToast('↻ Syncing with Shelby RPC...', 'info'); refetchBlobs(); }}>↻</div>
+              <div className="icon-btn" title="Refresh" onClick={() => { showToast('↻ Syncing with Shelby RPC...', 'info'); refetchBlobs(); refetchTransactions(); }}>↻</div>
               <div className="icon-btn" title="Filter">⚡</div>
               <div className="icon-btn" title="Sort">↕</div>
             </div>
