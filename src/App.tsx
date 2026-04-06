@@ -676,7 +676,17 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     
     // Blobs list (all raw)
     if (currentView === 'blobs' && onchainBlobs && onchainBlobs.length > 0) {
-      const mappedBlobs: Mail[] = onchainBlobs.map((b, i) => {
+      const isMailMetaBlob = (name: string) => {
+        const cleaned = name.startsWith('@') ? name.split('/').slice(1).join('/') : name
+        return cleaned.toLowerCase().endsWith('-mail.json')
+      }
+
+      const rawBlobs = onchainBlobs.filter((b: any) => {
+        const blobName = (b.blobNameSuffix || b.name || '') as string
+        return !isMailMetaBlob(blobName)
+      })
+
+      const mappedBlobs: Mail[] = rawBlobs.map((b, i) => {
         const hexHash = b.blobMerkleRoot ? Array.from(b.blobMerkleRoot).map((byte: number) => byte.toString(16).padStart(2, '0')).join('') : ''
         let bName = (b as any).blobNameSuffix || b.name || '';
         if (bName.startsWith('@')) {
