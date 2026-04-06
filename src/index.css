@@ -360,13 +360,7 @@
     z-index: 1;
     display: flex;
     flex: 1;
-    min-height: 0;
     overflow: hidden;
-  }
-
-  .mail-list,
-  .mail-view {
-    min-height: 0;
   }
 
   /* ===========================
@@ -1783,7 +1777,6 @@
       inset: 0;
       z-index: 10;
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      min-height: 0;
     }
 
     .mail-list.mobile-hidden {
@@ -1798,7 +1791,6 @@
       z-index: 20;
       transform: translateX(100%);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      min-height: 0;
     }
 
     .mail-view:not(.mobile-hidden) {
@@ -1853,10 +1845,7 @@
     /* Bottom nav with Safe Area support */
     .mobile-bottom-nav {
       display: flex;
-      position: sticky;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: relative;
       z-index: 100;
       background: white;
       border-top: 1px solid var(--border-light);
