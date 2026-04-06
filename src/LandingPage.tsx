@@ -6,10 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
-
-
-
-
 interface LandingPageProps {
   onEnterApp: () => void
 }
@@ -71,7 +67,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     gsap.fromTo('.feature-card', 
       { y: 40, opacity: 0 },
       {
-        scrollTrigger: { trigger: '#features', start: 'top 80%', once: true },
+        scrollTrigger: { trigger: '#keunggulan', start: 'top 80%', once: true },
         y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: 'power3.out'
       }
     )
@@ -80,7 +76,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     gsap.fromTo('.step-card', 
       { y: 40, opacity: 0 },
       {
-        scrollTrigger: { trigger: '#how-it-works', start: 'top 80%', once: true },
+        scrollTrigger: { trigger: '#cara-kerja', start: 'top 80%', once: true },
         y: 0, opacity: 1, duration: 0.8, stagger: 0.2, ease: 'power3.out'
       }
     )
@@ -93,7 +89,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
   // Navbar scroll effect
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -231,49 +227,50 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
   const features = [
     {
       icon: '⬡',
-      title: 'Blob Storage on Shelby',
-      desc: 'Every message is stored as an immutable blob on Shelby Protocol with 8+4 erasure coding    no single point of failure.',
+      title: 'Penyimpanan Blob Shelby',
+      desc: 'Setiap pesan disimpan sebagai blob permanen di Shelby Protocol dengan erasure coding 8+4—tanpa risiko titik kegagalan tunggal.',
       color: '#F040B0'
     },
     {
       icon: <AptosLogo size={32} />,
-      title: 'Settled on Aptos',
-      desc: 'All transactions are finalized on the Aptos blockchain, giving you verifiable, censorship-resistant proof of every message.',
+      title: 'Finansialisasi di Aptos',
+      desc: 'Semua transaksi difinalisasi di blockchain Aptos, memberikan Anda bukti yang dapat diverifikasi dan tahan sensor untuk setiap pesan.',
       color: '#6001D2'
     },
     {
       icon: '🔒',
-      title: 'AES-GCM Encryption',
-      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation    your messages are unreadable at rest on storage nodes.',
+      title: 'Enkripsi AES-GCM',
+      desc: 'Enkripsi end-to-end menggunakan AES-GCM dengan derivasi kunci PBKDF2—pesan Anda tidak dapat dibaca oleh node penyimpanan.',
       color: '#F040B0'
     },
     {
       icon: '📬',
-      title: 'Any Wallet Address',
-      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts    just your on-chain identity.',
+      title: 'Kirim ke Alamat Dompet Mana Saja',
+      desc: 'Kirim pesan terenkripsi ke alamat dompet Aptos mana pun. Tanpa username, tanpa akun—hanya identitas on-chain Anda.',
       color: '#6001D2'
     }
   ]
 
   const steps = [
-    { num: '01', title: 'Connect Wallet', desc: 'Connect your Aptos wallet (Petra, Martian, or any Aptos-compatible wallet).' },
-    { num: '02', title: 'Compose & Encrypt', desc: 'Write your message. It\'s auto-encrypted with AES-GCM before leaving your browser.' },
-    { num: '03', title: 'Send On-Chain', desc: 'Your encrypted blob is uploaded to Shelby nodes and the merkle root committed to Aptos.' },
-    { num: '04', title: 'Verify & Download', desc: 'Recipients fetch and decrypt messages locally using their wallet keys. Fully verifiable.' },
+    { num: '01', title: 'Hubungkan Dompet', desc: 'Hubungkan dompet Aptos Anda (Petra, Martian, atau dompet kompatabel Aptos lainnya).' },
+    { num: '02', title: 'Tulis & Enkripsi', desc: 'Tulis pesan Anda. Pesan dienkripsi otomatis dengan AES-GCM sebelum meninggalkan browser.' },
+    { num: '03', title: 'Kirim On-Chain', desc: 'Blob terenkripsi diunggah ke node Shelby dan akar merkle dikomitmenkan ke blockchain Aptos.' },
+    { num: '04', title: 'Verifikasi & Unduh', desc: 'Penerima mengambil dan mendekripsi pesan secara lokal menggunakan kunci dompet mereka secara aman.' },
   ]
 
   return (
-    <div ref={containerRef} style={{ fontFamily: 'var(--sans)', background: '#100a14', color: '#fff' }}>
+    <div ref={containerRef} style={{ fontFamily: '"Inter", sans-serif', background: '#100a14', color: '#fff', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
       
-      {/* â”€â”€â”€ FONTS â”€â”€â”€ */}
+      {/* ─── FONTS ─── */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* â”€â”€â”€ NAVBAR â”€â”€â”€ */}
+      {/* ─── NAVBAR ─── */}
       <nav className="landing-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
         height: 68,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 5%',
         background: isScrolled ? 'rgba(16,10,20,0.92)' : 'transparent',
         backdropFilter: isScrolled ? 'blur(20px)' : 'none',
         borderBottom: isScrolled ? '1px solid rgba(240,64,176,0.15)' : 'none',
@@ -294,41 +291,41 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
         {/* Nav Links */}
         <div className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
-          {['Features', 'How It Works', 'Security', 'Docs'].map(link => {
-            const targetId = link.toLowerCase().replace(/ /g, '-')
-            const isExternal = link === 'Docs'
-            
-            return (
-              <a
-                key={link}
-                href={isExternal ? 'https://shelby.xyz' : `#${targetId}`}
-                target={isExternal ? '_blank' : undefined}
-                rel={isExternal ? 'noreferrer' : undefined}
-                onClick={(e) => {
-                  if (isExternal) return
-                  e.preventDefault()
-                  const el = document.getElementById(targetId)
-                  if (el) {
-                    const topPos = el.getBoundingClientRect().top + window.scrollY - 80;
-                    window.scrollTo({ top: topPos, behavior: 'smooth' })
-                    
-                    // Refresh scroll trigger to avoid elements getting stuck at opacity 0
-                    setTimeout(() => {
-                      ScrollTrigger.refresh()
-                    }, 500)
-                  }
-                }}
-                style={{
-                  color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
-                  fontSize: 14, fontWeight: 500, transition: 'color 0.2s'
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#F040B0')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
-              >
-                {link}
-              </a>
-            )
-          })}
+          {[
+            { label: 'Keunggulan', id: 'keunggulan' },
+            { label: 'Cara Kerja', id: 'cara-kerja' },
+            { label: 'Keamanan', id: 'keamanan' },
+            { label: 'Dokumentasi', id: 'docs', external: true }
+          ].map(link => (
+            <a
+              key={link.label}
+              href={link.external ? 'https://shelby.xyz' : `#${link.id}`}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noreferrer' : undefined}
+              onClick={(e) => {
+                if (link.external) return
+                e.preventDefault()
+                const el = document.getElementById(link.id)
+                if (el) {
+                  const topPos = el.getBoundingClientRect().top + window.scrollY - 80;
+                  window.scrollTo({ top: topPos, behavior: 'smooth' })
+                  
+                  // Refresh scroll trigger to avoid elements getting stuck at opacity 0
+                  setTimeout(() => {
+                    ScrollTrigger.refresh()
+                  }, 500)
+                }
+              }}
+              style={{
+                color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
+                fontSize: 14, fontWeight: 500, transition: 'color 0.2s'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#F040B0')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
 
         {/* CTA */}
@@ -345,12 +342,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(240,64,176,0.5)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(240,64,176,0.35)' }}
         >
-          Launch App →
+          Mulai Aplikasi →
         </button>
       </nav>
 
-      {/* â”€â”€â”€ HERO â”€â”€â”€ */}
-      <section ref={heroRef} style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+      {/* ─── HERO ─── */}
+      <section ref={heroRef} style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: 80 }}>
         
         {/* Shelby-style geometric bg shapes */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -399,12 +396,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           }} />
         </div>
 
-        <div className="landing-hero-container" style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+        <div className="landing-hero-container" style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', width: '100%', padding: '120px 5% 80px' }}>
           <div className="landing-hero-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             
-            {/* Left Content */}
+            {/* Sisi Kiri */}
             <div style={{ flex: '1 1 520px', maxWidth: 620 }}>
-              {/* Badge */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: 'rgba(240,64,176,0.12)', border: '1px solid rgba(240,64,176,0.3)',
@@ -412,31 +408,29 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 fontSize: 12, fontWeight: 600, color: '#F040B0', letterSpacing: '0.5px'
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0', display: 'inline-block', boxShadow: '0 0 8px #F040B0' }} />
-                POWERED BY SHELBY PROTOCOL    APTOS
+                DITENAGAI OLEH SHELBY PROTOCOL × APTOS
               </div>
 
-              {/* Headline */}
               <h1 className="hero-headline" style={{
                 fontSize: 'clamp(42px, 5.5vw, 72px)', fontWeight: 900,
                 lineHeight: 1.05, margin: '0 0 24px',
                 letterSpacing: '-2px',
               }}>
-                Decentralized<br />
+                Email Terdesentralisasi<br />
                 <span style={{
                   background: 'linear-gradient(90deg, #F040B0 0%, #a040f0 60%, #6001D2 100%)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
-                }}>Email for Web3</span>
+                }}>Untuk Era Web3</span>
               </h1>
 
               <p className="hero-desc" style={{
                 fontSize: 18, lineHeight: 1.75, color: 'rgba(255,255,255,0.62)',
                 margin: '0 0 40px', maxWidth: 500, fontWeight: 400
               }}>
-                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs    censorship-resistant, verifiable, and yours.
+                Kirim pesan terenkripsi ke alamat dompet Aptos mana pun. Data Anda hidup permanen secara on-chain sebagai blob—tahan sensor, dapat diverifikasi, dan sepenuhnya milik Anda.
               </p>
 
-              {/* CTAs */}
               <div className="hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 <button
                   onClick={handleLaunchApp}
@@ -449,10 +443,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     transition: 'all 0.25s', fontFamily: 'inherit',
                     display: 'flex', alignItems: 'center', gap: 10
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(240,64,176,0.55)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(240,64,176,0.4)' }}
                 >
-                  <span style={{ fontSize: 20 }}>✉️</span> Open Mailbox
+                  <span style={{ fontSize: 20 }}>✉️</span> Buka Kotak Masuk
                 </button>
                 <a
                   href="https://shelby.xyz"
@@ -465,14 +457,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     textDecoration: 'none', transition: 'all 0.25s',
                     display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(240,64,176,0.4)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
                 >
-                  ⬡ Shelby Docs ↗
+                  ⬡ Dokumentasi Shelby ↗
                 </a>
               </div>
 
-              {/* Trust badges */}
               <div className="hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
                 {[
                   { label: 'Aptos Testnet', icon: <AptosLogo size={16} />, color: '#22d3ee' },
@@ -486,7 +475,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Right    App Preview Card */}
+            {/* Sisi Kanan — Preview Aplikasi */}
             <div className="hero-mockup" style={{ flex: '1 1 380px', maxWidth: 460 }}>
               <div style={{
                 background: '#ffffff',
@@ -495,66 +484,45 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 boxShadow: '0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(192,0,122,0.1)',
                 position: 'relative', overflow: 'hidden'
               }}>
-                {/* Simulated Topbar */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid #e5e5e5', background: '#fcfcfc' }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
-                  <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Inbox</span>
+                  <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Kotak Masuk</span>
                 </div>
 
-                {/* Content Area */}
                 <div style={{ padding: '12px' }}>
                   {[
-                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', bbg: '#f5f0ff', col: '#1a1a1a', iconBg: 'rgba(96,1,210,0.08)', iconCol: '#6001d2' },
-                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', bbg: '#ffffff', col: '#555555', iconBg: 'rgba(240,64,176,0.08)', iconCol: '#F040B0' },
-                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmed', tag: 'nft', unread: true, time: 'Yesterday', bbg: '#f5f0ff', col: '#1a1a1a', iconBg: 'rgba(0,196,159,0.08)', iconCol: '#00c49f' },
+                    { from: 'Ke: 0x1a2b...4c5d', subject: 'Update Yield DeFi', tag: 'defi', unread: true, time: '09:42', iconCol: '#6001d2' },
+                    { from: 'Ke: 0x9e8f...7a6b', subject: 'Proposal DAO #47', tag: 'dao', unread: false, time: '08:15', iconCol: '#F040B0' },
+                    { from: 'Ke: 0x3c4d...2e1f', subject: 'Konfirmasi NFT Drop', tag: 'nft', unread: true, time: 'Kemarin', iconCol: '#00c49f' },
                   ].map((item, i) => (
-                    <div key={i} style={{
-                      display: 'flex', gap: 12, padding: '12px 14px',
-                      borderRadius: 12, marginBottom: 4,
-                      background: item.bbg,
-                      border: '1px solid transparent',
-                      cursor: 'pointer', transition: 'all 0.2s',
-                    }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, color: item.iconCol }}>⬡</div>
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }}>⬡</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                          <span style={{ fontSize: 12, color: item.col, fontWeight: 700 }}>{item.from}</span>
-                          <span style={{ fontSize: 11, color: '#888888' }}>{item.time}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 11, color: '#1a1a1a', fontWeight: 700 }}>{item.from}</span>
+                          <span style={{ fontSize: 10, color: '#888' }}>{item.time}</span>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: item.unread ? 600 : 400, color: item.unread ? '#1a1a1a' : '#555555', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.subject}</div>
-                        <span style={{ fontSize: 10, fontWeight: 600, background: item.iconBg, color: item.iconCol, borderRadius: 6, padding: '2px 7px', border: `1px solid ${item.iconCol}33` }}>{item.tag}</span>
+                        <div style={{ fontSize: 13, fontWeight: item.unread ? 600 : 400, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subject}</div>
                       </div>
                     </div>
                   ))}
-
-                  {/* Compose CTA */}
-                  <div style={{
-                    marginTop: 12, padding: '12px 16px', borderRadius: 9999,
-                    background: '#F040B0',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    fontSize: 14, fontWeight: 700, color: '#ffffff', cursor: 'pointer',
-                    boxShadow: '0 6px 16px rgba(240,64,176,0.25)'
-                  }}>
-                    <span style={{ fontSize: 14 }}>➤</span> Send via Aptos
-                  </div>
+                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>➤ Kirim via Aptos</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
         <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: 0.4 }}>
-          <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '2px', color: '#F040B0' }}>SCROLL</span>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', color: '#F040B0' }}>SCROLL</span>
           <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, #F040B0, transparent)' }} />
         </div>
       </section>
 
       {/* ─── STATS ─── */}
-      <section className="landing-stats-section" ref={statsRef} style={{ borderTop: '1px solid rgba(240,64,176,0.1)', borderBottom: '1px solid rgba(240,64,176,0.1)', background: 'rgba(26,10,32,0.5)', position: 'relative' }}>
-        {/* LIVE badge */}
+      <section className="landing-stats-section" ref={statsRef} style={{ background: 'rgba(26,10,32,0.5)', borderTop: '1px solid rgba(240,64,176,0.1)', borderBottom: '1px solid rgba(240,64,176,0.1)' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -563,273 +531,126 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             fontSize: 11, fontWeight: 700, color: '#22d3ee', letterSpacing: '1.5px',
             textTransform: 'uppercase'
           }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: '#22d3ee',
-              display: 'inline-block',
-              boxShadow: '0 0 8px #22d3ee',
-              animation: 'livePulse 1.4s ease-in-out infinite'
-            }} />
-            {statsLoading ? 'Fetching Live Data…' : 'Live Network Stats'}
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22d3ee', display: 'inline-block', boxShadow: '0 0 8px #22d3ee', animation: 'livePulse 1.4s infinite' }} />
+            {statsLoading ? 'Mengambil Data…' : 'Statistik Jaringan Langsung'}
           </span>
-          {statsLastUpdated && !statsLoading && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 6 }}>
-              Updated {statsLastUpdated.toLocaleTimeString()}
-            </div>
-          )}
         </div>
-        <div className="landing-stats-grid" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid' }}>
+        <div className="landing-stats-grid" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           {[
-            { val: counters.blobs, suffix: '+', label: 'Blobs Stored', icon: '⬡', color: '#F040B0' },
-            { val: counters.txns,  suffix: '+', label: 'Aptos Transactions', icon: <AptosLogo size={32} />, color: '#a040f0' },
-            { val: counters.nodes, suffix: '', label: 'Active Storage Nodes', icon: <PetraLogo size={32} />, color: '#22d3ee' },
+            { val: counters.blobs, label: 'Blob Disimpan', icon: '⬡', color: '#F040B0' },
+            { val: counters.txns,  label: 'Transaksi Aptos', icon: <AptosLogo size={32} />, color: '#a040f0' },
+            { val: counters.nodes, label: 'Node Penyimpanan Aktif', icon: <PetraLogo size={32} />, color: '#22d3ee' },
           ].map((stat, i) => (
-            <div className="stat-card" key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, marginBottom: 6, display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
-              <div style={{
-                fontSize: 'clamp(36px, 4vw, 52px)', fontWeight: 900,
-                letterSpacing: '-2px', color: stat.color, fontFamily: 'inherit',
-                opacity: statsLoading && stat.val === 0 ? 0 : 1,
-                transition: 'opacity 0.4s ease',
-                minHeight: '1em'
-              }}>
-                {statsLoading && stat.val === 0
-                  ? '  '
-                  : stat.val.toLocaleString()
-                }
-                <span style={{ fontSize: '0.5em' }}>
-                  {!statsLoading && stat.val > 0 ? stat.suffix : ''}
-                </span>
+            <div className="stat-card" key={i} style={{ textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: 28, marginBottom: 8, display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
+              <div style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', color: stat.color }}>
+                {stat.val.toLocaleString()}+
               </div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* â”€â”€â”€ FEATURES â”€â”€â”€ */}
-      <section id="features" className="landing-section" style={{}}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          {/* Section header */}
-          <div style={{ textAlign: 'center', marginBottom: 72 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 16, textTransform: 'uppercase' }}>Core Features</div>
-            <h2 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 900, margin: '0 0 20px', letterSpacing: '-1.5px' }}>
-              Built for the Onchain Era
-            </h2>
-            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
-              Everything you expect from email, rebuilt on decentralized infrastructure you can verify.
-            </p>
-          </div>
-
-          {/* Features grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            {features.map((f, i) => (
-              <div className="feature-card"
-                key={i}
-                onClick={() => setActiveFeature(i)}
-                style={{
-                  padding: '32px 28px',
-                  borderRadius: 20,
-                  border: `1px solid ${activeFeature === i ? f.color + '50' : 'rgba(255,255,255,0.06)'}`,
-                  background: activeFeature === i ? `linear-gradient(135deg, ${f.color}10, ${f.color}05)` : 'rgba(255,255,255,0.02)',
-                  cursor: 'pointer', transition: 'all 0.3s',
-                  boxShadow: activeFeature === i ? `0 8px 40px ${f.color}20` : 'none',
-                }}
-                onMouseEnter={e => { if (activeFeature !== i) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={e => { if (activeFeature !== i) e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
-              >
-                <div style={{
-                  width: 52, height: 52, borderRadius: 14,
-                  background: f.color + '18', border: `1px solid ${f.color}35`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 24, marginBottom: 20
-                }}>{f.icon}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: activeFeature === i ? f.color : '#fff', transition: 'color 0.3s' }}>{f.title}</h3>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: 0 }}>{f.desc}</p>
-                {activeFeature === i && (
-                  <div style={{ marginTop: 20, height: 2, background: `linear-gradient(90deg, ${f.color}, transparent)`, borderRadius: 1 }} />
-                )}
-              </div>
-            ))}
-          </div>
+      {/* ─── KEUNGGULAN ─── */}
+      <section id="keunggulan" className="landing-section">
+        <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', marginBottom: 60 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 12 }}>KEUNGGULAN UTAMA</div>
+          <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Dibangun untuk Era Onchain</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
+          {features.map((f, i) => (
+            <div key={i} style={{ padding: 32, borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: f.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, marginBottom: 20 }}>{f.icon}</div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{f.title}</h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* â”€â”€â”€ HOW IT WORKS â”€â”€â”€ */}
-      <section id="how-it-works" className="landing-section" style={{ background: 'rgba(16,8,24,0.6)', position: 'relative', overflow: 'hidden' }}>
-        {/* BG shards */}
-        <div style={{ position: 'absolute', right: '-5%', top: '10%', width: '28%', height: '80%', background: '#F040B0', opacity: 0.04, borderRadius: 40, transform: 'rotate(15deg) skewX(5deg)' }} />
-        <div style={{ position: 'absolute', left: '-3%', bottom: '5%', width: '20%', height: '50%', background: '#6001D2', opacity: 0.06, borderRadius: 32, transform: 'rotate(-10deg)' }} />
-
-        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ textAlign: 'center', marginBottom: 80 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 16, textTransform: 'uppercase' }}>Process</div>
-            <h2 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 900, margin: '0 0 16px', letterSpacing: '-1.5px' }}>How It Works</h2>
-            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 460, margin: '0 auto' }}>Four simple steps from compose to on-chain forever.</p>
+      {/* ─── CARA KERJA ─── */}
+      <section id="cara-kerja" className="landing-section" style={{ background: 'rgba(16,8,24,0.6)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900 }}>Bagaimana Cara Kerjanya?</h2>
           </div>
-
-          <div className="landing-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', position: 'relative' }}>
-            {/* Connecting line */}
-            <div style={{
-              position: 'absolute', top: 52, left: '12.5%', right: '12.5%', height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(240,64,176,0.3) 20%, rgba(240,64,176,0.3) 80%, transparent)',
-              display: 'none'
-            }} />
+          <div className="landing-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
             {steps.map((s, i) => (
-              <div className="step-card" key={i} style={{ textAlign: 'center', padding: '24px 20px' }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: '50%', margin: '0 auto 24px',
-                  background: 'linear-gradient(135deg, rgba(240,64,176,0.15), rgba(96,1,210,0.15))',
-                  border: '1px solid rgba(240,64,176,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'monospace', fontSize: 13, fontWeight: 800, color: '#F040B0',
-                  position: 'relative'
-                }}>
-                  {s.num}
-                  <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '1px solid rgba(240,64,176,0.1)' }} />
-                </div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 12px', color: '#fff' }}>{s.title}</h3>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.48)', lineHeight: 1.7, margin: 0 }}>{s.desc}</p>
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(240,64,176,0.1)', border: '1px solid #F040B0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontWeight: 800, color: '#F040B0' }}>{s.num}</div>
+                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{s.title}</h3>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* â”€â”€â”€ SECURITY â”€â”€â”€ */}
-      <section id="security" className="landing-section" style={{}}>
-        <div className="landing-security-content" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Left */}
-          <div style={{ flex: '1 1 380px' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 16, textTransform: 'uppercase' }}>Security</div>
-            <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, margin: '0 0 24px', letterSpacing: '-1.5px', lineHeight: 1.1 }}>
-              Privacy-First,<br />At Every Layer
-            </h2>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', lineHeight: 1.8, marginBottom: 36 }}>
-              We don't trust our own servers with your data. Every message is encrypted in your browser before upload    not even Shelby nodes can read it.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* ─── KEAMANAN ─── */}
+      <section id="keamanan" className="landing-section">
+        <div className="landing-security-content" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 60 }}>
+          <div style={{ flex: '1 1 400px' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#F040B0', marginBottom: 12 }}>KEAMANAN</div>
+            <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, marginBottom: 20 }}>Privasi Utama di Setiap Lapisan</h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>Kami tidak mempercayai server kami sendiri dengan data Anda. Setiap pesan dienkripsi di browser Anda sebelum diunggah—bahkan node Shelby tidak bisa membacanya.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { label: 'AES-GCM 256-bit message encryption', icon: 'ðŸ”' },
-                { label: 'PBKDF2 key derivation from wallet address', icon: '🔑' },
-                { label: 'SHA-256 recipient address privacy hashing', icon: '🛡️' },
-                { label: '8+4 erasure coding across 7 storage nodes', icon: '⬡' },
-                { label: 'Aptos merkle root on-chain verification', icon: '✅' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0', opacity: 0.6 }} />
-                  <span>{item.label}</span>
+                'Enkripsi pesan AES-GCM 256-bit',
+                'Derivasi kunci PBKDF2 dari alamat dompet',
+                'Hashing privasi alamat penerima SHA-256',
+                'Erasure coding 8+4 di 7 node penyimpanan',
+                'Verifikasi on-chain akar merkle Aptos'
+              ].map((t, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0' }} />
+                  {t}
                 </div>
               ))}
             </div>
           </div>
-          {/* Right â€” security visual */}
-          <div style={{ flex: '1 1 320px' }}>
-            <div style={{
-              background: 'rgba(16,6,24,0.8)', border: '1px solid rgba(240,64,176,0.2)',
-              borderRadius: 24, padding: '32px 28px', fontFamily: 'monospace', fontSize: 12,
-              boxShadow: '0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(240,64,176,0.06)'
-            }}>
-              <div style={{ color: '#F040B0', marginBottom: 6, fontSize: 11, opacity: 0.7 }}>// encrypt payload before upload</div>
-              <div style={{ color: '#8b5cf6', marginBottom: 2 }}>const <span style={{ color: '#22d3ee' }}>key</span> = await <span style={{ color: '#F040B0' }}>deriveKey</span>(<span style={{ color: '#fbbf24' }}>senderAddr</span>);</div>
-              <div style={{ color: '#8b5cf6', marginBottom: 2 }}>const <span style={{ color: '#22d3ee' }}>iv</span> = crypto.<span style={{ color: '#F040B0' }}>getRandomValues</span>(<span style={{ color: '#fbbf24' }}>12</span>);</div>
-              <div style={{ color: '#8b5cf6', marginBottom: 16 }}>const <span style={{ color: '#22d3ee' }}>cipher</span> = await <span style={{ color: '#F040B0' }}>encrypt</span>(<span style={{ color: '#fbbf24' }}>AES-GCM</span>, key, msg);</div>
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16, color: '#F040B0', fontSize: 11, opacity: 0.7 }}>// upload: encrypted, never plaintext</div>
-              <div style={{ color: '#8b5cf6' }}>await <span style={{ color: '#F040B0' }}>uploadBlobs</span>({'{'} blobData: cipher {'}'});</div>
-              <div style={{ marginTop: 24, padding: '10px 14px', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 10, color: '#22d3ee', fontSize: 11 }}>
-                ✓ Nodes receive only ciphertext
-              </div>
-            </div>
+          <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.3)', padding: 32, borderRadius: 24, border: '1px solid rgba(240,64,176,0.2)', fontFamily: 'monospace', fontSize: 12 }}>
+            <div style={{ color: '#F040B0', opacity: 0.6, marginBottom: 8 }}>// enkripsi sebelum upload</div>
+            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>key</span> = await deriveKey(sender);</div>
+            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>cipher</span> = await encrypt(msg, key);</div>
+            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: '#22d3ee' }}>✓ Node hanya menerima ciphertext</div>
           </div>
         </div>
       </section>
 
-      {/* â”€â”€â”€ TECH STACK â”€â”€â”€ */}
-      <section className="landing-stack-section" style={{ background: 'rgba(16,8,24,0.5)', borderTop: '1px solid rgba(240,64,176,0.08)', borderBottom: '1px solid rgba(240,64,176,0.08)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: 40, textTransform: 'uppercase' }}>Built On</div>
-          <div className="landing-stack-grid" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* ─── TEKNOLOGI ─── */}
+      <section className="landing-stack-section" style={{ padding: '80px 5%', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginBottom: 40 }}>DIBANGUN DI ATAS</p>
+          <div className="landing-stack-grid" style={{ display: 'flex', justifyContent: 'center', gap: 60, flexWrap: 'wrap' }}>
             {[
-              { name: 'Shelby Protocol', icon: '⬡', color: '#F040B0', desc: 'Blob Storage' },
-              { name: 'Aptos', icon: <AptosLogo size={32} />, color: '#22d3ee', desc: 'L1 Blockchain' },
-              { name: 'Petra Wallet', icon: <PetraLogo size={32} />, color: '#fb923c', desc: 'Wallet Adapter' },
+               { n: 'Shelby Protocol', i: '⬡', c: '#F040B0' },
+               { n: 'Aptos', i: <AptosLogo size={32} />, c: '#22d3ee' },
+               { n: 'Petra Wallet', i: <PetraLogo size={32} />, c: '#f97316' }
             ].map((t, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 16,
-                  background: typeof t.icon === 'string' ? t.color + '15' : 'rgba(255,255,255,0.05)', 
-                  border: `1px solid ${typeof t.icon === 'string' ? t.color + '30' : 'rgba(255,255,255,0.1)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
-                  transition: 'all 0.2s', cursor: 'default'
-                }}>{t.icon}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{t.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{t.desc}</div>
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 12, display: 'flex', justifyContent: 'center' }}>{t.i}</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{t.n}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* â”€â”€â”€ FINAL CTA â”€â”€â”€ */}
-      <section className="landing-cta-section" style={{ textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        {/* Shelby-style pink shards */}
-        <div style={{ position: 'absolute', top: 0, left: '-5%', width: '30%', height: '100%', background: '#F040B0', opacity: 0.06, transform: 'rotate(-12deg) skewX(-5deg)', borderRadius: 40 }} />
-        <div style={{ position: 'absolute', top: 0, right: '-5%', width: '28%', height: '100%', background: '#F040B0', opacity: 0.05, transform: 'rotate(10deg) skewX(4deg)', borderRadius: 40 }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(240,64,176,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px', opacity: 0.5 }} />
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 900, margin: '0 0 20px', letterSpacing: '-2px' }}>
-            Your Inbox,<br />
-            <span style={{ background: 'linear-gradient(90deg, #F040B0, #a040f0, #6001D2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              On the Blockchain
-            </span>
-          </h2>
-          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px', lineHeight: 1.7 }}>
-            Connect your wallet and start sending encrypted, on-chain messages to any Aptos address today.
-          </p>
-          <button
-            onClick={handleLaunchApp}
-            style={{
-              background: 'linear-gradient(135deg, #F040B0 0%, #8020d0 100%)',
-              color: '#fff', border: 'none', borderRadius: 16,
-              padding: '18px 52px', fontWeight: 800, fontSize: 18,
-              cursor: 'pointer', letterSpacing: '-0.3px', fontFamily: 'inherit',
-              boxShadow: '0 12px 48px rgba(240,64,176,0.45)',
-              transition: 'all 0.25s'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 20px 60px rgba(240,64,176,0.6)' }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 12px 48px rgba(240,64,176,0.45)' }}
-          >
-            ✉️ Launch AptosBlobs Mail
-          </button>
-          <div style={{ marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>
-            No sign-up · No email · Just your wallet
-          </div>
-        </div>
+      {/* ─── CTA FINAL ─── */}
+      <section className="landing-cta-section" style={{ padding: '120px 5%', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Email On-Chain Anda Siap Digunakan</h2>
+        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>Tanpa pendaftaran. Tanpa email pihak ketiga. Hanya dompet Anda.</p>
+        <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>Luncurkan Aplikasi →</button>
       </section>
 
-      {/* â”€â”€â”€ FOOTER â”€â”€â”€ */}
-      <footer className="landing-footer" style={{ borderTop: '1px solid rgba(240,64,176,0.1)', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* ─── FOOTER ─── */}
+      <footer className="landing-footer" style={{ padding: '40px 5%', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #F040B0, #6001D2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✉️</div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>AptosBlobs<span style={{ color: '#F040B0' }}>MAIL</span></span>
+          <div style={{ width: 24, height: 24, borderRadius: 6, background: '#F040B0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✉️</div>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>AptosBlobs MAIL</span>
         </div>
-        <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[
-            { label: 'Shelby Protocol', href: 'https://shelby.xyz' },
-            { label: 'Aptos Explorer', href: 'https://explorer.aptoslabs.com/?network=testnet' },
-            { label: 'GitHub', href: 'https://github.com/shelby' },
-            { label: 'Docs', href: 'https://shelby.xyz' },
-          ].map(link => (
-            <a key={link.label} href={link.href} target="_blank" rel="noreferrer"
-              style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#F040B0'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-            >{link.label}</a>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
-          Built on Shelby Protocol × Aptos © 2026
-        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 Dibangun di atas Shelby Protocol × Aptos</div>
       </footer>
 
       {/* â”€â”€â”€ KEYFRAME ANIMATIONS â”€â”€â”€ */}
