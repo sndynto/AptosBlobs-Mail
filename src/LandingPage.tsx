@@ -67,7 +67,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     gsap.fromTo('.feature-card', 
       { y: 40, opacity: 0 },
       {
-        scrollTrigger: { trigger: '#keunggulan', start: 'top 80%', once: true },
+        scrollTrigger: { trigger: '#features', start: 'top 80%', once: true },
         y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: 'power3.out'
       }
     )
@@ -76,7 +76,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     gsap.fromTo('.step-card', 
       { y: 40, opacity: 0 },
       {
-        scrollTrigger: { trigger: '#cara-kerja', start: 'top 80%', once: true },
+        scrollTrigger: { trigger: '#how-it-works', start: 'top 80%', once: true },
         y: 0, opacity: 1, duration: 0.8, stagger: 0.2, ease: 'power3.out'
       }
     )
@@ -227,35 +227,35 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
   const features = [
     {
       icon: '⬡',
-      title: 'Penyimpanan Blob Shelby',
-      desc: 'Setiap pesan disimpan sebagai blob permanen di Shelby Protocol dengan erasure coding 8+4—tanpa risiko titik kegagalan tunggal.',
+      title: 'Shelby Blob Storage',
+      desc: 'Each message is stored as a permanent blob on the Shelby Protocol with 8+4 erasure coding—no single point of failure risk.',
       color: '#F040B0'
     },
     {
       icon: <AptosLogo size={32} />,
-      title: 'Finansialisasi di Aptos',
-      desc: 'Semua transaksi difinalisasi di blockchain Aptos, memberikan Anda bukti yang dapat diverifikasi dan tahan sensor untuk setiap pesan.',
+      title: 'Finalized on Aptos',
+      desc: 'All transactions are finalized on the Aptos blockchain, providing you with verifiable and censorship-resistant proof for every message.',
       color: '#6001D2'
     },
     {
       icon: '🔒',
-      title: 'Enkripsi AES-GCM',
-      desc: 'Enkripsi end-to-end menggunakan AES-GCM dengan derivasi kunci PBKDF2—pesan Anda tidak dapat dibaca oleh node penyimpanan.',
+      title: 'AES-GCM Encryption',
+      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation—your messages cannot be read by storage nodes.',
       color: '#F040B0'
     },
     {
       icon: '📬',
-      title: 'Kirim ke Alamat Dompet Mana Saja',
-      desc: 'Kirim pesan terenkripsi ke alamat dompet Aptos mana pun. Tanpa username, tanpa akun—hanya identitas on-chain Anda.',
+      title: 'Send to Any Wallet',
+      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts—just your on-chain identity.',
       color: '#6001D2'
     }
   ]
 
   const steps = [
-    { num: '01', title: 'Hubungkan Dompet', desc: 'Hubungkan dompet Aptos Anda (Petra, Martian, atau dompet kompatabel Aptos lainnya).' },
-    { num: '02', title: 'Tulis & Enkripsi', desc: 'Tulis pesan Anda. Pesan dienkripsi otomatis dengan AES-GCM sebelum meninggalkan browser.' },
-    { num: '03', title: 'Kirim On-Chain', desc: 'Blob terenkripsi diunggah ke node Shelby dan akar merkle dikomitmenkan ke blockchain Aptos.' },
-    { num: '04', title: 'Verifikasi & Unduh', desc: 'Penerima mengambil dan mendekripsi pesan secara lokal menggunakan kunci dompet mereka secara aman.' },
+    { num: '01', title: 'Connect Wallet', desc: 'Connect your Aptos wallet (Petra, Martian, or other Aptos-compatible wallets).' },
+    { num: '02', title: 'Compose & Encrypt', desc: 'Write your message. Messages are automatically encrypted with AES-GCM before leaving the browser.' },
+    { num: '03', title: 'Send On-Chain', desc: 'Encrypted blobs are uploaded to Shelby nodes, and the Merkle root is committed to the Aptos blockchain.' },
+    { num: '04', title: 'Verify & Download', desc: 'The recipient retrieves and decrypts the message locally using their wallet keys securely.' },
   ]
 
   return (
@@ -292,10 +292,10 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         {/* Nav Links */}
         <div className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
           {[
-            { label: 'Keunggulan', id: 'keunggulan' },
-            { label: 'Cara Kerja', id: 'cara-kerja' },
-            { label: 'Keamanan', id: 'keamanan' },
-            { label: 'Dokumentasi', id: 'docs', external: true }
+            { label: 'Features', id: 'features' },
+            { label: 'How It Works', id: 'how-it-works' },
+            { label: 'Security', id: 'security' },
+            { label: 'Documentation', id: 'docs', external: true }
           ].map(link => (
             <a
               key={link.label}
@@ -342,7 +342,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(240,64,176,0.5)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(240,64,176,0.35)' }}
         >
-          Mulai Aplikasi →
+          Launch App →
         </button>
       </nav>
 
@@ -399,7 +399,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <div className="landing-hero-container" style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', width: '100%', padding: '120px 5% 80px' }}>
           <div className="landing-hero-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             
-            {/* Sisi Kiri */}
+            {/* Left Side */}
             <div style={{ flex: '1 1 520px', maxWidth: 620 }}>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -408,7 +408,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 fontSize: 12, fontWeight: 600, color: '#F040B0', letterSpacing: '0.5px'
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0', display: 'inline-block', boxShadow: '0 0 8px #F040B0' }} />
-                DITENAGAI OLEH SHELBY PROTOCOL × APTOS
+                POWERED BY SHELBY PROTOCOL × APTOS
               </div>
 
               <h1 className="hero-headline" style={{
@@ -416,19 +416,19 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 lineHeight: 1.05, margin: '0 0 24px',
                 letterSpacing: '-2px',
               }}>
-                Email Terdesentralisasi<br />
+                Decentralized Email<br />
                 <span style={{
                   background: 'linear-gradient(90deg, #F040B0 0%, #a040f0 60%, #6001D2 100%)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
-                }}>Untuk Era Web3</span>
+                }}>For the Web3 Era</span>
               </h1>
 
               <p className="hero-desc" style={{
                 fontSize: 18, lineHeight: 1.75, color: 'rgba(255,255,255,0.62)',
                 margin: '0 0 40px', maxWidth: 500, fontWeight: 400
               }}>
-                Kirim pesan terenkripsi ke alamat dompet Aptos mana pun. Data Anda hidup permanen secara on-chain sebagai blob—tahan sensor, dapat diverifikasi, dan sepenuhnya milik Anda.
+                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs—censorship-resistant, verifiable, and entirely yours.
               </p>
 
               <div className="hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -444,7 +444,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     display: 'flex', alignItems: 'center', gap: 10
                   }}
                 >
-                  <span style={{ fontSize: 20 }}>✉️</span> Buka Kotak Masuk
+                  <span style={{ fontSize: 20 }}>✉️</span> Open Inbox
                 </button>
                 <a
                   href="https://shelby.xyz"
@@ -458,7 +458,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit'
                   }}
                 >
-                  ⬡ Dokumentasi Shelby ↗
+                  ⬡ Shelby Documentation ↗
                 </a>
               </div>
 
@@ -475,7 +475,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Sisi Kanan — Preview Aplikasi */}
+            {/* Right Side — App Preview */}
             <div className="hero-mockup" style={{ flex: '1 1 380px', maxWidth: 460 }}>
               <div style={{
                 background: '#ffffff',
@@ -488,14 +488,14 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
-                  <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Kotak Masuk</span>
+                  <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Inbox</span>
                 </div>
 
                 <div style={{ padding: '12px' }}>
                   {[
-                    { from: 'Ke: 0x1a2b...4c5d', subject: 'Update Yield DeFi', tag: 'defi', unread: true, time: '09:42', iconCol: '#6001d2' },
-                    { from: 'Ke: 0x9e8f...7a6b', subject: 'Proposal DAO #47', tag: 'dao', unread: false, time: '08:15', iconCol: '#F040B0' },
-                    { from: 'Ke: 0x3c4d...2e1f', subject: 'Konfirmasi NFT Drop', tag: 'nft', unread: true, time: 'Kemarin', iconCol: '#00c49f' },
+                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: '#6001d2' },
+                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', iconCol: '#F040B0' },
+                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
                       <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }}>⬡</div>
@@ -508,7 +508,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                       </div>
                     </div>
                   ))}
-                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>➤ Kirim via Aptos</div>
+                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>➤ Send via Aptos</div>
                 </div>
               </div>
             </div>
@@ -532,14 +532,14 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             textTransform: 'uppercase'
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22d3ee', display: 'inline-block', boxShadow: '0 0 8px #22d3ee', animation: 'livePulse 1.4s infinite' }} />
-            {statsLoading ? 'Mengambil Data…' : 'Statistik Jaringan Langsung'}
+            {statsLoading ? 'Fetching Data…' : 'Live Network Statistics'}
           </span>
         </div>
         <div className="landing-stats-grid" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           {[
-            { val: counters.blobs, label: 'Blob Disimpan', icon: '⬡', color: '#F040B0' },
-            { val: counters.txns,  label: 'Transaksi Aptos', icon: <AptosLogo size={32} />, color: '#a040f0' },
-            { val: counters.nodes, label: 'Node Penyimpanan Aktif', icon: <PetraLogo size={32} />, color: '#22d3ee' },
+            { val: counters.blobs, label: 'Blobs Stored', icon: '⬡', color: '#F040B0' },
+            { val: counters.txns,  label: 'Aptos Transactions', icon: <AptosLogo size={32} />, color: '#a040f0' },
+            { val: counters.nodes, label: 'Active Storage Nodes', icon: <PetraLogo size={32} />, color: '#22d3ee' },
           ].map((stat, i) => (
             <div className="stat-card" key={i} style={{ textAlign: 'center', padding: '20px' }}>
               <div style={{ fontSize: 28, marginBottom: 8, display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
@@ -552,11 +552,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ─── KEUNGGULAN ─── */}
-      <section id="keunggulan" className="landing-section">
+      {/* ─── FEATURES ─── */}
+      <section id="features" className="landing-section">
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', marginBottom: 60 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 12 }}>KEUNGGULAN UTAMA</div>
-          <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Dibangun untuk Era Onchain</h2>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 12 }}>KEY FEATURES</div>
+          <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Built for the Onchain Era</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
           {features.map((f, i) => (
@@ -569,11 +569,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ─── CARA KERJA ─── */}
-      <section id="cara-kerja" className="landing-section" style={{ background: 'rgba(16,8,24,0.6)' }}>
+      {/* ─── HOW IT WORKS ─── */}
+      <section id="how-it-works" className="landing-section" style={{ background: 'rgba(16,8,24,0.6)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900 }}>Bagaimana Cara Kerjanya?</h2>
+            <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900 }}>How Does It Work?</h2>
           </div>
           <div className="landing-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
             {steps.map((s, i) => (
@@ -587,20 +587,20 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ─── KEAMANAN ─── */}
-      <section id="keamanan" className="landing-section">
+      {/* ─── SECURITY ─── */}
+      <section id="security" className="landing-section">
         <div className="landing-security-content" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 60 }}>
           <div style={{ flex: '1 1 400px' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#F040B0', marginBottom: 12 }}>KEAMANAN</div>
-            <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, marginBottom: 20 }}>Privasi Utama di Setiap Lapisan</h2>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>Kami tidak mempercayai server kami sendiri dengan data Anda. Setiap pesan dienkripsi di browser Anda sebelum diunggah—bahkan node Shelby tidak bisa membacanya.</p>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#F040B0', marginBottom: 12 }}>SECURITY</div>
+            <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, marginBottom: 20 }}>Privacy First at Every Layer</h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>We don't trust our own servers with your data. Every message is encrypted in your browser before upload—not even Shelby nodes can read it.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                'Enkripsi pesan AES-GCM 256-bit',
-                'Derivasi kunci PBKDF2 dari alamat dompet',
-                'Hashing privasi alamat penerima SHA-256',
-                'Erasure coding 8+4 di 7 node penyimpanan',
-                'Verifikasi on-chain akar merkle Aptos'
+                '256-bit AES-GCM message encryption',
+                'PBKDF2 key derivation from wallet address',
+                'SHA-256 recipient address privacy hashing',
+                '8+4 erasure coding across 7 storage nodes',
+                'Aptos Merkle root on-chain verification'
               ].map((t, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0' }} />
@@ -610,18 +610,18 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             </div>
           </div>
           <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.3)', padding: 32, borderRadius: 24, border: '1px solid rgba(240,64,176,0.2)', fontFamily: 'monospace', fontSize: 12 }}>
-            <div style={{ color: '#F040B0', opacity: 0.6, marginBottom: 8 }}>// enkripsi sebelum upload</div>
+            <div style={{ color: '#F040B0', opacity: 0.6, marginBottom: 8 }}>// encrypt before upload</div>
             <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>key</span> = await deriveKey(sender);</div>
             <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>cipher</span> = await encrypt(msg, key);</div>
-            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: '#22d3ee' }}>✓ Node hanya menerima ciphertext</div>
+            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: '#22d3ee' }}>✓ Node only receives ciphertext</div>
           </div>
         </div>
       </section>
 
-      {/* ─── TEKNOLOGI ─── */}
+      {/* ─── TECHNOLOGY ─── */}
       <section className="landing-stack-section" style={{ padding: '80px 5%', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginBottom: 40 }}>DIBANGUN DI ATAS</p>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginBottom: 40 }}>BUILT ON TOP OF</p>
           <div className="landing-stack-grid" style={{ display: 'flex', justifyContent: 'center', gap: 60, flexWrap: 'wrap' }}>
             {[
                { n: 'Shelby Protocol', i: '⬡', c: '#F040B0' },
@@ -637,11 +637,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ─── CTA FINAL ─── */}
+      {/* ─── FINAL CTA ─── */}
       <section className="landing-cta-section" style={{ padding: '120px 5%', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Email On-Chain Anda Siap Digunakan</h2>
-        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>Tanpa pendaftaran. Tanpa email pihak ketiga. Hanya dompet Anda.</p>
-        <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>Luncurkan Aplikasi →</button>
+        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Email is Ready</h2>
+        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party email. Just your wallet.</p>
+        <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>Launch App →</button>
       </section>
 
       {/* ─── FOOTER ─── */}
@@ -650,10 +650,10 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div style={{ width: 24, height: 24, borderRadius: 6, background: '#F040B0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✉️</div>
           <span style={{ fontWeight: 700, fontSize: 14 }}>AptosBlobs MAIL</span>
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 Dibangun di atas Shelby Protocol × Aptos</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 Built on Shelby Protocol × Aptos</div>
       </footer>
 
-      {/* â”€â”€â”€ KEYFRAME ANIMATIONS â”€â”€â”€ */}
+      {/* ─── KEYFRAME ANIMATIONS ─── */}
       <style>{`
         /* Global & Reset */
         * { box-sizing: border-box; }

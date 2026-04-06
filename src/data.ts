@@ -10,9 +10,9 @@ export type Mail = {
   body: string
   blobs: any[]
   color: number
-  pending?: boolean   // true = blob belum dikonfirmasi on-chain
-  timestamp?: number  // Untuk sorting berdasarkan waktu terbaru
-  private?: boolean    // true = pesan terenkripsi/allowlist
+  pending?: boolean   // true = blob not yet confirmed on-chain
+  timestamp?: number  // For sorting by most recent time
+  private?: boolean    // true = encrypted message/allowlist
 }
 
 // [background, text]    vivid solid for circle avatars on white bg

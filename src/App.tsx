@@ -33,9 +33,9 @@ export default function App() {
   const [fadeOut, setFadeOut] = useState(false)
   
   const key = currentNetwork === 'shelbynet' ? API_KEY_SHELBYNET : API_KEY_TESTNET
-  const noKey = !key || key.startsWith('masukkan_api_key')
+  const noKey = !key || key.startsWith('insert_api_key')
   const envSecret = import.meta.env.VITE_SHELBY_APP_SECRET
-  const noSecret = !envSecret || envSecret === 'GANTI_DENGAN_SECRET_RANDOM_ANDA_SENDIRI_MINIMAL_32_CHAR' || envSecret === 'masukkan_secret_disini'
+  const noSecret = !envSecret || envSecret === 'REPLACE_WITH_YOUR_OWN_RANDOM_SECRET_MINIMUM_32_CHARS' || envSecret === 'insert_secret_here'
   const envVar = currentNetwork === 'shelbynet' ? 'VITE_SHELBY_API_KEY_SHELBYNET' : 'VITE_SHELBY_API_KEY_TESTNET'
 
   const handleEnterApp = () => {
@@ -77,17 +77,17 @@ export default function App() {
           <span>
             {noKey && (
               <>
-                <b>{envVar}</b> tidak ditemukan untuk {currentNetwork}.
+                <b>{envVar}</b> not found for {currentNetwork}.
               </>
             )}
             {noKey && noSecret && <span style={{margin: '0 8px'}}>|</span>}
             {noSecret && (
               <>
-                <b>VITE_SHELBY_APP_SECRET</b> belum dikonfigurasi.
+                <b>VITE_SHELBY_APP_SECRET</b> not yet configured.
               </>
             )}
-            <span style={{marginLeft: 8}}>Periksa file <code style={{background:'#fef3c7',padding:'1px 6px',borderRadius:4,border:'1px solid #fde68a'}}>.env</code> Anda.</span>
-            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#6001D2', fontWeight:600, marginLeft: 8}}>Dapatkan Key →</a>
+            <span style={{marginLeft: 8}}>Check your <code style={{background:'#fef3c7',padding:'1px 6px',borderRadius:4,border:'1px solid #fde68a'}}>.env</code> file.</span>
+            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#6001D2', fontWeight:600, marginLeft: 8}}>Get Key →</a>
           </span>
         </div>
       )}
@@ -100,7 +100,7 @@ export default function App() {
 //  Utilities & Formatting
 // -------------------------------------------------------------------------
 const formatAddr = (addr: string) => {
-  if (!addr || addr === '0x') return 'Anonim'
+  if (!addr || addr === '0x') return 'Anonymous'
   const clean = addr.replace(/^to_/, '').split('_')[0]
   return `${clean.slice(0, 6)}...${clean.slice(-4)}`
 }
@@ -134,9 +134,9 @@ const deriveKey = async (salt: string) => {
   
   if (!envSecret || 
       envSecret === 'SHELBY_APP_MASTER_SECRET_2026_XRAY' || 
-      envSecret === 'masukkan_secret_disini' || 
-      envSecret === 'GANTI_DENGAN_SECRET_RANDOM_ANDA_SENDIRI_MINIMAL_32_CHAR') {
-    throw new Error("KEAMANAN KRITIS: VITE_SHELBY_APP_SECRET tidak ditemukan atau masih menggunakan nilai default. Harap atur secret unik minimal 32 karakter di file .env Anda.");
+      envSecret === 'insert_secret_here' || 
+      envSecret === 'REPLACE_WITH_YOUR_OWN_RANDOM_SECRET_MINIMUM_32_CHARS') {
+    throw new Error("CRITICAL SECURITY: VITE_SHELBY_APP_SECRET not found or using default values. Please set a unique secret of at least 32 characters in your .env file.");
   }
 
   const secret = envSecret;
@@ -208,7 +208,7 @@ const decryptBody = async (text: string, address: string) => {
       const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as any }, key, ciphertext as any);
       return new TextDecoder().decode(decrypted);
     } catch(e) { 
-      return `[Gagal Dekripsi: Periksa izin/secret Anda]`; 
+      return `[Decryption Failed: Check your permissions/secret]`; 
     }
   }
   return text;
@@ -229,7 +229,7 @@ const decryptBinary = async (data: Uint8Array, address: string, ivBase64: string
     const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as any }, key, data as any);
     return new Uint8Array(decrypted);
   } catch(e) {
-    throw new Error("Gagal mendekripsi lampiran. Periksa izin/secret Anda.");
+    throw new Error("Failed to decrypt attachment. Check your permissions/secret.");
   }
 }
 
@@ -254,8 +254,8 @@ const TAG_ICONS: Record<string, any> = {
 
 const TAG_LABELS: Record<string, string> = {
   shelby: 'Shelby', aptos: 'Aptos', blobs: 'Blob',
-  nft: 'NFT', defi: 'DeFi', dao: 'DAO', attachment: 'Lampiran',
-  pending: 'Tertunda', starred: 'Berbintang'
+  nft: 'NFT', defi: 'DeFi', dao: 'DAO', attachment: 'Attachment',
+  pending: 'Pending', starred: 'Starred'
 }
 
 const Tag = ({ type }: { type: string }) => (
@@ -338,8 +338,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         });
         
         return res;
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("Failed fetching incoming blobs:", err);
+      } catch (_err) {
         return [];
       }
     },
@@ -388,37 +387,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     return !currentWalletNet.includes('testnet');
   }, [connected, walletNetwork]);
 
-  const [hiddenMailIds, setHiddenMailIds] = useState<number[]>(() => {
-    const saved = localStorage.getItem(`aptosblobs_hidden_${currentNetwork}`)
-    try { return saved ? JSON.parse(saved) : [] } catch (e) { return [] }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(`aptosblobs_hidden_${currentNetwork}`, JSON.stringify(hiddenMailIds))
-  }, [hiddenMailIds, currentNetwork])
-
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
-  
-  const cacheKey = `aptosblobs_cache_${currentNetwork}`
-  const [mails, setMails] = useState<Mail[]>(() => {
-    let saved = localStorage.getItem(cacheKey)
-    if (!saved || saved === '[]') {
-      const oldCache = localStorage.getItem('aptosblobs_cache')
-      if (oldCache && oldCache !== '[]') {
-        saved = oldCache;
-        localStorage.setItem(cacheKey, oldCache);
-      }
-    }
-    
-    if (saved) {
-      try { return JSON.parse(saved) } catch (e) {}
-    }
-    return []
-  })
-
-  useEffect(() => {
-    localStorage.setItem(cacheKey, JSON.stringify(mails))
-  }, [mails, cacheKey])
   const [filteredMails, setFilteredMails] = useState<Mail[]>([])
   const [currentView, setCurrentView] = useState('inbox')
   const [searchQuery, setSearchQuery] = useState('')
@@ -485,7 +454,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
   useEffect(() => {
     (window as any).handleSecureDownload = async (owner: string, blobName: string, fileName: string, iv?: string, saltAddr?: string) => {
       try {
-        showToast(`Mendekripsi ${fileName}...`, 'info');
+        showToast(`Decrypting ${fileName}...`, 'info');
         const blobObj = await shelbyClient.download({ account: owner as any, blobName });
         const response = new Response((blobObj as any).readable);
         const data = await response.blob();
@@ -511,40 +480,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast('Unduhan selesai', 'success');
+        showToast('Download complete', 'success');
       } catch (e: any) {
-        showToast(`Unduhan gagal: ${e.message}`, 'error');
+        showToast(`Download failed: ${e.message}`, 'error');
       }
     };
   }, [shelbyClient]);
 
-  const [aptosPing, setAptosPing] = useState('--')
-  const [shelbyPing, setShelbyPing] = useState('--')
-
-  // Deteksi apakah user membuka via Petra mobile dApp browser
+  // Detect if user is opening via Petra mobile dApp browser
   const isPetraApp = typeof window !== 'undefined' && !!(window as any).aptos
-
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const ping = async () => {
-      try {
-        const mappedNet = currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork
-        const aptosNode = currentNetwork === 'shelbynet'
-          ? 'https://api.shelbynet.shelby.xyz/v1'
-          : `https://api.${mappedNet}.aptoslabs.com/v1`
-        const startAptos = Date.now()
-        await fetch(aptosNode, { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
-        setAptosPing(String(Date.now() - startAptos))
-        
-        const startShelby = Date.now()
-        await fetch(currentNetwork === 'shelbynet' ? 'https://api.shelbynet.shelby.xyz/v1' : 'https://api.testnet.shelby.xyz/v1', { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
-        setShelbyPing(String(Date.now() - startShelby))
-      } catch (e) {}
-    }
-    ping()
-    const interval = setInterval(ping, 10000)
-    return () => clearInterval(interval)
-  }, [currentNetwork])
 
   // Premium Entry Animation with GSAP (All-Device optimized)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -593,9 +537,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       setComposeSubject(draft.composeSubject || '')
       setComposeBody(draft.composeBody || '')
       setComposeOpen(true)
-      showToast('Draf dipulihkan', 'success')
+      showToast('Draft restored', 'success')
     } else {
-      showToast('Tidak ada draf yang tersimpan', 'info')
+      showToast('No saved drafts found', 'info')
     }
   }
 
@@ -607,12 +551,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
   const handleConnect = () => {
     if (connected) {
       disconnect()
-      showToast('Dompet terputus', 'info')
+      showToast('Wallet disconnected', 'info')
       if (onReturnHome) {
         setTimeout(() => onReturnHome(), 250)
       }
     } else {
-      // Di Petra mobile dApp browser, wallet inject otomatis sebagai window.aptos
+      // In Petra mobile dApp browser, wallet is automatically injected as window.aptos
       if (isPetraApp) {
         const petraWallet = wallets?.find(w => w.name === 'Petra')
         if (petraWallet) {
@@ -620,28 +564,26 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           return
         }
       }
-      // Di browser biasa: cari Petra dulu, fallback ke wallet pertama
+      // In regular browsers: look for Petra first, fallback to the first wallet
       const targetWallet = wallets?.find(w => w.name === 'Petra') || wallets?.[0]
       if (targetWallet) {
         connect(targetWallet.name)
       } else {
-        // Mobile: arahkan ke Petra deep link atau halaman download
+        // Mobile: redirect to Petra deep link or download page
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
         if (isMobile) {
-          showToast('Buka dApp ini di browser aplikasi Petra Wallet', 'info')
-          // Deep link ke Petra mobile
+          showToast('Please open this dApp in the Petra Wallet browser', 'info')
+          // Deep link to Petra mobile
           window.open('https://petra.app', '_blank')
         } else {
-          showToast('Dompet Aptos tidak ditemukan. Silakan pasang Petra atau Martian.', 'error')
+          showToast('Aptos wallet not found. Please install Petra or Martian.', 'error')
         }
       }
     }
   }
 
   useEffect(() => {
-    // Universal Filter: Only use mock/local messages if wallet is NOT connected
-    const baseMails = connected ? [] : [...mails]
-    let list = [...baseMails]
+    let list: Mail[] = []
     
     // Merge onchain blobs into the inbox view    grouped by send operation (same timestamp in name)
     if (incomingBlobs && incomingBlobs.length > 0) {
@@ -674,7 +616,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           })
           const primary = blobs[0] as any
           const isPending = !primary.blobMerkleRoot || primary.blobMerkleRoot.every((byte: number) => byte === 0)
-          const senderAddr = (primary.owner || primary.account || primary.creator || '').toString() || 'Pengirim Tidak Dikenal'
+          const senderAddr = (primary.owner || primary.account || primary.creator || '').toString() || 'Unknown Sender'
           const tsMs = (primary.creationMicros ? Math.floor(primary.creationMicros / 1000) : 0) || Date.now()
 
           // Extract subject from .json blob name suffix: to_<addr>_<ts>-<subject>.json
@@ -696,7 +638,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             return {
               name: bn,
               size: ((b.size || 0) / 1024).toFixed(1) + ' KB',
-              hash: bPending ? '⏳ Tertunda...' : '0x' + hexHash,
+              hash: bPending ? '⏳ Pending...' : '0x' + hexHash,
               enc: '8+4',
               pending: bPending
             }
@@ -711,16 +653,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             addr: senderAddr,
             subject,
             preview: isPending
-              ? '🕐 Menunggu konfirmasi...'
+              ? '🕐 Waiting for on-chain confirmation...'
               : hasAttachments
-                ? `📎 ${blobs.length - 1} lampiran · ${formatAddr(senderAddr)}`
-                : `Dari ${formatAddr(senderAddr)}`,
-            time: new Date(tsMs).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                ? `📎 ${blobs.length - 1} attachments · ${formatAddr(senderAddr)}`
+                : `From ${formatAddr(senderAddr)}`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             timestamp: tsMs,
             tags: sTags,
             body: isPending
-              ? `<p>⏳ Pesan ini sedang <b>menunggu konfirmasi on-chain</b>.</p>`
-              : `<p>Memuat isi pesan...</p>`,
+              ? `<p>⏳ This message is <b>waiting for on-chain confirmation</b>.</p>`
+              : `<p>Loading message content...</p>`,
             blobs: blobItems,
             color: (i + 1) % COLORS.length,
             private: groupKey.length > 30 // Rough check if hashed
@@ -744,15 +686,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         const tsMs = ((b as any).creationMicros ? Math.floor((b as any).creationMicros / 1000) : 0) || Date.now()
         return {
           id: -100 - i,
-          unread: false, pending: false, from: 'Blob Mentah',
+          unread: false, pending: false, from: 'Raw Blob',
           addr: account?.address?.toString() || '0x',
-          subject: bName || 'Blob Tanpa Nama',
-          preview: `Hash Blob Mentah...`,
-          time: new Date(tsMs).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+          subject: bName || 'Unnamed Blob',
+          preview: `Raw Blob Hash...`,
+          time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           timestamp: tsMs,
           tags: ['blobs'],
-          body: `<p>Data Blob on-chain mentah.</p>`,
-          blobs: [{ name: bName || 'blob', size: 'Tidak Diketahui', hash: '0x' + hexHash, enc: '8+4', pending: false }], color: 0
+          body: `<p>Raw on-chain Blob data.</p>`,
+          blobs: [{ name: bName || 'blob', size: 'Unknown', hash: '0x' + hexHash, enc: '8+4', pending: false }], color: 0
         }
       })
       list = [...mappedBlobs, ...list]
@@ -831,16 +773,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             addr: account?.address?.toString() || '0x',
             subject,
             preview: isPending
-              ? '🕐 Menunggu konfirmasi on-chain...'
+              ? '🕐 Waiting for on-chain confirmation...'
               : blobs.length > 1
-                ? `📎 ${blobs.length - 1} lampiran · Terkirim`
-                : `Pesan on-chain · Terkirim`,
-            time: new Date(tsMs).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                ? `📎 ${blobs.length - 1} attachments · Sent`
+                : `On-chain message · Sent`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             timestamp: tsMs,
             tags: sTags,
             body: isPending
-              ? `<p>⏳ Pesan ini sedang <b>menunggu konfirmasi on-chain</b>.</p><p>Shelby Protocol sedang melakukan komitmen data Anda ke Aptos. Biasanya memakan waktu 10–30 detik.</p>`
-              : `<p>Memuat isi pesan...</p>`,
+              ? `<p>⏳ This message is <b>waiting for on-chain confirmation</b>.</p><p>Shelby Protocol is committing your data to Aptos. Usually takes 10–30 seconds.</p>`
+              : `<p>Loading message content...</p>`,
             blobs: blobItems,
             color: i % COLORS.length
           }
@@ -861,25 +803,25 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             pending: false,
             from: `Hash: ${tx.hash.substring(0, 10)}...`,
             addr: tx.hash,
-            subject: `Aktivitas: ${shortFunc}`,
-            preview: `${success ? '✅ Berhasil' : '❌ Gagal'} · Versi ${tx.version}`,
-            time: new Date(tsMs).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+            subject: `Activity: ${shortFunc}`,
+            preview: `${success ? '✅ Success' : '❌ Failed'} · Version ${tx.version}`,
+            time: new Date(tsMs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             timestamp: tsMs,
             tags: ['transactions', success ? 'success' : 'failed'],
             body: `
               <div class="txn-detail" style="font-family:var(--sans); color:var(--text-primary);">
-                <h3 style="margin-top:0; color:var(--brand-color); font-size:18px;">Detail Transaksi</h3>
+                <h3 style="margin-top:0; color:var(--brand-color); font-size:18px;">Transaction Details</h3>
                 <p style="margin:8px 0;"><b>Hash:</b> <code style="font-size:11px; color:var(--text-muted); word-break:break-all; background:#f8f9fa; padding:2px 4px; border-radius:4px;">${tx.hash}</code></p>
-                <p style="margin:8px 0;"><b>Versi:</b> <span style="color:#6001D2; font-weight:600;">${tx.version}</span></p>
-                <p style="margin:8px 0;"><b>Fungsi:</b> <code style="font-size:11px; color:#6001D2; background:rgba(96,1,210,0.05); padding:2px 6px; border-radius:4px;">${func}</code></p>
-                <p style="margin:8px 0;"><b>Status:</b> ${success ? '<span style="color:#10b981; font-weight:600;">✅ Berhasil</span>' : '<span style="color:#ef4444; font-weight:600;">❌ Gagal</span>'}</p>
-                <p style="margin:8px 0;"><b>Pengirim:</b> <code style="font-size:11px;">${tx.sender}</code></p>
+                <p style="margin:8px 0;"><b>Version:</b> <span style="color:#6001D2; font-weight:600;">${tx.version}</span></p>
+                <p style="margin:8px 0;"><b>Function:</b> <code style="font-size:11px; color:#6001D2; background:rgba(96,1,210,0.05); padding:2px 6px; border-radius:4px;">${func}</code></p>
+                <p style="margin:8px 0;"><b>Status:</b> ${success ? '<span style="color:#10b981; font-weight:600;">✅ Success</span>' : '<span style="color:#ef4444; font-weight:600;">❌ Failed</span>'}</p>
+                <p style="margin:8px 0;"><b>Sender:</b> <code style="font-size:11px;">${tx.sender}</code></p>
                 <hr style="border:none; border-top:1px solid #f0f0f0; margin:15px 0;"/>
-                <p style="margin:8px 0; font-weight:600; color:var(--text-secondary);">Payload Data:</p>
+                <p style="margin:8px 0; font-weight:600; color:var(--text-secondary);">Data Payload:</p>
                 <pre style="background:#fafafa; padding:12px; border:1px solid #eee; border-radius:8px; font-size:10px; overflow-x:auto; line-height:1.5;">${JSON.stringify(tx.payload, null, 2)}</pre>
                 <div style="margin-top:20px; display:flex; gap:12px;">
                   <a href="https://explorer.aptoslabs.com/txn/${tx.version}?network=${currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork}" target="_blank" class="btn-secure-download" style="text-decoration:none; display:inline-block; text-align:center; flex:1;">
-                    Lihat di Aptos Explorer
+                    View on Aptos Explorer
                   </a>
                 </div>
               </div>
@@ -893,8 +835,6 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       }
     } else if (currentView === 'drafts') {
       list = []
-    } else if (currentView !== 'inbox') {
-      list = baseMails.filter(m => m.tags.includes(currentView))
     }
     
     if (searchQuery) {
@@ -907,10 +847,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       )
     }
 
-    // Final Sort: terbaru paling atas (Strict timestamp first)
+    // Final Sort: latest at top (Strict timestamp first)
     list = [...list].sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0))
     setFilteredMails(list)
-  }, [currentView, mails, searchQuery, onchainBlobs, incomingBlobs, account])
+  }, [currentView, searchQuery, onchainBlobs, incomingBlobs, account])
 
   // Automatically sync allowlist with sent history if enabled
   useEffect(() => {
@@ -991,11 +931,11 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           if (parsed.accessMode === 'allowlist' && !isOwner && !isRecipient && !isAllowlisted) {
             decodedBody = `
               <div class="access-denied">
-                <h3>🔴 Akses Ditolak</h3>
-                <p>Pesan ini dilindungi oleh <b>Wallet Allowlist</b>.</p>
-                <p>Alamat Anda (<code>${myAddress}</code>) tidak diizinkan 
-                untuk melihat konten ini.</p>
-                <div class="access-badge-small">Privasi Shelby Aktif</div>
+                <h3>🔴 Access Denied</h3>
+                <p>This message is protected by a <b>Wallet Allowlist</b>.</p>
+                <p>Your address (<code>${myAddress}</code>) is not permitted 
+                to view this content.</p>
+                <div class="access-badge-small">Shelby Privacy Active</div>
               </div>
             `;
             setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: decodedBody }))
@@ -1018,23 +958,23 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           decodedBody = `
             <div class="decoded-mail ${isReallyPrivate ? 'is-private' : ''}">
               <div class="mail-header-info">
-                <p><b>Dari:</b> <code>${ownerAddr.replace('to_', '').split('_')[0]}</code></p>
-                <p><b>Ke:</b> <code>${finalTo}</code></p>
-                <p><b>Subjek:</b> ${finalSubject}</p>
-                ${isReallyPrivate ? '<p class="privacy-badge">🔒 Terenkripsi AES-GCM</p>' : ''}
+                <p><b>From:</b> <code>${ownerAddr.replace('to_', '').split('_')[0]}</code></p>
+                <p><b>To:</b> <code>${finalTo}</code></p>
+                <p><b>Subject:</b> ${finalSubject}</p>
+                ${isReallyPrivate ? '<p class="privacy-badge">🔒 AES-GCM Encrypted</p>' : ''}
               </div>
               <hr/>
               <div class="mail-text-body">${(finalBody || '').replace(/\n/g, '<br/>')}</div>
               
               ${attachments.length > 0 ? `
                 <div class="secure-attachments">
-                  <p><b>Lampiran (Terdekripsi):</b></p>
+                  <p><b>Attachments (Decrypted):</b></p>
                   <div class="secure-attachment-list">
                     ${attachments.map((at: any) => `
                       <div class="secure-attachment-item">
                         <span>📎 ${at.originalName}</span>
                         <button class="btn-secure-download" onclick="window.handleSecureDownload('${ownerAddr}', '${at.blobName}', '${at.originalName}', '${at.iv || ''}', '${ownerAddr}')">
-                          Unduh Aman
+                          Secure Download
                         </button>
                       </div>
                     `).join('')}
@@ -1050,9 +990,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         
         setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: decodedBody }))
       } catch (e: any) {
-        if (import.meta.env.DEV) console.error("Fetch blob error:", e)
         const errMsg = e?.message || String(e)
-        setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: `<div class="fetch-error">⚠️ <b>Gagal mengambil isi pesan:</b> ${errMsg}<br/><button onclick="window.location.reload()" style="margin-top:10px; cursor:pointer; padding:4px 12px; background:var(--brand-color); color:white; border:none; border-radius:4px; font-size:11px;">Sinkronkan Ulang</button></div>` }))
+        setBlobBodyCache(prev => ({ ...prev, [selectedMailId]: `<div class="fetch-error">⚠️ <b>Failed to fetch message body:</b> ${errMsg}<br/><button onclick="window.location.reload()" style="margin-top:10px; cursor:pointer; padding:4px 12px; background:var(--brand-color); color:white; border:none; border-radius:4px; font-size:11px;">Resync</button></div>` }))
       } finally {
         setBlobLoading(false)
       }
@@ -1070,11 +1009,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
   
   const handleOpenMail = (id: number) => {
     setSelectedMailId(id)
-    setMobilePanel('detail') // Di mobile: switch ke panel detail
-    // Only update unread for local mails (positive ids)
-    if (id > 0) {
-      setMails(mails.map(m => m.id === id ? { ...m, unread: false } : m))
-    }
+    setMobilePanel('detail')
   }
 
   const handleMobileBack = () => {
@@ -1083,12 +1018,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
   }
 
   const handleSend = async () => {
-    if (!composeTo) return showToast('Masukkan penerima', 'error')
-    if (!composeSubject) return showToast('Masukkan subjek', 'error')
-    if (!connected || !account) return showToast('Hubungkan dompet terlebih dahulu', 'error')
+    if (!composeTo) return showToast('Enter recipient', 'error')
+    if (!composeSubject) return showToast('Enter subject', 'error')
+    if (!connected || !account) return showToast('Connect your wallet first', 'error')
 
     try {
-      showToast('Menyiapkan unggahan via Shelby...', 'info')
+      showToast('Preparing upload via Shelby...', 'info')
       
       const timestamp = Date.now()
       const safeComposeTo = normalizeAddr(composeTo)
@@ -1167,7 +1102,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         expirationMicros: Date.now() * 1000 + 86400000000, // 1 day in microseconds per docs
       })
       
-      showToast('✓ Pesan berhasil dikirim ke Shelby Storage!', 'success')
+      showToast('✓ Message successfully sent to Shelby Storage!', 'success')
 
       setComposeOpen(false)
       
@@ -1180,16 +1115,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     } catch (e: any) {
       const errMsg = e instanceof Error ? e.message : String(e)
       if (errMsg.includes('Transaction not found')) {
-        showToast('Transaksi diajukan! Menunggu konfirmasi on-chain...', 'info')
+        showToast('Transaction submitted! Waiting for on-chain confirmation...', 'info')
         setTimeout(() => refetchBlobs(), 15000)
       } else {
-        showToast('Gagal mengirim pesan: ' + errMsg, 'error')
+        showToast('Failed to send message: ' + errMsg, 'error')
       }
     }
   }
 
   const handleDownloadBlob = async (addr: string, blobName: string, isPending?: boolean) => {
-    // Guard: jangan download blob yang masih pending
+    // Guard: do not download blobs that are still pending
     if (isPending) {
       showToast('⏳ Blob is still pending confirmation. Please wait...', 'info')
       return
@@ -1200,13 +1135,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       const response = new Response(blob.readable)
       const data = await response.blob()
       
-      // Jika file berupa mail.json, kita parse isinya dan perbarui UI selectedMail
+      // If the file is mail.json, parse its content and update the selectedMail UI
       if (blobName.endsWith('.json')) {
         const text = await data.text()
         try {
-           const parsed = JSON.parse(text)
-           setMails(prev => prev.map(m => m.id === selectedMailId ? { ...m, body: `<p><b>Pengirim:</b> ${addr}</p><p><b>Ke:</b> ${parsed.to}</p><p><b>Subjek:</b> ${parsed.subject}</p><hr/>${parsed.body.replace(/\\n/g, '<br/>')}` } : m))
-           showToast('Isi pesan berhasil didekode!', 'success')
+           JSON.parse(text) // validate it's valid JSON
+           showToast('Message content successfully decoded!', 'success')
            return
         } catch(e) {}
       }
@@ -1214,7 +1148,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       if (blobName.match(/\.(png|jpe?g|gif|webp|svg)$/i)) {
         const url = URL.createObjectURL(data)
         setPreviewBlob({ url, name: blobName, type: 'image' })
-        showToast('Menampilkan pratinjau gambar...', 'success')
+        showToast('Displaying image preview...', 'success')
         return
       }
 
@@ -1224,45 +1158,32 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       a.download = blobName.split('/').pop() || 'downloaded_blob'
       a.click()
       URL.revokeObjectURL(url)
-      showToast('Unduhan selesai', 'success')
+      showToast('Download complete', 'success')
     } catch (e: any) {
       const errMsg: string = e?.message || String(e)
       if (errMsg.includes('404') || errMsg.toLowerCase().includes('not found')) {
         showToast('⏳ Blob syncing to download nodes. Retrying in 5s...', 'info')
         setTimeout(() => handleDownloadBlob(addr, blobName), 5000)
       } else {
-        showToast(`Gagal mengunduh: ${errMsg}`, 'error')
+        showToast(`Download failed: ${errMsg}`, 'error')
       }
     }
   }
 
   const handleDeleteMail = async (m: Mail) => {
-    if (m.id < 0) {
-      // Blob On-chain
-      if (!connected) return showToast('Please connect your wallet to delete on-chain blobs!', 'error')
-      try {
-         showToast('Requesting deletion from Shelby...', 'info')
-         await deleteBlobs({
-            signer: { account: account!, signAndSubmitTransaction },
-            blobNames: [m.blobs?.[0]?.name || m.subject]
-         })
-         showToast('Blob deleted successfully from Shelby!', 'success')
-         refetchBlobs()
-         setSelectedMailId(null)
-      } catch (e: any) {
-         showToast(`Failed to delete blob: ${e.message}`, 'error')
-      }
-    } else {
-      // Cache lokal
-      setMails(mails.filter(mail => mail.id !== m.id))
+    if (!connected) return showToast('Please connect your wallet to delete on-chain blobs!', 'error')
+    try {
+      showToast('Requesting deletion from Shelby...', 'info')
+      await deleteBlobs({
+        signer: { account: account!, signAndSubmitTransaction },
+        blobNames: [m.blobs?.[0]?.name || m.subject]
+      })
+      showToast('Blob deleted successfully from Shelby!', 'success')
+      refetchBlobs()
       setSelectedMailId(null)
-      showToast('Dihapus dari cache lokal', 'success')
+    } catch (e: any) {
+      showToast(`Failed to delete blob: ${e.message}`, 'error')
     }
-  }
-
-  const handleToggleStar = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
-    setMails(mails.map(m => m.id === id ? { ...m, tags: m.tags.includes('starred') ? m.tags.filter(t => t !== 'starred') : [...m.tags, 'starred'] } : m))
   }
 
   // Derive context for the currently selected message
@@ -1270,15 +1191,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
   
   // Display titles for different navigation views
   const titles: Record<string, string> = { 
-    inbox: 'Kotak Masuk', 
-    sent: 'Pesan Terkirim', 
-    drafts: 'Draf', 
-    starred: 'Berbintang', 
-    blobs: 'Blob On-Chain', 
-    transactions: 'Aktivitas Terbaru', 
-    defi: 'Hub DeFi', 
-    dao: 'Tata Kelola (DAO)', 
-    nft: 'Koleksi NFT' 
+    inbox: 'Inbox', 
+    sent: 'Sent Messages', 
+    drafts: 'Drafts', 
+    starred: 'Starred', 
+    blobs: 'On-Chain Blobs', 
+    transactions: 'Recent Activity', 
+    defi: 'DeFi Hub', 
+    dao: 'Governance (DAO)', 
+    nft: 'NFT Collections' 
   }
 
   return (
@@ -1306,10 +1227,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                   await changeNetwork(targetNet as any);
                 }
               } catch (e) {
-                if (import.meta.env.DEV) console.warn("Wallet changeNetwork failed", e)
+                showToast(`Please switch to Aptos Testnet manually in your wallet`, 'error');
               }
             }
-            showToast(`Beralih antarmuka ke ${next}`, 'info')
+            showToast(`Switching interface to ${next}`, 'info')
           }}>
             <div className="chain-dot" style={{ background: isWrongNetwork ? '#ef4444' : '#10b981' }}></div>
             <span>Aptos {String(currentNetwork)}</span>
@@ -1319,7 +1240,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           <button className={`btn-connect ${connected ? 'connected' : ''}`} onClick={handleConnect}>
             {connected && account
               ? `${account.address.toString().substring(0,6)}...${account.address.toString().substring(account.address.toString().length-4)}`
-              : isPetraApp ? 'Hubungkan Petra' : 'Hubungkan Dompet'
+              : isPetraApp ? 'Connect Petra' : 'Connect Wallet'
             }
           </button>
         </div>
@@ -1341,7 +1262,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           zIndex: 100
         }}>
           <span style={{ fontSize: '16px' }}>⚠️</span>
-          <span>Anda terhubung ke jaringan yang salah, aplikasi mungkin tidak berjalan sebagaimana mestinya. Harap beralih ke <b>testnet</b>.</span>
+          <span>You are connected to the wrong network; the app may not function correctly. Please switch to <b>testnet</b>.</span>
           <button 
             onClick={async () => {
               if (changeNetwork) {
@@ -1367,7 +1288,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             onMouseOver={(e) => (e.currentTarget.style.opacity = '0.9')}
             onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
           >
-            Beralih ke Testnet
+            Switch to Testnet
           </button>
         </div>
       )}
@@ -1385,10 +1306,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         {/* SIDEBAR */}
         <div className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
           <button className="btn-compose" onClick={() => setComposeOpen(true)}>
-            Pesan Baru
+            New Message
           </button>
           <button className="btn-compose" style={{ marginTop: 4 }} onClick={loadDraft}>
-            Muat Draf
+            Load Draft
           </button>
 
           <div className="nav-section">
@@ -1415,7 +1336,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               <div className="nav-item-left"><span className="nav-icon">⬡</span> Blob</div>
             </div>
             <div className={`nav-item ${currentView === 'transactions' ? 'active' : ''}`} onClick={() => selectNav('transactions')}>
-              <div className="nav-item-left"><span className="nav-icon">⛓</span> Transaksi</div>
+              <div className="nav-item-left"><span className="nav-icon">⛓</span> Transactions</div>
               {accountTransactions && accountTransactions.length > 0 && (
                 <span className="nav-count" style={{ background: 'rgba(96,1,210,0.2)', color: '#6001D2' }}>
                   {accountTransactions.length}
@@ -1423,7 +1344,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               )}
             </div>
             <div className="nav-item" onClick={() => setAccessControlOpen(true)}>
-              <div className="nav-item-left"><span className="nav-icon">🔒</span> Kontrol Akses</div>
+              <div className="nav-item-left"><span className="nav-icon">🔒</span> Access Control</div>
             </div>
           </div>
 
@@ -1441,17 +1362,17 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           </div>
 
           <div className="sidebar-storage">
-            <div className="storage-label">Penyimpanan Shelby</div>
+            <div className="storage-label">Shelby Storage</div>
             <div className="storage-bar">
               <div className="storage-fill" style={{ width: `${Math.min((onchainBlobs?.reduce((a,b)=>a+b.size,0)||0) / (100 * 1024 * 1024) * 100, 100)}%` }}></div>
             </div>
             <div className="storage-info">
-              <span>{((onchainBlobs?.reduce((a,b)=>a+b.size,0)||0) / (1024 * 1024)).toFixed(2)} MB terpakai</span>
+              <span>{((onchainBlobs?.reduce((a,b)=>a+b.size,0)||0) / (1024 * 1024)).toFixed(2)} MB used</span>
               <span>100 MB</span>
             </div>
           </div>
           {/* Mobile: close sidebar button */}
-          <button className="mobile-sidebar-close" onClick={() => setMobileSidebarOpen(false)}>✕ Tutup</button>
+          <button className="mobile-sidebar-close" onClick={() => setMobileSidebarOpen(false)}>✕ Close</button>
         </div>
 
         {/* MAIL LIST */}
@@ -1467,18 +1388,18 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           <div className="search-box">
             <div className="search-wrap">
               <span className="search-icon">🔍</span>
-              <input className="search-input" placeholder="Cari berdasarkan alamat, subjek..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <input className="search-input" placeholder="Search by address, subject..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
             </div>
           </div>
           <div className="mail-items">
             {filteredMails.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">📭</div>
-                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-secondary)' }}>Belum ada pesan</div>
+                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-secondary)' }}>No messages yet</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 200, lineHeight: 1.6 }}>
                   {connected
-                    ? 'Hubungkan dompet dan kirim blob untuk melihat pesan di sini'
-                    : 'Hubungkan dompet Aptos Anda untuk memulai'}
+                    ? 'Connect your wallet and send a blob to see messages here'
+                    : 'Connect your Aptos wallet to get started'}
                 </div>
                 {!connected && (
                   <button
@@ -1497,7 +1418,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                       boxShadow: '0 2px 10px rgba(240,64,176,0.35)',
                     }}
                   >
-                    Hubungkan Dompet
+                    Connect Wallet
                   </button>
                 )}
               </div>
@@ -1511,10 +1432,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                       <div className="mail-item-content">
                         <div className="mail-item-top">
                           <div className="mail-item-from">{m.from}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span onClick={(e) => handleToggleStar(e, m.id)} style={{ cursor: 'pointer', color: m.tags.includes('starred') ? '#f59e0b' : 'var(--text3)' }}>★</span>
-                            <div className="mail-item-time">{m.time}</div>
-                          </div>
+                          <div className="mail-item-time">{m.time}</div>
                         </div>
                         <div className="mail-item-subject">{m.subject}</div>
                         <div className="mail-item-preview">{m.preview}</div>
@@ -1552,16 +1470,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 AptosBlobs Mail
               </div>
               <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.7, maxWidth: 320, textAlign: 'center' }}>
-                Email terdesentralisasi ditenagai oleh{' '}
+                Decentralized email powered by{' '}
                 <span style={{ color: 'var(--brand-color)', fontWeight: 600 }}>Shelby Protocol</span>
-                {' '}   disimpan secara on-chain, difinalisasi di Aptos.
+                {' '}stored on-chain, finalized on Aptos.
               </div>
               <div className="welcome-features">
                 {[
-                  { icon: '⬡', label: 'Blob disimpan di Shelby Protocol' },
-                  { icon: '⛓', label: 'Finalisasi di blockchain Aptos' },
-                  { icon: '🔒', label: 'Enkripsi erasure-coded 8+4' },
-                  { icon: '📬', label: 'Kirim ke alamat dompet mana saja' },
+                  { icon: '⬡', label: 'Blobs stored on Shelby Protocol' },
+                  { icon: '⛓', label: 'Finalized on Aptos blockchain' },
+                  { icon: '🔒', label: '8+4 erasure-coded encryption' },
+                  { icon: '📬', label: 'Send to any wallet address' },
                 ].map(f => (
                   <div key={f.label} className="welcome-feature-item">
                     <span className="welcome-feature-icon">{f.icon}</span>
@@ -1570,13 +1488,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 ))}
               </div>
               <div style={{ marginTop: 20, fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
-                Disimpan di Shelby · Finalisasi di Aptos
+                Stored on Shelby · Finalized on Aptos
               </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Mobile back button */}
-              <button className="mobile-back-btn" onClick={handleMobileBack}>← Kembali</button>
+              <button className="mobile-back-btn" onClick={handleMobileBack}>← Back</button>
               <div className="mail-view-header">
                 {selectedMail.pending && (
                   <div className="pending-banner">
@@ -1592,15 +1510,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                     </div>
                     <div className="mail-from-info">
                       <div className="mail-from-name">{selectedMail.from}</div>
-                      <div className="mail-from-addr" onClick={() => { navigator.clipboard.writeText(selectedMail.addr); showToast('Alamat disalin', 'success') }}>
+                      <div className="mail-from-addr" onClick={() => { navigator.clipboard.writeText(selectedMail.addr); showToast('Address copied', 'success') }}>
                         {selectedMail.addr}
                       </div>
                     </div>
                   </div>
                   <div className="mail-view-actions">
-                    <button className="btn-action" onClick={() => { setComposeTo(selectedMail.addr); setComposeSubject(selectedMail.subject.startsWith('Re:') ? selectedMail.subject : 'Re: ' + selectedMail.subject); setComposeBody(`\n\n> Pada ${selectedMail.time}, ${selectedMail.from} menulis:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↩ Balas</button>
-                    <button className="btn-action" onClick={() => { setComposeSubject(selectedMail.subject.startsWith('Fwd:') ? selectedMail.subject : 'Fwd: ' + selectedMail.subject); setComposeBody(`\n\n> Pesan diteruskan dari ${selectedMail.from}:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↪ Teruskan</button>
-                    <button className="btn-action" style={{ color: '#de385d', borderColor: '#fecdd3' }} disabled={isDeleting} onClick={() => handleDeleteMail(selectedMail)}>🗑 {isDeleting ? 'Menghapus...' : 'Hapus'}</button>
+                    <button className="btn-action" onClick={() => { setComposeTo(selectedMail.addr); setComposeSubject(selectedMail.subject.startsWith('Re:') ? selectedMail.subject : 'Re: ' + selectedMail.subject); setComposeBody(`\n\n> On ${selectedMail.time}, ${selectedMail.from} wrote:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↩ Reply</button>
+                    <button className="btn-action" onClick={() => { setComposeSubject(selectedMail.subject.startsWith('Fwd:') ? selectedMail.subject : 'Fwd: ' + selectedMail.subject); setComposeBody(`\n\n> Forwarded message from ${selectedMail.from}:\n> ${selectedMail.body.replace(/<[^>]+>/g, '').replace(/\\n/g, '\\n> ')}`); setComposeOpen(true) }}>↪ Forward</button>
+                    <button className="btn-action" style={{ color: '#de385d', borderColor: '#fecdd3' }} disabled={isDeleting} onClick={() => handleDeleteMail(selectedMail)}>🗑 {isDeleting ? 'Deleting...' : 'Delete'}</button>
                     <button className="btn-action primary" onClick={() => window.open(`https://explorer.aptoslabs.com/account/${account?.address}?network=${currentNetwork === 'shelbynet' ? 'testnet' : currentNetwork}`, '_blank')}>⛓ Explorer On-Chain</button>
                   </div>
                 </div>
@@ -1614,7 +1532,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                     <div className="skeleton-line" style={{ width: '80%', marginTop: 16 }} />
                     <div className="skeleton-line" style={{ width: '70%' }} />
                     <div className="skeleton-line" style={{ width: '55%' }} />
-                    <div className="skeleton-loading-label">⬡ Mengambil blob dari Shelby...</div>
+                    <div className="skeleton-loading-label">⬡ Fetching blob from Shelby...</div>
                   </div>
                 ) : (
                   <div className="mail-content" dangerouslySetInnerHTML={{ __html: blobBodyCache[selectedMail.id] || selectedMail.body }} />
@@ -1647,12 +1565,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                       </div>
                       <div className="verify-badge" style={b.pending ? { color: '#f59e0b', borderColor: 'rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' } : {}}>
                         {b.pending
-                          ? '⏳ Tertunda...'
+                          ? '⏳ Pending...'
                           : blobLoading && b.name.endsWith('.json')
-                          ? '⏳ Memuat...'
+                          ? '⏳ Loading...'
                           : b.name.endsWith('.json')
-                          ? (blobBodyCache[selectedMail.id] ? '✓ Dimuat' : '👁 Baca Isi')
-                          : '⬇ Unduh'}
+                          ? (blobBodyCache[selectedMail.id] ? '✓ Loaded' : '👁 Read Content')
+                          : '⬇ Download'}
                       </div>
                     </div>
                   ))}
@@ -1670,21 +1588,21 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           onClick={() => selectNav('inbox')}
         >
           <span className="mobile-tab-icon">📥</span>
-          <span className="mobile-tab-label">Masuk</span>
+          <span className="mobile-tab-label">Inbox</span>
         </button>
         <button
           className={`mobile-tab ${currentView === 'sent' ? 'active' : ''}`}
           onClick={() => selectNav('sent')}
         >
           <span className="mobile-tab-icon">📤</span>
-          <span className="mobile-tab-label">Terkirim</span>
+          <span className="mobile-tab-label">Sent</span>
         </button>
         <button
           className="mobile-tab compose-tab"
           onClick={() => setComposeOpen(true)}
         >
           <span className="mobile-tab-icon compose-icon">✏️</span>
-          <span className="mobile-tab-label">Tulis</span>
+          <span className="mobile-tab-label">Compose</span>
         </button>
         <button
           className={`mobile-tab ${currentView === 'blobs' ? 'active' : ''}`}
@@ -1698,53 +1616,29 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           onClick={() => setMobileSidebarOpen(true)}
         >
           <span className="mobile-tab-icon">☰</span>
-          <span className="mobile-tab-label">Lainnya</span>
+          <span className="mobile-tab-label">More</span>
         </button>
       </nav>
 
-      {/* STATS BAR (Dev only - moved to bottom) */}
-      {import.meta.env.DEV && (
-        <div className="stats-bar" style={{ borderTop: '1px solid #f0e8f5', borderBottom: 'none' }}>
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Aptos RPC <span className="stat-val">{aptosPing}ms</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Shelby RPC <span className="stat-val">{shelbyPing}ms</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item warn">
-            <div className="dot" style={{ background: 'var(--shelby)' }}></div>
-            Storage Providers <span className="stat-val">7 active</span>
-          </div>
-          <div className="separator"></div>
-          <div className="stat-item ok">
-            <div className="dot"></div>
-            Erasure Coding <span className="stat-val">8+4</span>
-          </div>
-        </div>
-      )}
 
       {/* COMPOSE OVERLAY */}
       <div className={`compose-overlay ${composeOpen ? 'open' : ''}`} onClick={(e) => e.target === e.currentTarget && setComposeOpen(false)}>
         <div className="compose-panel">
           <div className="compose-header">
             <div className="compose-title">
-              Pesan Baru
+              New Message
               <span className="compose-badge">via Shelby</span>
             </div>
             <div className="close-btn" onClick={() => setComposeOpen(false)}>✕</div>
           </div>
           <div className="compose-fields">
             <div className="compose-field">
-              <span className="field-label">Ke</span>
-              <input className="field-input" placeholder="0x... (Alamat Aptos)" value={composeTo} onChange={e => setComposeTo(e.target.value)} />
+              <span className="field-label">To</span>
+              <input className="field-input" placeholder="0x... (Aptos Address)" value={composeTo} onChange={e => setComposeTo(e.target.value)} />
             </div>
             <div className="compose-field">
-              <span className="field-label">Subjek</span>
-              <input className="field-input" placeholder="Subjek" value={composeSubject} onChange={e => setComposeSubject(e.target.value)} />
+              <span className="field-label">Subject</span>
+              <input className="field-input" placeholder="Subject" value={composeSubject} onChange={e => setComposeSubject(e.target.value)} />
             </div>
           </div>
           <div className="attached-files">
@@ -1755,7 +1649,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             ))}
           </div>
           <div className="compose-body-area">
-            <textarea className="body-textarea" placeholder="Tulis pesan Anda...&#10;&#10;Pesan ini akan disimpan sebagai blob di Shelby Protocol dan difinalisasi di blockchain Aptos." value={composeBody} onChange={e => setComposeBody(e.target.value)} />
+            <textarea className="body-textarea" placeholder="Write your message...&#10;&#10;This message will be stored as a blob on Shelby Protocol and finalized on the Aptos blockchain." value={composeBody} onChange={e => setComposeBody(e.target.value)} />
           </div>
           <div className={`upload-progress ${isPending ? 'active' : ''}`}>
             <div className="upload-progress-fill" style={{ width: isPending ? '50%' : '0%' }}></div>
@@ -1766,11 +1660,11 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 <input type="file" multiple style={{ display: 'none' }} onChange={e => {
                   if (e.target.files) setAttachedFiles([...attachedFiles, ...Array.from(e.target.files)])
                 }} />
-                ⬡ Lampirkan Blob
+                ⬡ Attach Blob
               </label>
               <div className="privacy-config-indicator" onClick={() => setAccessControlOpen(true)}>
                 {accessMode === 'public' ? (
-                  <span className="privacy-status public">🔓 Publik</span>
+                  <span className="privacy-status public">🔓 Public</span>
                 ) : (
                   <span className="privacy-status private">🔒 {accessMode.toUpperCase()}</span>
                 )}
@@ -1778,12 +1672,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               {isPending && (
                 <div className="upload-status">
                   <div className="spinner" style={{ display: 'block' }}></div>
-                  <span>Mengunggah ke Shelby...</span>
+                  <span>Uploading to Shelby...</span>
                 </div>
               )}
             </div>
             <button className="btn-send" disabled={isPending} onClick={handleSend}>
-              {isPending ? '➤ Mengirim...' : '➤ Kirim via Aptos'}
+              {isPending ? '➤ Sending...' : '➤ Send via Aptos'}
             </button>
           </div>
         </div>
@@ -1795,10 +1689,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           <div className="access-body">
             <div className="access-sidebar">
               {[
-                { id: 'public', label: 'Publik', desc: 'Tanpa batasan' },
-                { id: 'allowlist', label: 'Daftar Izin', desc: 'Alamat spesifik' },
-                { id: 'timelock', label: 'Kunci Waktu', desc: 'Tersedia nanti' },
-                { id: 'purchasable', label: 'Dapat Dibeli', desc: 'Memerlukan pembayaran' }
+                { id: 'public', label: 'Public', desc: 'No restrictions' },
+                { id: 'allowlist', label: 'Allowlist', desc: 'Specific addresses' },
+                { id: 'timelock', label: 'Time Lock', desc: 'Available later' },
+                { id: 'purchasable', label: 'Purchasable', desc: 'Requires payment' }
               ].map(opt => (
                 <button 
                   key={opt.id} 
@@ -1816,23 +1710,23 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             <div className="access-content">
               {accessMode === 'public' && (
                 <>
-                  <h2 className="access-title">Akses Publik</h2>
-                  <p className="access-subtitle">Data Anda dapat dilihat oleh siapa saja di Protokol Shelby. Ini sangat cocok untuk berbagi konten secara luas.</p>
+                  <h2 className="access-title">Public Access</h2>
+                  <p className="access-subtitle">Your data can be viewed by anyone on the Shelby Protocol. Ideal for broad content sharing.</p>
                 </>
               )}
               {accessMode === 'allowlist' && (
                 <>
-                  <h2 className="access-title">Daftar Izin (Allowlist)</h2>
-                  <p className="access-subtitle">Berikan akses ke alamat dompet tertentu. Hanya pengguna ini yang dapat meninjau data Anda di Shelby Explorer.</p>
+                  <h2 className="access-title">Allowlist</h2>
+                  <p className="access-subtitle">Grant access to specific wallet addresses. Only these users can review your data on Shelby Explorer.</p>
                   
                   <div style={{ padding: '8px 12px', background: 'rgba(96,1,210,0.06)', borderRadius: 8, fontSize: 11, color: '#6001D2', marginBottom: 16, border: '1px dashed rgba(96,1,210,0.2)' }}>
-                    <b>Tips:</b> Penerima di kolom "Ke" secara otomatis masuk dalam daftar izin.
+                    <b>Tip:</b> The recipient in the "To" field is automatically added to the allowlist.
                   </div>
                   
                   <div className="auto-sync-banner">
                     <div className="auto-sync-info">
                       <span>🔄</span>
-                      <span>Sinkronkan dengan riwayat Pesan Terkirim? (Otomatis menambah penerima)</span>
+                      <span>Sync with Sent Messages history? (Automatically add recipients)</span>
                     </div>
                     <input 
                       type="checkbox" 
@@ -1843,9 +1737,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                   </div>
 
                   <div className="access-section-title">
-                    <span>Alamat</span>
+                    <span>Addresses</span>
                     <button className="btn-add-addr" onClick={() => setAllowlistAddrs([...allowlistAddrs, ''])}>
-                      + Tambah Alamat
+                      + Add Address
                     </button>
                   </div>
 
@@ -1876,8 +1770,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               )}
               {accessMode === 'timelock' && (
                 <>
-                  <h2 className="access-title">Kunci Waktu (Time Lock)</h2>
-                  <p className="access-subtitle">Batasi akses hingga tanggal dan waktu tertentu. Bagus untuk rilis yang ditunda atau konten terjadwal.</p>
+                  <h2 className="access-title">Time Lock</h2>
+                  <p className="access-subtitle">Restrict access until a specific date and time. Ideal for delayed releases or scheduled content.</p>
                   <div style={{ marginTop: 20 }}>
                     <input type="datetime-local" className="addr-input" defaultValue={new Date().toISOString().slice(0, 16)} />
                   </div>
@@ -1885,10 +1779,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               )}
               {accessMode === 'purchasable' && (
                 <>
-                  <h2 className="access-title">Dapat Dibeli (Purchasable)</h2>
-                  <p className="access-subtitle">Uangkan data on-chain Anda. Pengguna harus membayar biaya dalam APT untuk membuka dan meninjau konten.</p>
+                  <h2 className="access-title">Purchasable</h2>
+                  <p className="access-subtitle">Monetize your on-chain data. Users must pay a fee in APT to unlock and review content.</p>
                   <div className="addr-input-wrap" style={{ marginTop: 20 }}>
-                    <input className="addr-input" placeholder="Harga dalam APT (misal: 1.0)" />
+                    <input className="addr-input" placeholder="Price in APT (e.g., 1.0)" />
                     <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#666' }}>APT</span>
                   </div>
                 </>
@@ -1896,12 +1790,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             </div>
           </div>
           <div className="access-footer">
-            <button className="btn-access-cancel" onClick={() => setAccessControlOpen(false)}>Batal</button>
+            <button className="btn-access-cancel" onClick={() => setAccessControlOpen(false)}>Cancel</button>
             <button className="btn-access-save" onClick={() => { 
-              showToast(`Akses diperbarui: ${accessMode.toUpperCase()}`, 'success'); 
+              showToast(`Access updated: ${accessMode.toUpperCase()}`, 'success'); 
               setAccessControlOpen(false); 
             }}>
-              Simpan Perubahan
+              Save Changes
             </button>
           </div>
         </div>
@@ -1925,16 +1819,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               <button style={{ background: '#f5f5f5', border: '1px solid #e5e5e5', borderRadius: 8, color: '#666', cursor: 'pointer', fontSize: 18, lineHeight: 1, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>&times;</button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-              {previewBlob.type === 'image' && <img src={previewBlob.url} alt="Pratinjau" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} />}
+              {previewBlob.type === 'image' && <img src={previewBlob.url} alt="Preview" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} />}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 14, borderTop: '1px solid #e5e5e5' }}>
-              <button className="btn-action" onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>Tutup</button>
+              <button className="btn-action" onClick={() => { URL.revokeObjectURL(previewBlob.url); setPreviewBlob(null) }}>Close</button>
               <button className="btn-action primary" onClick={() => {
                 const a = document.createElement('a')
                 a.href = previewBlob.url
-                a.download = previewBlob.name.split('/').pop() || 'unduhan_file'
+                a.download = previewBlob.name.split('/').pop() || 'file_download'
                 a.click()
-              }}>⬇ Unduh File</button>
+              }}>⬇ Download File</button>
             </div>
           </div>
         </div>
