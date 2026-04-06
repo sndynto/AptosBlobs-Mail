@@ -1,10 +1,11 @@
 # 📬 AptosBlobs Mail
 
-A simple, decentralized email client. It uses **Shelby Protocol** for storage and settles everything on the **Aptos** blockchain. No servers, just on-chain data.
+A secure, **client-side encrypted**, decentralized email client. It uses **Shelby Protocol** for storage and settles everything on the **Aptos** blockchain. No servers, just on-chain data.
 
 ## Features
 
 - **Send messages** — Stored as blobs, settled on Aptos.
+- **Client-Side Encryption** — All messages are encrypted with AES-GCM before upload.
 - **Inbox & Sent** — Standard mail views for your wallet address.
 - **Attachments** — You can attach files directly to your on-chain messages.
 - **Tags** — Automatic tagging for DeFi, DAO, and NFT related subjects.
@@ -158,7 +159,6 @@ Output is in the `dist/` folder. You can deploy to:
 
 ## ⚠️ Known Limitations
 
-- Messages are **not encrypted** — blobs are readable by anyone with the blob name
 - Requires real APT on testnet for sending (for the 100 Octa notification ping)
 - Shelby Protocol is in beta — occasional sync delays possible (2–30 seconds)
 

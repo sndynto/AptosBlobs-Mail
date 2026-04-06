@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, Suspense, lazy } from 'react'
 import gsap from 'gsap'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { useUploadBlobs, useAccountBlobs, useDeleteBlobs } from '@shelby-protocol/react'
@@ -7,15 +7,60 @@ import { ShelbyClient } from '@shelby-protocol/sdk/browser'
 import { AptosConfig, Network, AccountAddress } from '@aptos-labs/ts-sdk'
 import { COLORS, Mail } from './data'
 
+const AptosLogo = ({ size = 20, color = 'currentColor' }: { size?: number | string, color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M11 25.5H49V22.5H11V25.5ZM11 31.5H49V28.5H11V31.5ZM11 37.5H49V34.5H11V37.5Z" fill={color}/>
+  </svg>
+)
+
+const PetraLogo = ({ size = 20 }: { size?: number | string }) => (
+  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M49 14L30 3L11 14V36L30 47L49 36V14Z" fill="#EE7622"/>
+    <path d="M30 47L11 36L30 3L49 36L30 47Z" fill="#F8B133"/>
+    <path d="M30 47V3L49 36L30 47Z" fill="#F05A28"/>
+    <path d="M30 25L23 30L30 35L37 30L30 25Z" fill="white"/>
+  </svg>
+)
+
+const LandingPage = lazy(() => import('./LandingPage'))
+
 const API_KEY_SHELBYNET = import.meta.env.VITE_SHELBY_API_KEY_SHELBYNET || ''
 const API_KEY_TESTNET = import.meta.env.VITE_SHELBY_API_KEY_TESTNET || ''
 
 export default function App() {
   const [currentNetwork, setCurrentNetwork] = useState<any>('testnet') // shelbynet, testnet
+  const [showLanding, setShowLanding] = useState(true)
+  const [fadeOut, setFadeOut] = useState(false)
   
   const key = currentNetwork === 'shelbynet' ? API_KEY_SHELBYNET : API_KEY_TESTNET
   const noKey = !key || key.startsWith('masukkan_api_key')
   const envVar = currentNetwork === 'shelbynet' ? 'VITE_SHELBY_API_KEY_SHELBYNET' : 'VITE_SHELBY_API_KEY_TESTNET'
+
+  const handleEnterApp = () => {
+    setFadeOut(true)
+    setTimeout(() => setShowLanding(false), 420)
+  }
+
+  if (showLanding) {
+    return (
+      <div style={{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.42s ease', minHeight: '100vh' }}>
+        <Suspense fallback={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#100a14', color: '#F040B0', fontSize: 20, fontFamily: 'Inter,sans-serif', gap: 12 }}>
+            <span style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
+              <AptosLogo size={24} color="#F040B0" />
+            </span> Loading...
+          </div>
+        }>
+          <LandingPage onEnterApp={handleEnterApp} />
+        </Suspense>
+      </div>
+    )
+  }
+
+  const handleReturnHome = () => {
+    setFadeOut(false)
+    setShowLanding(true)
+  }
 
   return (
     <>
@@ -34,7 +79,7 @@ export default function App() {
           </span>
         </div>
       )}
-      <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} apiKey={key} />
+      <MailApp key={currentNetwork} currentNetwork={currentNetwork} setCurrentNetwork={setCurrentNetwork} apiKey={key} onReturnHome={handleReturnHome} />
     </>
   )
 }
@@ -74,13 +119,16 @@ const normalizeAddr = (addr: string) => {
 const deriveKey = async (salt: string) => {
   const enc = new TextEncoder();
   const envSecret = import.meta.env.VITE_SHELBY_APP_SECRET
-  // Robust fallback: ensures we use the legacy key if the environment variable is not explicitly provided.
-  const secret = (envSecret && envSecret.length > 5) ? envSecret : "SHELBY_APP_MASTER_SECRET_2026_XRAY"; 
   
-  if (import.meta.env.DEV && !envSecret) {
-    // Only log once in dev to help explain the behavior.
-    (window as any).__shelby_secret_warned = true;
+  if (!envSecret || envSecret === 'SHELBY_APP_MASTER_SECRET_2026_XRAY' || envSecret === 'masukkan_secret_disini') {
+    if (import.meta.env.DEV) {
+       (window as any).__shelby_secret_warned = true;
+    } else {
+       throw new Error("CRITICAL: VITE_SHELBY_APP_SECRET is missing or using a global fallback. Encryption disabled for security.");
+    }
   }
+
+  const secret = envSecret || "SHELBY_TEMP_UNSECURE_FALLBACK_DEV_ONLY";
 
   const keyMaterial = await crypto.subtle.importKey(
     "raw", enc.encode(secret), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
@@ -184,8 +232,11 @@ const getTags = (subject: string, isPending: boolean, hasAttachments: boolean) =
   return tags
 }
 
-const TAG_ICONS: Record<string, string> = {
-  shelby: '⬡', aptos: '⬡', blobs: '⬡', blob: '⬡',
+const TAG_ICONS: Record<string, any> = {
+  shelby: <AptosLogo size={14} />, 
+  aptos: <AptosLogo size={14} />, 
+  blobs: <AptosLogo size={14} />, 
+  blob: <AptosLogo size={14} />,
   nft: '🖼', defi: '💱', dao: '🏛', attachment: '📎',
   pending: '⏳', starred: '⭐'
 }
@@ -197,12 +248,12 @@ const TAG_LABELS: Record<string, string> = {
 }
 
 const Tag = ({ type }: { type: string }) => (
-  <span className={`tag tag-${type}`}>
+  <span className={`tag tag-${type}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
     {TAG_ICONS[type] || ''} {TAG_LABELS[type] || type}
   </span>
 )
 
-function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
+function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: any) {
   const { aptosConfig, shelbyClient } = useMemo(() => {
     // Shelbynet runs on Aptos Testnet, others use their direct names
     const mappedNet = currentNetwork === 'shelbynet' ? Network.TESTNET : currentNetwork;
@@ -546,6 +597,9 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey }: any) {
     if (connected) {
       disconnect()
       showToast('Wallet disconnected', 'info')
+      if (onReturnHome) {
+        setTimeout(() => onReturnHome(), 250)
+      }
     } else {
       // Di Petra mobile dApp browser, wallet inject otomatis sebagai window.aptos
       if (isPetraApp) {
