@@ -1108,7 +1108,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       await uploadBlobs({
         signer: signer as any,
         blobs: formattedBlobs,
-        expirationMicros: Date.now() * 1000 + 3153600000000000, // 100 years in microseconds
+        expirationMicros: Date.now() * 1000 + 157680000000000, // 5 years in microseconds
       })
       
       showToast('✓ Message successfully sent to Shelby Storage!', 'success')
