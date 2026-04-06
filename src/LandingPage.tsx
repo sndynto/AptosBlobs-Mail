@@ -498,7 +498,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 lineHeight: 1.05, margin: '0 0 24px',
                 letterSpacing: '-2px',
               }}>
-                Decentralized Email<br />
+                Decentralized Mail<br />
                 <span style={{
                   background: BRAND.gradientSoft,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -561,35 +561,40 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               <div style={{
                 background: '#ffffff',
                 border: '1px solid #e5e5e5',
-                borderRadius: 16, padding: 0,
-                boxShadow: '0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(192,0,122,0.1)',
-                position: 'relative', overflow: 'hidden'
+                borderRadius: 28,
+                overflow: 'hidden',
+                boxShadow: '0 28px 80px rgba(0,0,0,0.18)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid #e5e5e5', background: '#fcfcfc' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
-                  <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Inbox</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 20px', borderBottom: '1px solid #e5e5e5', background: '#f8fafc' }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
+                  </div>
+                  <span style={{ fontSize: 14, color: '#334155', fontWeight: 700 }}>Inbox</span>
                 </div>
 
-                <div style={{ padding: '12px' }}>
+                <div style={{ padding: '16px 16px 20px' }}>
                   {[
-                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: BRAND.aptos },
-                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', iconCol: BRAND.primary },
-                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
+                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', unread: true, time: '09:42', iconCol: BRAND.aptos },
+                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', unread: false, time: '08:15', iconCol: BRAND.primary },
+                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
                   ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }} />
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 14px', borderRadius: 18, marginBottom: 8, background: item.unread ? '#f8f0ff' : '#ffffff', border: item.unread ? '1px solid rgba(240,64,176,0.18)' : '1px solid #f1f5f9' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 16, background: item.iconCol + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol, fontWeight: 700 }}>{item.from.charAt(4)}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, color: '#1a1a1a', fontWeight: 700 }}>{item.from}</span>
-                          <span style={{ fontSize: 10, color: '#888' }}>{item.time}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <span style={{ fontSize: 11, color: '#475569', fontWeight: 700 }}>{item.from}</span>
+                          <span style={{ fontSize: 10, color: '#94a3b8' }}>{item.time}</span>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: item.unread ? 600 : 400, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subject}</div>
+                        <div style={{ fontSize: 14, fontWeight: item.unread ? 700 : 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.subject}</div>
                       </div>
                     </div>
                   ))}
-                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: BRAND.primary, color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>Send via Aptos</div>
+
+                  <button style={{ width: '100%', marginTop: 14, border: 'none', borderRadius: 999, background: BRAND.primary, color: 'white', padding: '14px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 14px 32px rgba(240,64,176,0.18)' }}>
+                    Send via Aptos
+                  </button>
                 </div>
               </div>
             </div>
@@ -753,8 +758,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
       {/* ─── FINAL CTA ─── */}
       <section className="landing-cta-section" style={{ padding: '120px 5%', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Email is Ready</h2>
-        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party email. Just your wallet.</p>
+        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Mail is Ready</h2>
+        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party mail. Just your wallet.</p>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
           <button onClick={handleLaunchApp} style={{ background: BRAND.gradient, color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>
             {connected ? 'Launch App' : isConnecting ? 'Connecting Wallet…' : 'Connect Wallet to Launch'}
