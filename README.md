@@ -1,6 +1,10 @@
 # 📬 AptosBlobs Mail
 
+<<<<<<< HEAD
 A secure, **client-side encrypted**, decentralized email client. It uses **Shelby Protocol** for storage and settles everything on the **Aptos** blockchain. No servers, just on-chain data.
+=======
+A simple Web3 email-like client using Aptos for identity and transaction settlement, with Shelby Protocol for scalable storage
+>>>>>>> 6f0b0cc0f18eb69d141c89be16e2a362eccdb323
 
 ## Features
 
