@@ -10,24 +10,77 @@ interface LandingPageProps {
   onEnterApp: () => void
 }
 
-const AptosLogo = ({ size = 24, color = 'currentColor' }: { size?: number | string, color?: string }) => (
+const ShelbyLogo = ({ size = 34 }: { size?: number | string }) => (
   <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M11 25.5H49V22.5H11V25.5ZM11 31.5H49V28.5H11V31.5ZM11 37.5H49V34.5H11V37.5Z" fill={color}/>
+    <path d="M19 10H41L51 22.5V37.5L41 50H19L9 37.5V22.5L19 10Z" fill="none" stroke="#F040B0" strokeWidth="3" />
+    <path d="M30 20L38 26V34L30 40L22 34V26L30 20Z" fill="#F040B0" />
+    <circle cx="30" cy="30" r="3" fill="#fff" />
   </svg>
 )
 
-const PetraLogo = ({ size = 24 }: { size?: number | string }) => (
+const AptosLogo = ({ size = 34, color = '#22d3ee' }: { size?: number | string, color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M49 14L30 3L11 14V36L30 47L49 36V14Z" fill="#EE7622"/>
-    <path d="M30 47L11 36L30 3L49 36L30 47Z" fill="#F8B133"/>
-    <path d="M30 47V3L49 36L30 47Z" fill="#F05A28"/>
-    <path d="M30 25L23 30L30 35L37 30L30 25Z" fill="white"/>
+    <path d="M13 13H47V47H13V13Z" fill="#0D2A3E" stroke={color} strokeWidth="2" />
+    <rect x="19" y="22" width="22" height="4" rx="2" fill={color} />
+    <rect x="19" y="30" width="22" height="4" rx="2" fill={color} />
+    <rect x="19" y="38" width="22" height="4" rx="2" fill={color} />
   </svg>
 )
+
+const PetraLogo = ({ size = 34 }: { size?: number | string }) => (
+  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 10L46 22L38 46H22L14 22L30 10Z" fill="#F97316" />
+    <path d="M30 10L38 22L30 30L22 22L30 10Z" fill="#F59E0B" />
+    <path d="M30 30L38 46H22L30 30Z" fill="#FB923C" />
+    <path d="M30 10L34 22L30 30L26 22L30 10Z" fill="#FFF7ED" opacity="0.8" />
+  </svg>
+)
+
+const FeatureIcon = ({ type, color }: { type: string, color: string }) => {
+  switch (type) {
+    case 'shelby':
+      return (
+        <svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 10H41L51 22.5V37.5L41 50H19L9 37.5V22.5L19 10Z" stroke={color} strokeWidth="3" fill="none" />
+          <path d="M30 20L38 26V34L30 40L22 34V26L30 20Z" fill={color} />
+          <circle cx="30" cy="30" r="3" fill="#fff" />
+        </svg>
+      )
+    case 'aptos':
+      return (
+        <svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="13" y="13" width="34" height="34" rx="10" stroke={color} strokeWidth="3" fill="none" />
+          <rect x="20" y="22" width="20" height="4" rx="2" fill={color} />
+          <rect x="20" y="30" width="20" height="4" rx="2" fill={color} />
+          <rect x="20" y="38" width="20" height="4" rx="2" fill={color} />
+        </svg>
+      )
+    case 'lock':
+      return (
+        <svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="18" y="26" width="24" height="20" rx="6" stroke={color} strokeWidth="3" fill="none" />
+          <path d="M21 26V20C21 15.5817 24.5817 12 29 12C33.4183 12 37 15.5817 37 20V26" stroke={color} strokeWidth="3" />
+          <circle cx="30" cy="36" r="3" fill={color} />
+        </svg>
+      )
+    case 'send':
+      return (
+        <svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 22L42 30L18 38L18 30L18 22Z" fill={color} />
+          <path d="M42 30L18 10V22L42 30Z" fill={color} opacity="0.7" />
+          <path d="M42 30L18 50V38L42 30Z" fill={color} opacity="0.5" />
+        </svg>
+      )
+    default:
+      return null
+  }
+}
 
 export default function LandingPage({ onEnterApp }: LandingPageProps) {
   const { connect, connected, wallets } = useWallet()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [launchError, setLaunchError] = useState<string | null>(null)
   const [activeFeature, setActiveFeature] = useState(0)
   const [counters, setCounters] = useState({ blobs: 0, txns: 0, nodes: 0 })
   const [statsLoading, setStatsLoading] = useState(true)
@@ -210,43 +263,59 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     requestAnimationFrame(step)
   }
 
-  const handleLaunchApp = () => {
+  const handleLaunchApp = async () => {
+    setLaunchError(null)
     if (connected) {
       onEnterApp()
-    } else {
-      const petra = wallets?.find(w => w.name === 'Petra') || wallets?.[0]
-      if (petra) {
-        connect(petra.name)
-        setTimeout(() => onEnterApp(), 800)
-      } else {
-        onEnterApp()
-      }
+      return
+    }
+
+    const wallet = wallets?.find(w => w.name === 'Petra') || wallets?.[0]
+    if (!wallet) {
+      setLaunchError('No Aptos wallet detected. Install Petra or another Aptos-compatible wallet first.')
+      return
+    }
+
+    setIsConnecting(true)
+    try {
+      await connect(wallet.name)
+      setTimeout(() => {
+        setIsConnecting(false)
+        if (connected) {
+          onEnterApp()
+        } else {
+          setLaunchError('Wallet connection did not complete. Please approve the wallet prompt and try again.')
+        }
+      }, 800)
+    } catch (error) {
+      setIsConnecting(false)
+      setLaunchError('Unable to connect wallet. Please retry or select a wallet manually.')
     }
   }
 
   const features = [
     {
-      icon: '⬡',
+      icon: 'shelby',
       title: 'Shelby Blob Storage',
-      desc: 'Each message is stored as a permanent blob on the Shelby Protocol with 8+4 erasure coding—no single point of failure risk.',
+      desc: 'Each message is stored as a permanent blob on the Shelby Protocol with 8+4 erasure coding, no single point of failure risk.',
       color: '#F040B0'
     },
     {
-      icon: <AptosLogo size={32} />,
+      icon: 'aptos',
       title: 'Finalized on Aptos',
       desc: 'All transactions are finalized on the Aptos blockchain, providing you with verifiable and censorship-resistant proof for every message.',
       color: '#6001D2'
     },
     {
-      icon: '🔒',
+      icon: 'lock',
       title: 'AES-GCM Encryption',
-      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation—your messages cannot be read by storage nodes.',
+      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation, your messages cannot be read by storage nodes.',
       color: '#F040B0'
     },
     {
-      icon: '📬',
+      icon: 'send',
       title: 'Send to Any Wallet',
-      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts—just your on-chain identity.',
+      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts, just your on-chain identity.',
       color: '#6001D2'
     }
   ]
@@ -282,8 +351,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             width: 36, height: 36, borderRadius: 10,
             background: 'linear-gradient(135deg, #F040B0, #6001D2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, boxShadow: '0 0 20px rgba(240,64,176,0.4)'
-          }}>✉️</div>
+            fontSize: 18, boxShadow: '0 0 20px rgba(240,64,176,0.4)',
+            color: '#fff', fontWeight: 700
+          }}>
+            ✉
+          </div>
           <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.3px' }}>
             AptosBlobs<span style={{ color: '#F040B0' }}>MAIL</span>
           </span>
@@ -342,7 +414,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(240,64,176,0.5)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(240,64,176,0.35)' }}
         >
-          Launch App →
+          Launch App
         </button>
       </nav>
 
@@ -421,14 +493,14 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                   background: 'linear-gradient(90deg, #F040B0 0%, #a040f0 60%, #6001D2 100%)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
-                }}>For the Web3 Era</span>
+                }}>For Web3</span>
               </h1>
 
               <p className="hero-desc" style={{
                 fontSize: 18, lineHeight: 1.75, color: 'rgba(255,255,255,0.62)',
                 margin: '0 0 40px', maxWidth: 500, fontWeight: 400
               }}>
-                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs—censorship-resistant, verifiable, and entirely yours.
+                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs, censorship-resistant, verifiable, and entirely yours.
               </p>
 
               <div className="hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -444,7 +516,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     display: 'flex', alignItems: 'center', gap: 10
                   }}
                 >
-                  <span style={{ fontSize: 20 }}>✉️</span> Open Inbox
+                  Open Inbox
                 </button>
                 <a
                   href="https://shelby.xyz"
@@ -458,24 +530,23 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit'
                   }}
                 >
-                  ⬡ Shelby Documentation ↗
+                  Shelby Documentation
                 </a>
               </div>
 
               <div className="hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Aptos Testnet', icon: <AptosLogo size={16} />, color: '#22d3ee' },
-                  { label: 'Open Source', icon: '⬡', color: '#a78bfa' },
+                  { label: 'Aptos Testnet', color: '#22d3ee' },
+                  { label: 'Open Source', color: '#a78bfa' },
                 ].map(b => (
                   <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-                    <span style={{ display: 'flex', alignItems: 'center' }}>{b.icon}</span>
                     <span>{b.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right Side — App Preview */}
+            {/* Right Side App Preview */}
             <div className="hero-mockup" style={{ flex: '1 1 380px', maxWidth: 460 }}>
               <div style={{
                 background: '#ffffff',
@@ -498,7 +569,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                     { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }}>⬡</div>
+                      <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: 11, color: '#1a1a1a', fontWeight: 700 }}>{item.from}</span>
@@ -508,7 +579,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                       </div>
                     </div>
                   ))}
-                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>➤ Send via Aptos</div>
+                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>Send via Aptos</div>
                 </div>
               </div>
             </div>
@@ -537,12 +608,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
         <div className="landing-stats-grid" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           {[
-            { val: counters.blobs, label: 'Blobs Stored', icon: '⬡', color: '#F040B0' },
-            { val: counters.txns,  label: 'Aptos Transactions', icon: <AptosLogo size={32} />, color: '#a040f0' },
-            { val: counters.nodes, label: 'Active Storage Nodes', icon: <PetraLogo size={32} />, color: '#22d3ee' },
+            { val: counters.blobs, label: 'Blobs Stored', color: '#F040B0' },
+            { val: counters.txns,  label: 'Aptos Transactions', color: '#a040f0' },
+            { val: counters.nodes, label: 'Active Storage Nodes', color: '#22d3ee' },
           ].map((stat, i) => (
             <div className="stat-card" key={i} style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: 28, marginBottom: 8, display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
+              <div style={{ height: 28, marginBottom: 8 }} />
               <div style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', color: stat.color }}>
                 {stat.val.toLocaleString()}+
               </div>
@@ -556,12 +627,14 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       <section id="features" className="landing-section">
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', marginBottom: 60 }}>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 12 }}>KEY FEATURES</div>
-          <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Built for the Onchain Era</h2>
+          <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Built for Onchain</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
           {features.map((f, i) => (
-            <div key={i} style={{ padding: 32, borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: f.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, marginBottom: 20 }}>{f.icon}</div>
+            <div key={i} className="feature-card" style={{ padding: 32, borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 18, background: `rgba(255,255,255,0.04)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: `0 12px 30px ${f.color}20`, border: `1px solid ${f.color}20` }}>
+                <FeatureIcon type={f.icon} color={f.color} />
+              </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{f.title}</h3>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>{f.desc}</p>
             </div>
@@ -593,7 +666,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div style={{ flex: '1 1 400px' }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#F040B0', marginBottom: 12 }}>SECURITY</div>
             <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, marginBottom: 20 }}>Privacy First at Every Layer</h2>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>We don't trust our own servers with your data. Every message is encrypted in your browser before upload—not even Shelby nodes can read it.</p>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>We don't trust our own servers with your data. Every message is encrypted in your browser before upload, not even Shelby nodes can read it.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 '256-bit AES-GCM message encryption',
@@ -622,51 +695,46 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       <section className="landing-stack-section" style={{ padding: '72px 5%', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 48, textTransform: 'uppercase' }}>Built on top of</p>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0, flexWrap: 'wrap' }}>
+          <div className="landing-stack-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, alignItems: 'start' }}>
             {[
               {
                 n: 'Shelby Protocol',
-                icon: (
-                  <svg width="36" height="36" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M30 5L52 17.5V42.5L30 55L8 42.5V17.5L30 5Z" stroke="#F040B0" strokeWidth="3" fill="none"/>
-                    <path d="M30 5L52 17.5V42.5L30 55L8 42.5V17.5L30 5Z" fill="rgba(240,64,176,0.08)"/>
-                    <circle cx="30" cy="30" r="7" fill="#F040B0" opacity="0.9"/>
-                  </svg>
-                ),
+                icon: <ShelbyLogo size={34} />,
                 c: '#F040B0',
+                bg: 'rgba(240,64,176,0.1)',
+                border: 'rgba(240,64,176,0.25)',
                 sub: 'Blob Storage'
               },
               {
                 n: 'Aptos',
-                icon: <AptosLogo size={36} color="#22d3ee" />,
+                icon: <AptosLogo size={34} color="#22d3ee" />,
                 c: '#22d3ee',
+                bg: 'rgba(34,211,238,0.1)',
+                border: 'rgba(34,211,238,0.25)',
                 sub: 'L1 Blockchain'
               },
               {
                 n: 'Petra Wallet',
-                icon: <PetraLogo size={36} />,
+                icon: <PetraLogo size={34} />,
                 c: '#f97316',
+                bg: 'rgba(249,115,22,0.1)',
+                border: 'rgba(249,115,22,0.25)',
                 sub: 'Key Management'
               }
-            ].map((t, i, arr) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ textAlign: 'center', padding: '0 48px' }}>
-                  <div style={{
-                    width: 64, height: 64, borderRadius: 18,
-                    background: `${t.c}12`,
-                    border: `1px solid ${t.c}30`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px',
-                    boxShadow: `0 0 24px ${t.c}18`
-                  }}>
-                    {t.icon}
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{t.n}</div>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: t.c, opacity: 0.8, letterSpacing: '0.5px' }}>{t.sub}</div>
+            ].map((t, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 24px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: 18,
+                  background: t.bg,
+                  border: `1px solid ${t.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 16,
+                  boxShadow: `0 0 28px ${t.bg}`
+                }}>
+                  {t.icon}
                 </div>
-                {i < arr.length - 1 && (
-                  <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
-                )}
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6, lineHeight: 1.2 }}>{t.n}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: t.c, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{t.sub}</div>
               </div>
             ))}
           </div>
@@ -677,13 +745,27 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       <section className="landing-cta-section" style={{ padding: '120px 5%', textAlign: 'center' }}>
         <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Email is Ready</h2>
         <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party email. Just your wallet.</p>
-        <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>Launch App →</button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>
+            {connected ? 'Launch App' : isConnecting ? 'Connecting Wallet…' : 'Connect Wallet to Launch'}
+          </button>
+          {launchError && (
+            <div style={{ fontSize: 13, color: '#f9a8d4', maxWidth: 440, lineHeight: 1.5 }}>{launchError}</div>
+          )}
+        </div>
       </section>
 
       {/* ─── FOOTER ─── */}
       <footer className="landing-footer" style={{ padding: '40px 5%', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 6, background: '#F040B0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✉️</div>
+          <div style={{
+            width: 34, height: 34, borderRadius: 10,
+            background: 'linear-gradient(135deg, #F040B0, #6001D2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 17, color: '#fff', fontWeight: 700
+          }}>
+            ✉
+          </div>
           <span style={{ fontWeight: 700, fontSize: 14 }}>AptosBlobs MAIL</span>
         </div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 Built on Shelby Protocol × Aptos</div>
@@ -750,7 +832,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           .landing-steps-grid { gap: 32px; }
           .landing-security-content { gap: 40px; flex-direction: column; text-align: center; }
           .landing-stack-section { padding: 60px 20px; }
-          .landing-stack-grid { gap: 32px; }
+          .landing-stack-grid { grid-template-columns: 1fr; gap: 32px; justify-items: center; }
+          .landing-stack-grid > div { border-right: none !important; padding: 0 18px !important; }
           .landing-cta-section { padding: 80px 20px; }
           .landing-footer { 
             flex-direction: column; 

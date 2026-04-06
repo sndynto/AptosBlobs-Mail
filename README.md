@@ -1,76 +1,65 @@
-# 📬 AptosBlobs Mail
+﻿# 📬 AptosBlobs Mail
 
-<<<<<<< HEAD
-A secure, **client-side encrypted**, decentralized email client. It uses **Shelby Protocol** for storage and settles everything on the **Aptos** blockchain. No servers, just on-chain data.
-=======
-A simple Web3 email-like client using Aptos for identity and transaction settlement, with Shelby Protocol for scalable storage
->>>>>>> 6f0b0cc0f18eb69d141c89be16e2a362eccdb323
+A secure, client-side encrypted decentralized mail app built with React + Vite. Messages are stored as blobs on **Shelby Protocol** and finalized on **Aptos**, so there is no centralized email server and sensitive data stays encrypted in the browser.
 
 ## Features
 
-- **Send messages** — Stored as blobs, settled on Aptos.
-- **Client-Side Encryption** — All messages are encrypted with AES-GCM before upload.
-- **Inbox & Sent** — Standard mail views for your wallet address.
-- **Attachments** — You can attach files directly to your on-chain messages.
-- **Tags** — Automatic tagging for DeFi, DAO, and NFT related subjects.
-- **Mobile Friendly** — Works great on Android/iOS and inside Petra Wallet.
-- **Drafts** — Automatically saves what you're typing to local storage.
+- **Send encrypted messages** — Stored as blobs and settled on Aptos.
+- **Client-side AES-GCM encryption** — Messages are encrypted before they leave the browser.
+- **Inbox & Sent views** — Standard mail-like interface for wallet-based messaging.
+- **File attachments** — Upload and send files along with your message.
+- **Tags and labels** — Auto-tagging for DeFi, DAO, NFT, and pending messages.
+- **Mobile-friendly** — Responsive UI and Petra Wallet support.
+- **Draft autosave** — Drafts are saved to local storage automatically.
 
 ---
 
 ## Tech
 
 - **Frontend**: React 18 + Vite
-- **Chain**: Aptos (Testnet / Shelbynet)
-- **Storage**: [Shelby Protocol](https://shelby.xyz)
-- **State**: React Query 
-- **Style**: Pure CSS
+- **State + Data**: React Query
+- **Blockchain**: Aptos Testnet / Shelbynet
+- **Storage**: Shelby Protocol
+- **Wallet**: Aptos Wallet Adapter / Petra Wallet
 
 ---
 
 ## ⚙️ Prerequisites
 
 - [Node.js 18+](https://nodejs.org/)
-- [Petra Wallet](https://petra.app/) browser extension (or mobile app)
-- An Aptos Testnet wallet with some test APT ([faucet](https://aptos.dev/en/network/faucet))
-- A **Shelby Protocol API Key** (get one at [geomi.dev](https://geomi.dev))
+- [Petra Wallet](https://petra.app/) browser extension or mobile app
+- Aptos Testnet APT from the [Aptos Faucet](https://aptos.dev/en/network/faucet)
+- A Shelby Protocol API key from [geomi.dev](https://geomi.dev)
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/sndynto/AptosBlobs-Mail.git
-cd AptosBlobs-Mail
-```
-
-### 2. Install dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Set up environment variables
+### 2. Set up environment variables
 
-Copy the example env file and fill in your API key:
+Copy the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env`:
+Then edit `.env` and set your keys:
 
 ```env
 VITE_SHELBY_API_KEY_SHELBYNET=your_shelbynet_api_key_here
 VITE_SHELBY_API_KEY_TESTNET=your_testnet_api_key_here
+VITE_SHELBY_APP_SECRET=your_unique_secret_at_least_32_chars
 ```
 
-> **Get your API key** → [https://geomi.dev](https://geomi.dev)  
-> Obtain separate keys for Shelbynet and Aptos Testnet if needed. Without a valid API key, uploading blobs will fail. The inbox can still show received messages.
+> `VITE_SHELBY_APP_SECRET` is required for client-side encryption and must be unique.
 
-### 4. Run locally
+### 3. Run locally
 
 ```bash
 npm run dev
@@ -82,22 +71,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🔐 Wallet Setup
 
-1. Install [Petra Wallet](https://petra.app/) browser extension
+1. Install Petra Wallet
 2. Create or import an Aptos wallet
-3. Switch to **Testnet** in Petra settings
-4. Get test APT from the [Aptos Faucet](https://aptos.dev/en/network/faucet)
-5. Click **"Connect Wallet"** in the app
-
----
-
-## 📱 Mobile (Android / iOS)
-
-The app is fully responsive. To use with Petra mobile wallet:
-
-1. Install **Petra Wallet** app on your phone
-2. Open the Petra app → tap **"Browser"** (dApp browser tab)
-3. Enter your deployed app URL
-4. The app auto-detects Petra and connects instantly
+3. Switch Petra to **Testnet**
+4. Fund the wallet with test APT
+5. Connect the wallet from the app UI
 
 ---
 
@@ -106,12 +84,12 @@ The app is fully responsive. To use with Petra mobile wallet:
 ```
 aptosblobs-mail/
 ├── src/
-│   ├── App.tsx          # Main application (all components)
-│   ├── data.ts          # Mail type definition & color palette
-│   ├── index.css        # Styles + mobile responsive
-│   └── main.tsx         # Entry point (providers setup)
-├── index.html           # HTML shell with mobile meta tags
-├── vite.config.ts       # Vite + WASM + node polyfills
+│   ├── App.tsx          # Main application logic and UI
+│   ├── data.ts          # Mail type definitions and color palette
+│   ├── index.css        # Application styles
+│   └── main.tsx         # React entry point and providers
+├── index.html           # HTML shell
+├── vite.config.ts       # Vite config with polyfills
 ├── .env.example         # Environment variable template
 └── package.json
 ```
@@ -120,20 +98,12 @@ aptosblobs-mail/
 
 ## 🛠️ How It Works
 
-```
-User writes email
-      ↓
-JSON payload encoded → Uint8Array blob
-      ↓
-Blob named: "to_<recipientAddr>_<timestamp>-mail.json"
-      ↓
-Uploaded to Shelby Protocol (blob storage layer)
-      ↓
-100 Octa APT sent to recipient as on-chain notification
-      ↓
-Recipient's inbox polls Shelby indexer for blobs
-matching pattern: "to_<myAddr>_%"
-```
+1. User composes a message and optionally attaches files.
+2. The app serializes the payload to JSON.
+3. If privacy is enabled, the payload is encrypted in the browser.
+4. The app uploads blobs to Shelby Protocol.
+5. Shelby stores the blob and the transaction is finalized on Aptos.
+6. Recipient inbox polls Shelby for blobs addressed to their wallet.
 
 ---
 
@@ -143,12 +113,7 @@ matching pattern: "to_<myAddr>_%"
 npm run build
 ```
 
-Output is in the `dist/` folder. You can deploy to:
-- [Vercel](https://vercel.com) — recommended
-- [Netlify](https://netlify.com)
-- Any static file host
-
-> ⚠️ Remember to set `VITE_SHELBY_API_KEY_SHELBYNET` and `VITE_SHELBY_API_KEY_TESTNET` as environment variables in your hosting dashboard.
+The production output is saved in `dist/`.
 
 ---
 
@@ -156,27 +121,30 @@ Output is in the `dist/` folder. You can deploy to:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_SHELBY_API_KEY_SHELBYNET` | Yes | API key for Shelbynet access ([geomi.dev](https://geomi.dev)) |
-| `VITE_SHELBY_API_KEY_TESTNET` | Yes | API key for Aptos Testnet access ([geomi.dev](https://geomi.dev)) |
+| `VITE_SHELBY_API_KEY_SHELBYNET` | Yes | Shelby API key for Shelbynet access |
+| `VITE_SHELBY_API_KEY_TESTNET` | Yes | Shelby API key for Aptos Testnet access |
+| `VITE_SHELBY_APP_SECRET` | Yes | Client-side encryption secret (use a unique 32+ char value) |
 
 ---
 
 ## ⚠️ Known Limitations
 
-- Requires real APT on testnet for sending (for the 100 Octa notification ping)
-- Shelby Protocol is in beta — occasional sync delays possible (2–30 seconds)
+- Requires Aptos Testnet APT for sending messages
+- Recent uploads may take a few seconds to appear due to Shelby indexing
+- Designed for Testnet / Shelbynet use; mainnet support is not configured
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome!
+Contributions are welcome.
 
-```
-fork → create branch → commit → open PR
-```
+1. Fork the repo
+2. Create a branch
+3. Make your changes
+4. Open a pull request
 
-Please do **not** commit your `.env` file or any file containing API keys.
+Please do not commit `.env` or any credentials.
 
 ---
 
@@ -191,5 +159,4 @@ MIT License
 - [Aptos Developer Docs](https://aptos.dev)
 - [Shelby Protocol Docs](https://shelby.xyz)
 - [Petra Wallet](https://petra.app)
-- [Geomi Dashboard (API Keys)](https://geomi.dev)
-- [GitHub Repository](https://github.com/sndynto/AptosBlobs-Mail)
+- [Geomi Dashboard](https://geomi.dev)
