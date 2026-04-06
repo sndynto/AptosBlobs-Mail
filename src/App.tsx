@@ -47,9 +47,9 @@ export default function App() {
     return (
       <div style={{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.42s ease', minHeight: '100vh' }}>
         <Suspense fallback={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#100a14', color: '#F040B0', fontSize: 20, fontFamily: 'Inter,sans-serif', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--brand-color-dark)', color: 'var(--brand-color)', fontSize: 20, fontFamily: 'Inter,sans-serif', gap: 12 }}>
             <span style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
-              <AptosLogo size={24} color="#F040B0" />
+              <AptosLogo size={24} color="var(--brand-color)" />
             </span> Loading...
           </div>
         }>
@@ -87,7 +87,7 @@ export default function App() {
               </>
             )}
             <span style={{marginLeft: 8}}>Check your <code style={{background:'#fef3c7',padding:'1px 6px',borderRadius:4,border:'1px solid #fde68a'}}>.env</code> file.</span>
-            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'#6001D2', fontWeight:600, marginLeft: 8}}>Get Key →</a>
+            <a href="https://geomi.dev" target="_blank" rel="noreferrer" style={{color:'var(--brand-purple)', fontWeight:600, marginLeft: 8}}>Get Key →</a>
           </span>
         </div>
       )}
@@ -821,8 +821,8 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               <div class="txn-detail" style="font-family:var(--sans); color:var(--text-primary);">
                 <h3 style="margin-top:0; color:var(--brand-color); font-size:18px;">Transaction Details</h3>
                 <p style="margin:8px 0;"><b>Hash:</b> <code style="font-size:11px; color:var(--text-muted); word-break:break-all; background:#f8f9fa; padding:2px 4px; border-radius:4px;">${tx.hash}</code></p>
-                <p style="margin:8px 0;"><b>Version:</b> <span style="color:#6001D2; font-weight:600;">${tx.version}</span></p>
-                <p style="margin:8px 0;"><b>Function:</b> <code style="font-size:11px; color:#6001D2; background:rgba(96,1,210,0.05); padding:2px 6px; border-radius:4px;">${func}</code></p>
+                <p style="margin:8px 0;"><b>Version:</b> <span style="color:var(--brand-purple); font-weight:600;">${tx.version}</span></p>
+                <p style="margin:8px 0;"><b>Function:</b> <code style="font-size:11px; color:var(--brand-purple); background:rgba(96,1,210,0.05); padding:2px 6px; border-radius:4px;">${func}</code></p>
                 <p style="margin:8px 0;"><b>Status:</b> ${success ? '<span style="color:#10b981; font-weight:600;">✅ Success</span>' : '<span style="color:#ef4444; font-weight:600;">❌ Failed</span>'}</p>
                 <p style="margin:8px 0;"><b>Sender:</b> <code style="font-size:11px;">${tx.sender}</code></p>
                 <hr style="border:none; border-top:1px solid #f0f0f0; margin:15px 0;"/>
@@ -1347,7 +1347,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             <div className={`nav-item ${currentView === 'transactions' ? 'active' : ''}`} onClick={() => selectNav('transactions')}>
               <div className="nav-item-left"><span className="nav-icon">⛓</span> Transactions</div>
               {accountTransactions && accountTransactions.length > 0 && (
-                <span className="nav-count" style={{ background: 'rgba(96,1,210,0.2)', color: '#6001D2' }}>
+                <span className="nav-count" style={{ background: 'rgba(96,1,210,0.2)', color: 'var(--brand-purple)' }}>
                   {accountTransactions.length}
                 </span>
               )}
@@ -1728,7 +1728,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                   <h2 className="access-title">Allowlist</h2>
                   <p className="access-subtitle">Grant access to specific wallet addresses. Only these users can review your data on Shelby Explorer.</p>
                   
-                  <div style={{ padding: '8px 12px', background: 'rgba(96,1,210,0.06)', borderRadius: 8, fontSize: 11, color: '#6001D2', marginBottom: 16, border: '1px dashed rgba(96,1,210,0.2)' }}>
+                  <div style={{ padding: '8px 12px', background: 'rgba(96,1,210,0.06)', borderRadius: 8, fontSize: 11, color: 'var(--brand-purple)', marginBottom: 16, border: '1px dashed rgba(96,1,210,0.2)' }}>
                     <b>Tip:</b> The recipient in the "To" field is automatically added to the allowlist.
                   </div>
                   

@@ -10,6 +10,10 @@
     --brand-color-light: #FF70CC;
     --brand-color-bg: #FFF0FA;
     --brand-color-bg-solid: #FFE4F6;
+    --brand-purple: #6001D2;
+    --brand-gradient: linear-gradient(135deg, var(--brand-color), var(--brand-purple));
+    --brand-gradient-soft: linear-gradient(90deg, var(--brand-color) 0%, var(--brand-color-light) 60%, var(--brand-purple) 100%);
+    --brand-gradient-strong: linear-gradient(135deg, var(--brand-color) 0%, #8020d0 100%);
 
     /* Aptos / Shelby accent */
     --aptos: #00c49f;

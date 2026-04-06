@@ -10,15 +10,25 @@ interface LandingPageProps {
   onEnterApp: () => void
 }
 
+const BRAND = {
+  primary: 'var(--brand-color)',
+  purple: 'var(--brand-purple)',
+  light: 'var(--brand-color-light)',
+  aptos: 'var(--aptos)',
+  gradient: 'var(--brand-gradient)',
+  gradientSoft: 'var(--brand-gradient-soft)',
+  gradientStrong: 'var(--brand-gradient-strong)',
+}
+
 const ShelbyLogo = ({ size = 34 }: { size?: number | string }) => (
   <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 10H41L51 22.5V37.5L41 50H19L9 37.5V22.5L19 10Z" fill="none" stroke="#F040B0" strokeWidth="3" />
-    <path d="M30 20L38 26V34L30 40L22 34V26L30 20Z" fill="#F040B0" />
+    <path d="M19 10H41L51 22.5V37.5L41 50H19L9 37.5V22.5L19 10Z" fill="none" stroke={BRAND.primary} strokeWidth="3" />
+    <path d="M30 20L38 26V34L30 40L22 34V26L30 20Z" fill={BRAND.primary} />
     <circle cx="30" cy="30" r="3" fill="#fff" />
   </svg>
 )
 
-const AptosLogo = ({ size = 34, color = '#22d3ee' }: { size?: number | string, color?: string }) => (
+const AptosLogo = ({ size = 34, color = BRAND.aptos }: { size?: number | string, color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M13 13H47V47H13V13Z" fill="#0D2A3E" stroke={color} strokeWidth="2" />
     <rect x="19" y="22" width="22" height="4" rx="2" fill={color} />
@@ -298,25 +308,25 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       icon: 'shelby',
       title: 'Shelby Blob Storage',
       desc: 'Each message is stored as a permanent blob on the Shelby Protocol with 8+4 erasure coding, no single point of failure risk.',
-      color: '#F040B0'
+      color: BRAND.primary
     },
     {
       icon: 'aptos',
       title: 'Finalized on Aptos',
       desc: 'All transactions are finalized on the Aptos blockchain, providing you with verifiable and censorship-resistant proof for every message.',
-      color: '#6001D2'
+      color: BRAND.purple
     },
     {
       icon: 'lock',
       title: 'AES-GCM Encryption',
       desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation, your messages cannot be read by storage nodes.',
-      color: '#F040B0'
+      color: BRAND.primary
     },
     {
       icon: 'send',
       title: 'Send to Any Wallet',
       desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts, just your on-chain identity.',
-      color: '#6001D2'
+      color: BRAND.purple
     }
   ]
 
@@ -349,7 +359,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #F040B0, #6001D2)',
+            background: BRAND.gradient,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 18, boxShadow: '0 0 20px rgba(240,64,176,0.4)',
             color: '#fff', fontWeight: 700
@@ -357,7 +367,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             ✉
           </div>
           <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.3px' }}>
-            AptosBlobs<span style={{ color: '#F040B0' }}>MAIL</span>
+            AptosBlobs<span style={{ color: BRAND.primary }}>MAIL</span>
           </span>
         </div>
 
@@ -392,7 +402,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
                 fontSize: 14, fontWeight: 500, transition: 'color 0.2s'
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#F040B0')}
+              onMouseEnter={e => (e.currentTarget.style.color = BRAND.primary)}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
             >
               {link.label}
@@ -404,7 +414,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <button
           onClick={handleLaunchApp}
           style={{
-            background: 'linear-gradient(135deg, #F040B0, #6001D2)',
+            background: BRAND.gradient,
             color: '#fff', border: 'none', borderRadius: 100,
             padding: '10px 24px', fontWeight: 700, fontSize: 14,
             cursor: 'pointer', letterSpacing: '0.2px',
@@ -427,7 +437,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div style={{
             position: 'absolute', top: '-10%', left: '-8%',
             width: '38%', height: '130%',
-            background: '#F040B0',
+            background: BRAND.primary,
             transform: 'rotate(-12deg) skewX(-8deg)',
             opacity: 0.12, borderRadius: 32
           }} />
@@ -435,7 +445,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div style={{
             position: 'absolute', top: '-5%', right: '-10%',
             width: '35%', height: '120%',
-            background: '#F040B0',
+            background: BRAND.primary,
             transform: 'rotate(10deg) skewX(6deg)',
             opacity: 0.1, borderRadius: 32
           }} />
@@ -443,7 +453,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div style={{
             position: 'absolute', bottom: '8%', left: '15%',
             width: '22%', height: '40%',
-            background: '#6001D2',
+            background: BRAND.purple,
             transform: 'rotate(-20deg)',
             opacity: 0.07, borderRadius: 24
           }} />
@@ -477,9 +487,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: 'rgba(240,64,176,0.12)', border: '1px solid rgba(240,64,176,0.3)',
                 borderRadius: 100, padding: '6px 16px', marginBottom: 28,
-                fontSize: 12, fontWeight: 600, color: '#F040B0', letterSpacing: '0.5px'
+                fontSize: 12, fontWeight: 600, color: BRAND.primary, letterSpacing: '0.5px'
               }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0', display: 'inline-block', boxShadow: '0 0 8px #F040B0' }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.primary, display: 'inline-block', boxShadow: '0 0 8px rgba(240,64,176,0.8)' }} />
                 POWERED BY SHELBY PROTOCOL × APTOS
               </div>
 
@@ -490,7 +500,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               }}>
                 Decentralized Email<br />
                 <span style={{
-                  background: 'linear-gradient(90deg, #F040B0 0%, #a040f0 60%, #6001D2 100%)',
+                  background: BRAND.gradientSoft,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>For Web3</span>
@@ -507,7 +517,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 <button
                   onClick={handleLaunchApp}
                   style={{
-                    background: 'linear-gradient(135deg, #F040B0 0%, #8020d0 100%)',
+                    background: BRAND.gradientStrong,
                     color: '#fff', border: 'none', borderRadius: 14,
                     padding: '16px 36px', fontWeight: 800, fontSize: 16,
                     cursor: 'pointer', letterSpacing: '-0.2px',
@@ -536,7 +546,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
               <div className="hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Aptos Testnet', color: '#22d3ee' },
+                  { label: 'Aptos Testnet', color: BRAND.aptos },
                   { label: 'Open Source', color: '#a78bfa' },
                 ].map(b => (
                   <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
@@ -564,8 +574,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
                 <div style={{ padding: '12px' }}>
                   {[
-                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: '#6001d2' },
-                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', iconCol: '#F040B0' },
+                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: BRAND.aptos },
+                    { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', iconCol: BRAND.primary },
                     { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
@@ -579,7 +589,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                       </div>
                     </div>
                   ))}
-                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: '#F040B0', color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>Send via Aptos</div>
+                  <div style={{ marginTop: 12, padding: '12px', borderRadius: 99, background: BRAND.primary, color: 'white', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>Send via Aptos</div>
                 </div>
               </div>
             </div>
@@ -587,8 +597,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
 
         <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: 0.4 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', color: '#F040B0' }}>SCROLL</span>
-          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, #F040B0, transparent)' }} />
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', color: BRAND.primary }}>SCROLL</span>
+          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, var(--brand-color), transparent)' }} />
         </div>
       </section>
 
@@ -599,18 +609,18 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             display: 'inline-flex', alignItems: 'center', gap: 7,
             background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)',
             borderRadius: 100, padding: '5px 14px',
-            fontSize: 11, fontWeight: 700, color: '#22d3ee', letterSpacing: '1.5px',
+            fontSize: 11, fontWeight: 700, color: BRAND.aptos, letterSpacing: '1.5px',
             textTransform: 'uppercase'
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22d3ee', display: 'inline-block', boxShadow: '0 0 8px #22d3ee', animation: 'livePulse 1.4s infinite' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.aptos, display: 'inline-block', boxShadow: '0 0 8px rgba(34,211,238,0.9)', animation: 'livePulse 1.4s infinite' }} />
             {statsLoading ? 'Fetching Data…' : 'Live Network Statistics'}
           </span>
         </div>
         <div className="landing-stats-grid" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           {[
-            { val: counters.blobs, label: 'Blobs Stored', color: '#F040B0' },
-            { val: counters.txns,  label: 'Aptos Transactions', color: '#a040f0' },
-            { val: counters.nodes, label: 'Active Storage Nodes', color: '#22d3ee' },
+            { val: counters.blobs, label: 'Blobs Stored', color: BRAND.primary },
+            { val: counters.txns,  label: 'Aptos Transactions', color: 'var(--brand-color-mid)' },
+            { val: counters.nodes, label: 'Active Storage Nodes', color: BRAND.aptos },
           ].map((stat, i) => (
             <div className="stat-card" key={i} style={{ textAlign: 'center', padding: '20px' }}>
               <div style={{ height: 28, marginBottom: 8 }} />
@@ -626,7 +636,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       {/* ─── FEATURES ─── */}
       <section id="features" className="landing-section">
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', marginBottom: 60 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: '#F040B0', marginBottom: 12 }}>KEY FEATURES</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '3px', color: BRAND.primary, marginBottom: 12 }}>KEY FEATURES</div>
           <h2 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1px' }}>Built for Onchain</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -651,7 +661,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           <div className="landing-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
             {steps.map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(240,64,176,0.1)', border: '1px solid #F040B0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontWeight: 800, color: '#F040B0' }}>{s.num}</div>
+                <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(240,64,176,0.1)', border: `1px solid ${BRAND.primary}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontWeight: 800, color: BRAND.primary }}>{s.num}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{s.title}</h3>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{s.desc}</p>
               </div>
@@ -664,7 +674,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       <section id="security" className="landing-section">
         <div className="landing-security-content" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 60 }}>
           <div style={{ flex: '1 1 400px' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#F040B0', marginBottom: 12 }}>SECURITY</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: BRAND.primary, marginBottom: 12 }}>SECURITY</div>
             <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, marginBottom: 20 }}>Privacy First at Every Layer</h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 32 }}>We don't trust our own servers with your data. Every message is encrypted in your browser before upload, not even Shelby nodes can read it.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -676,17 +686,17 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 'Aptos Merkle root on-chain verification'
               ].map((t, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0' }} />
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.primary }} />
                   {t}
                 </div>
               ))}
             </div>
           </div>
           <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.3)', padding: 32, borderRadius: 24, border: '1px solid rgba(240,64,176,0.2)', fontFamily: 'monospace', fontSize: 12 }}>
-            <div style={{ color: '#F040B0', opacity: 0.6, marginBottom: 8 }}>// encrypt before upload</div>
-            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>key</span> = await deriveKey(sender);</div>
-            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: '#22d3ee' }}>cipher</span> = await encrypt(msg, key);</div>
-            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: '#22d3ee' }}>✓ Node only receives ciphertext</div>
+            <div style={{ color: BRAND.primary, opacity: 0.6, marginBottom: 8 }}>// encrypt before upload</div>
+            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: BRAND.aptos }}>key</span> = await deriveKey(sender);</div>
+            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: BRAND.aptos }}>cipher</span> = await encrypt(msg, key);</div>
+            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: BRAND.aptos }}>✓ Node only receives ciphertext</div>
           </div>
         </div>
       </section>
@@ -700,15 +710,15 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               {
                 n: 'Shelby Protocol',
                 icon: <ShelbyLogo size={34} />,
-                c: '#F040B0',
+                c: BRAND.primary,
                 bg: 'rgba(240,64,176,0.1)',
                 border: 'rgba(240,64,176,0.25)',
                 sub: 'Blob Storage'
               },
               {
                 n: 'Aptos',
-                icon: <AptosLogo size={34} color="#22d3ee" />,
-                c: '#22d3ee',
+                icon: <AptosLogo size={34} color={BRAND.aptos} />,
+                c: BRAND.aptos,
                 bg: 'rgba(34,211,238,0.1)',
                 border: 'rgba(34,211,238,0.25)',
                 sub: 'L1 Blockchain'
@@ -746,7 +756,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Email is Ready</h2>
         <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party email. Just your wallet.</p>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <button onClick={handleLaunchApp} style={{ background: 'linear-gradient(135deg, #F040B0, #6001D2)', color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>
+          <button onClick={handleLaunchApp} style={{ background: BRAND.gradient, color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>
             {connected ? 'Launch App' : isConnecting ? 'Connecting Wallet…' : 'Connect Wallet to Launch'}
           </button>
           {launchError && (
@@ -760,7 +770,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 10,
-            background: 'linear-gradient(135deg, #F040B0, #6001D2)',
+            background: BRAND.gradient,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 17, color: '#fff', fontWeight: 700
           }}>
@@ -865,8 +875,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           66% { transform: translateY(-10px) translateX(10px); }
         }
         @keyframes livePulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px #22d3ee; }
-          50% { opacity: 0.4; box-shadow: 0 0 3px #22d3ee; }
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--aptos); }
+          50% { opacity: 0.4; box-shadow: 0 0 3px var(--aptos); }
         }
         
         ::-webkit-scrollbar { width: 6px; }
