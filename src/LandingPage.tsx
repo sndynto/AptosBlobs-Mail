@@ -834,7 +834,16 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
       {/* â”€â”€â”€ KEYFRAME ANIMATIONS â”€â”€â”€ */}
       <style>{`
-        /* Responsive Classes */
+        /* Global & Reset */
+        * { box-sizing: border-box; }
+        html, body, #root { 
+          scroll-behavior: smooth; 
+          overflow-x: hidden;
+          width: 100%;
+          min-height: 100dvh;
+        }
+
+        /* Responsive Base Classes */
         .landing-nav { padding: 0 40px; }
         .landing-hero-container { padding: 120px 40px 80px; }
         .landing-hero-content { gap: 60px; }
@@ -847,6 +856,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         .landing-stack-grid { gap: 48px; }
         .landing-cta-section { padding: 140px 40px; }
         .landing-footer { padding: 40px; justify-content: space-between; flex-direction: row; gap: 20px; }
+
+        /* Mobile Utility: Show/Hide */
+        .mobile-only { display: none; }
 
         /* Tablet: 768px - 1199px */
         @media screen and (max-width: 1199px) {
@@ -861,28 +873,45 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         /* Mobile: < 768px */
         @media screen and (max-width: 767px) {
           .landing-nav-links { display: none !important; }
-          .landing-nav { padding: 0 20px; }
+          .landing-nav { 
+            padding: 0 20px; 
+            justify-content: space-between; 
+            height: 60px;
+          }
           .landing-hero-container { padding: 80px 20px 40px; }
           .landing-hero-content { gap: 40px; flex-direction: column; text-align: center; }
-          .landing-stats-section { padding: 60px 20px; }
-          .landing-stats-grid { grid-template-columns: 1fr; gap: 32px; }
-          .landing-section { padding: 80px 20px; }
-          .landing-steps-grid { gap: 40px; }
+          .hero-headline { font-size: clamp(34px, 10vw, 42px) !important; letter-spacing: -1px !important; }
+          .hero-desc { margin: 0 auto 32px !important; }
+          .hero-ctas { justify-content: center; width: 100%; flex-direction: column; }
+          .hero-ctas button, .hero-ctas a { width: 100%; justify-content: center; }
+          .hero-mockup { width: 100%; max-width: 100% !important; flex: 1 1 auto !important; }
+          .hero-badges { justify-content: center; }
+          
+          .landing-stats-section { padding: 48px 20px; }
+          .landing-stats-grid { grid-template-columns: 1fr; gap: 40px; }
+          .landing-section { padding: 60px 20px; }
+          .landing-steps-grid { gap: 32px; }
           .landing-security-content { gap: 40px; flex-direction: column; text-align: center; }
           .landing-stack-section { padding: 60px 20px; }
           .landing-stack-grid { gap: 32px; }
           .landing-cta-section { padding: 80px 20px; }
-          .landing-footer { flex-direction: column; justify-content: center; gap: 16px; padding: 32px 20px; text-align: center; }
+          .landing-footer { 
+            flex-direction: column; 
+            justify-content: center; 
+            gap: 24px; 
+            padding: 48px 20px; 
+            text-align: center; 
+            padding-bottom: calc(48px + env(safe-area-inset-bottom));
+          }
         }
 
-        /* Small Mobile: < 480px */
-        @media screen and (max-width: 479px) {
+        /* Small Mobile / Petra Wallet: < 400px */
+        @media screen and (max-width: 399px) {
+          .hero-headline { font-size: 32px !important; }
           .landing-nav { padding: 0 16px; }
-          .landing-hero-container { padding: 60px 16px 30px; }
-          .landing-stats-section { padding: 40px 16px; }
-          .landing-section { padding: 60px 16px; }
-          .landing-cta-section { padding: 60px 16px; }
-          .landing-footer { padding: 24px 16px; }
+          .landing-hero-container { padding: 70px 16px 30px; }
+          .landing-section { padding: 50px 16px; }
+          .stat-card div:first-child { transform: scale(0.85); }
         }
 
         @keyframes float1 {
@@ -899,17 +928,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           0%, 100% { opacity: 1; box-shadow: 0 0 8px #22d3ee; }
           50% { opacity: 0.4; box-shadow: 0 0 3px #22d3ee; }
         }
-        @keyframes statsShimmer {
-          0% { opacity: 0.3; }
-          50% { opacity: 0.7; }
-          100% { opacity: 0.3; }
-        }
-        * { box-sizing: border-box; }
-        html, body, #root { 
-          scroll-behavior: smooth; 
-          overflow-y: auto !important;
-          height: auto !important;
-        }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0d0117; }
         ::-webkit-scrollbar-thumb { background: rgba(240,64,176,0.3); border-radius: 3px; }
