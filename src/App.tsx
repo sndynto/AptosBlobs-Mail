@@ -1479,7 +1479,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 AptosBlobs Mail
               </div>
               <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.7, maxWidth: 320, textAlign: 'center' }}>
-                Decentralized mail powered by{' '}
+                Decentralized email powered by{' '}
                 <span style={{ color: 'var(--brand-color)', fontWeight: 600 }}>Shelby Protocol</span>
                 {' '}stored on-chain, finalized on Aptos.
               </div>
