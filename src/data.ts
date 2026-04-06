@@ -15,7 +15,7 @@ export type Mail = {
   private?: boolean    // true = pesan terenkripsi/allowlist
 }
 
-// [background, text] — vivid solid for circle avatars on white bg
+// [background, text]    vivid solid for circle avatars on white bg
 export const COLORS = [
   ['#F040B0', '#ffffff'], // Shelby pink
   ['#0073e6', '#ffffff'], // Blue

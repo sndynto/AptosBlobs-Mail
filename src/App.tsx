@@ -632,7 +632,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     const baseMails = connected ? [] : [...mails]
     let list = [...baseMails]
     
-    // Merge onchain blobs into the inbox view — grouped by send operation (same timestamp in name)
+    // Merge onchain blobs into the inbox view    grouped by send operation (same timestamp in name)
     if (incomingBlobs && incomingBlobs.length > 0) {
       // Helper: extract group key = "to_<addr>_<timestamp>" from blob name
       const getGroupKey = (rawName: string) => {
@@ -1543,7 +1543,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
               <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.7, maxWidth: 320, textAlign: 'center' }}>
                 Decentralized email powered by{' '}
                 <span style={{ color: 'var(--brand-color)', fontWeight: 600 }}>Shelby Protocol</span>
-                {' '}— stored on-chain, settles on Aptos.
+                {' '}   stored on-chain, settles on Aptos.
               </div>
               <div className="welcome-features">
                 {[
@@ -1570,7 +1570,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 {selectedMail.pending && (
                   <div className="pending-banner">
                     <div className="pending-spinner" />
-                    <span>Blob is <b>Pending</b> — awaiting on-chain confirmation. Auto-refreshing every 5s...</span>
+                    <span>Blob is <b>Pending</b>    awaiting on-chain confirmation. Auto-refreshing every 5s...</span>
                   </div>
                 )}
                 <div className="mail-view-subject">{realSubjects[selectedMail.id] || selectedMail.subject}</div>

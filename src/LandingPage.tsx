@@ -111,10 +111,10 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
     const fetchStats = async () => {
       setStatsLoading(true)
-      // Seed values — only updated upward if API returns more
+      // Seed values    only updated upward if API returns more
       let blobs = 12847, txns = 94231, nodes = 7
 
-      // 1. Blobs stored — try two possible table names
+      // 1. Blobs stored    try two possible table names
       try {
         const gqlRes = await fetch(SHELBY_GRAPHQL, {
           method: 'POST',
@@ -136,7 +136,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         }
       } catch (_) {}
 
-      // 2. Aptos Transactions — block_height × ~10 txns/block gives a realistic count
+      // 2. Aptos Transactions    block_height × ~10 txns/block gives a realistic count
       try {
         const chainRes = await fetch(`${APTOS_NODE}/`, { signal: AbortSignal.timeout(4000) })
         if (chainRes.ok) {
@@ -149,7 +149,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         }
       } catch (_) {}
 
-      // 3. Active nodes — Shelby RPC /v1/status (may not expose CORS, fallback ok)
+      // 3. Active nodes    Shelby RPC /v1/status (may not expose CORS, fallback ok)
       try {
         const nodesRes = await fetch(`${SHELBY_RPC}/v1/status`, { signal: AbortSignal.timeout(4000) })
         if (nodesRes.ok) {
@@ -232,7 +232,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     {
       icon: '⬡',
       title: 'Blob Storage on Shelby',
-      desc: 'Every message is stored as an immutable blob on Shelby Protocol with 8+4 erasure coding — no single point of failure.',
+      desc: 'Every message is stored as an immutable blob on Shelby Protocol with 8+4 erasure coding    no single point of failure.',
       color: '#F040B0'
     },
     {
@@ -244,13 +244,13 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
     {
       icon: '🔒',
       title: 'AES-GCM Encryption',
-      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation — your messages are unreadable at rest on storage nodes.',
+      desc: 'End-to-end encryption using AES-GCM with PBKDF2 key derivation    your messages are unreadable at rest on storage nodes.',
       color: '#F040B0'
     },
     {
       icon: '📬',
       title: 'Any Wallet Address',
-      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts — just your on-chain identity.',
+      desc: 'Send encrypted messages to any Aptos wallet address. No usernames, no accounts    just your on-chain identity.',
       color: '#6001D2'
     }
   ]
@@ -412,7 +412,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 fontSize: 12, fontWeight: 600, color: '#F040B0', letterSpacing: '0.5px'
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F040B0', display: 'inline-block', boxShadow: '0 0 8px #F040B0' }} />
-                POWERED BY SHELBY PROTOCOL — APTOS
+                POWERED BY SHELBY PROTOCOL    APTOS
               </div>
 
               {/* Headline */}
@@ -433,7 +433,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 fontSize: 18, lineHeight: 1.75, color: 'rgba(255,255,255,0.62)',
                 margin: '0 0 40px', maxWidth: 500, fontWeight: 400
               }}>
-                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs — censorship-resistant, verifiable, and yours.
+                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs    censorship-resistant, verifiable, and yours.
               </p>
 
               {/* CTAs */}
@@ -486,7 +486,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Right — App Preview Card */}
+            {/* Right    App Preview Card */}
             <div className="hero-mockup" style={{ flex: '1 1 380px', maxWidth: 460 }}>
               <div style={{
                 background: '#ffffff',
@@ -593,7 +593,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 minHeight: '1em'
               }}>
                 {statsLoading && stat.val === 0
-                  ? '—'
+                  ? '  '
                   : stat.val.toLocaleString()
                 }
                 <span style={{ fontSize: '0.5em' }}>
@@ -705,7 +705,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               Privacy-First,<br />At Every Layer
             </h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', lineHeight: 1.8, marginBottom: 36 }}>
-              We don't trust our own servers with your data. Every message is encrypted in your browser before upload — not even Shelby nodes can read it.
+              We don't trust our own servers with your data. Every message is encrypted in your browser before upload    not even Shelby nodes can read it.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
