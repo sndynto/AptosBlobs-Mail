@@ -362,13 +362,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         if (!res.ok) return [];
         const txns = await res.json();
         
-        // Filter: only transactions interacting with Shelby Protocol (AptosBlobs-Mail)
+        // Filter: only transactions interacting with the AptosBlobs-Mail Shelby module
         return txns.filter((t: any) => {
           const payload = t.payload;
           if (!payload || payload.type !== 'entry_function_payload') return false;
           const func = payload.function || '';
-          // Filter by the module address or common Shelby function patterns
-          return func.includes('shelby') || func.includes('blob');
+          return func.startsWith(SHELBY_MODULE + '::');
         });
       } catch (e) {
         return [];
