@@ -619,18 +619,54 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       </section>
 
       {/* ─── TECHNOLOGY ─── */}
-      <section className="landing-stack-section" style={{ padding: '80px 5%', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginBottom: 40 }}>BUILT ON TOP OF</p>
-          <div className="landing-stack-grid" style={{ display: 'flex', justifyContent: 'center', gap: 60, flexWrap: 'wrap' }}>
+      <section className="landing-stack-section" style={{ padding: '72px 5%', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 48, textTransform: 'uppercase' }}>Built on top of</p>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0, flexWrap: 'wrap' }}>
             {[
-               { n: 'Shelby Protocol', i: '⬡', c: '#F040B0' },
-               { n: 'Aptos', i: <AptosLogo size={32} />, c: '#22d3ee' },
-               { n: 'Petra Wallet', i: <PetraLogo size={32} />, c: '#f97316' }
-            ].map((t, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 12, display: 'flex', justifyContent: 'center' }}>{t.i}</div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{t.n}</div>
+              {
+                n: 'Shelby Protocol',
+                icon: (
+                  <svg width="36" height="36" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 5L52 17.5V42.5L30 55L8 42.5V17.5L30 5Z" stroke="#F040B0" strokeWidth="3" fill="none"/>
+                    <path d="M30 5L52 17.5V42.5L30 55L8 42.5V17.5L30 5Z" fill="rgba(240,64,176,0.08)"/>
+                    <circle cx="30" cy="30" r="7" fill="#F040B0" opacity="0.9"/>
+                  </svg>
+                ),
+                c: '#F040B0',
+                sub: 'Blob Storage'
+              },
+              {
+                n: 'Aptos',
+                icon: <AptosLogo size={36} color="#22d3ee" />,
+                c: '#22d3ee',
+                sub: 'L1 Blockchain'
+              },
+              {
+                n: 'Petra Wallet',
+                icon: <PetraLogo size={36} />,
+                c: '#f97316',
+                sub: 'Key Management'
+              }
+            ].map((t, i, arr) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ textAlign: 'center', padding: '0 48px' }}>
+                  <div style={{
+                    width: 64, height: 64, borderRadius: 18,
+                    background: `${t.c}12`,
+                    border: `1px solid ${t.c}30`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 16px',
+                    boxShadow: `0 0 24px ${t.c}18`
+                  }}>
+                    {t.icon}
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{t.n}</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: t.c, opacity: 0.8, letterSpacing: '0.5px' }}>{t.sub}</div>
+                </div>
+                {i < arr.length - 1 && (
+                  <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+                )}
               </div>
             ))}
           </div>
