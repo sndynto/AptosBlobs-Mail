@@ -1,10 +1,10 @@
 ﻿# 📬 AptosBlobs Mail
 
-A secure, client-side encrypted decentralized mail app built with React + Vite. Messages are stored as blobs on **Shelby Protocol** and finalized on **Aptos**, so there is no centralized email server and sensitive data stays encrypted in the browser.
+A secure, client-side encrypted decentralized mail app built with React + Vite. Messages are stored as blobs on **Shelby Protocol** and finalized on **Aptos**, so there is no centralized mail server and sensitive data stays encrypted in the browser.
 
 ## Features
 
-- **Send encrypted messages** — Stored as blobs and settled on Aptos.
+- **Send encrypted messages to any Aptos wallet address. Messages are encrypted client-side, stored as Shelby blobs, and finalized on Aptos for censorship-resistant, verifiable delivery.**
 - **Client-side AES-GCM encryption** — Messages are encrypted before they leave the browser.
 - **Inbox & Sent views** — Standard mail-like interface for wallet-based messaging.
 - **File attachments** — Upload and send files along with your message.

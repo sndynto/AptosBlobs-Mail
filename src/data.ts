@@ -18,12 +18,12 @@ export type Mail = {
 // [background, text]    vivid solid for circle avatars on white bg
 export const COLORS = [
   ['#F040B0', '#ffffff'], // Shelby pink
-  ['#0073e6', '#ffffff'], // Blue
-  ['#00875a', '#ffffff'], // Green
-  ['#d97706', '#ffffff'], // Amber
+  ['#6001D2', '#ffffff'], // Shelby purple
   ['#8B0050', '#ffffff'], // Deep pink
-  ['#0891b2', '#ffffff'], // Cyan
-  ['#7c3aed', '#ffffff'], // Violet
   ['#be185d', '#ffffff'], // Rose
+  ['#7c3aed', '#ffffff'], // Violet
+  ['#d946ef', '#ffffff'], // Fuchsia
+  ['#4c1d95', '#ffffff'], // Deep violet
+  ['#9d174d', '#ffffff'], // Deep rose
 ]
 

@@ -1,0 +1,10 @@
+[package]
+name = "AptosBlobsMailV2"
+version = "1.0.0"
+upgrade_policy = "compatible"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "aptos-node-v1.10.0", subdir = "aptos-move/framework/aptos-framework" }
+
+[addresses]
+mail_addr = "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e"

@@ -14,35 +14,44 @@ const BRAND = {
   primary: 'var(--brand-color)',
   purple: 'var(--brand-purple)',
   light: 'var(--brand-color-light)',
-  aptos: 'var(--aptos)',
+  aptos: 'var(--brand-purple)',
   gradient: 'var(--brand-gradient)',
   gradientSoft: 'var(--brand-gradient-soft)',
   gradientStrong: 'var(--brand-gradient-strong)',
 }
 
-const ShelbyLogo = ({ size = 34 }: { size?: number | string }) => (
-  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 10H41L51 22.5V37.5L41 50H19L9 37.5V22.5L19 10Z" fill="none" stroke={BRAND.primary} strokeWidth="3" />
-    <path d="M30 20L38 26V34L30 40L22 34V26L30 20Z" fill={BRAND.primary} />
-    <circle cx="30" cy="30" r="3" fill="#fff" />
+const ShelbyLogo = ({ size = 34, color = BRAND.primary }: { size?: number | string, color?: string }) => (
+  <svg className="stack-icon stack-icon-shelby" width={size} height={size} viewBox="0 0 60 60" fill="none" style={{ color }} xmlns="http://www.w3.org/2000/svg">
+    <path data-stroke d="M30 7 47 16.5v19L30 45 13 35.5v-19L30 7Z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+    <path data-stroke d="M18 20.5 30 27l12-6.5M18 29.5 30 36l12-6.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.62" />
+    <path data-fill d="M30 17 40 22.5 30 28 20 22.5 30 17Z" fill="currentColor" />
+    <circle data-fill-soft cx="30" cy="47" r="4" fill="var(--brand-color-light)" />
   </svg>
 )
 
-const AptosLogo = ({ size = 34, color = BRAND.aptos }: { size?: number | string, color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M13 13H47V47H13V13Z" fill="#0D2A3E" stroke={color} strokeWidth="2" />
-    <rect x="19" y="22" width="22" height="4" rx="2" fill={color} />
-    <rect x="19" y="30" width="22" height="4" rx="2" fill={color} />
-    <rect x="19" y="38" width="22" height="4" rx="2" fill={color} />
+const AptosLogo = ({ size = 34, color = BRAND.purple }: { size?: number | string, color?: string }) => (
+  <svg className="stack-icon stack-icon-aptos" width={size} height={size} viewBox="0 0 60 60" fill="none" style={{ color }} xmlns="http://www.w3.org/2000/svg">
+    <rect data-stroke x="12" y="12" width="36" height="36" rx="12" stroke="currentColor" strokeWidth="3" />
+    <path data-stroke d="M20 23h20M20 30h20M20 37h20" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+    <circle data-fill cx="20" cy="23" r="3.2" fill="currentColor" />
+    <circle data-fill cx="40" cy="37" r="3.2" fill="currentColor" />
   </svg>
 )
 
-const PetraLogo = ({ size = 34 }: { size?: number | string }) => (
-  <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M30 10L46 22L38 46H22L14 22L30 10Z" fill="#F97316" />
-    <path d="M30 10L38 22L30 30L22 22L30 10Z" fill="#F59E0B" />
-    <path d="M30 30L38 46H22L30 30Z" fill="#FB923C" />
-    <path d="M30 10L34 22L30 30L26 22L30 10Z" fill="#FFF7ED" opacity="0.8" />
+const PetraLogo = ({ size = 34, color = BRAND.primary }: { size?: number | string, color?: string }) => (
+  <svg className="stack-icon stack-icon-petra" width={size} height={size} viewBox="0 0 60 60" fill="none" style={{ color }} xmlns="http://www.w3.org/2000/svg">
+    <rect data-stroke x="13" y="17" width="34" height="27" rx="9" stroke="currentColor" strokeWidth="3" />
+    <path data-fill-soft d="M18 24h29v8H18z" fill="var(--brand-color-bg-solid)" />
+    <path data-stroke d="M36 30h8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    <circle data-fill cx="27" cy="31" r="5" fill="currentColor" />
+    <path data-stroke d="M27 26v-5a6 6 0 0 1 11.4-2.6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+)
+
+const MailGlyph = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="2" />
+    <path d="m4 7 8 6 8-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
 
@@ -164,9 +173,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
   // --- Fetch LIVE stats from Shelby + Aptos APIs ---
   useEffect(() => {
-    const SHELBY_GRAPHQL = 'https://api.testnet.aptoslabs.com/nocode/v1/public/alias/shelby/testnet/v1/graphql'
+    const SHELBY_GRAPHQL = 'https://api.testnet.aptoslabs.com/nocode/v1/public/cmlfqs5wt00qrs601zt5s4kfj/v1/graphql'
     const APTOS_NODE    = 'https://api.testnet.aptoslabs.com/v1'
-    const SHELBY_RPC    = 'https://api.testnet.shelby.xyz'
+    const SHELBY_RPC    = 'https://api.testnet.shelby.xyz/shelby'
 
     const fetchStats = async () => {
       setStatsLoading(true)
@@ -338,7 +347,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
   ]
 
   return (
-    <div ref={containerRef} style={{ fontFamily: '"Inter", sans-serif', background: '#100a14', color: '#fff', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+    <div ref={containerRef} className="landing-page" style={{ fontFamily: '"Inter", sans-serif', background: '#100a14', color: '#fff', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
       
       {/* ─── FONTS ─── */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -364,7 +373,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             fontSize: 18, boxShadow: '0 0 20px rgba(240,64,176,0.4)',
             color: '#fff', fontWeight: 700
           }}>
-            ✉
+            <MailGlyph size={18} />
           </div>
           <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.3px' }}>
             AptosBlobs<span style={{ color: BRAND.primary }}>MAIL</span>
@@ -429,7 +438,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
       </nav>
 
       {/* ─── HERO ─── */}
-      <section ref={heroRef} style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: 80 }}>
+      <section ref={heroRef} style={{ position: 'relative', minHeight: '92vh', display: 'flex', alignItems: 'center', paddingTop: 56 }}>
         
         {/* Shelby-style geometric bg shapes */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -457,18 +466,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             transform: 'rotate(-20deg)',
             opacity: 0.07, borderRadius: 24
           }} />
-          {/* Glow orbs */}
+          {/* Soft Shelby light field */}
           <div style={{
-            position: 'absolute', top: '20%', left: '20%',
-            width: 400, height: 400,
-            background: 'radial-gradient(circle, rgba(240,64,176,0.15) 0%, transparent 70%)',
-            borderRadius: '50%', animation: 'float1 8s ease-in-out infinite'
-          }} />
-          <div style={{
-            position: 'absolute', top: '40%', right: '15%',
-            width: 300, height: 300,
-            background: 'radial-gradient(circle, rgba(96,1,210,0.2) 0%, transparent 70%)',
-            borderRadius: '50%', animation: 'float2 10s ease-in-out infinite'
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(120deg, rgba(240,64,176,0.18) 0%, transparent 34%, rgba(96,1,210,0.1) 72%, transparent 100%)',
+            opacity: 0.8
           }} />
           {/* Grid dots */}
           <div style={{
@@ -478,7 +480,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           }} />
         </div>
 
-        <div className="landing-hero-container" style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', width: '100%', padding: '120px 5% 80px' }}>
+        <div className="landing-hero-container" style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', width: '100%', padding: '64px 5% 44px' }}>
           <div className="landing-hero-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             
             {/* Left Side */}
@@ -486,19 +488,19 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: 'rgba(240,64,176,0.12)', border: '1px solid rgba(240,64,176,0.3)',
-                borderRadius: 100, padding: '6px 16px', marginBottom: 28,
+                borderRadius: 100, padding: '6px 16px', marginBottom: 22,
                 fontSize: 12, fontWeight: 600, color: BRAND.primary, letterSpacing: '0.5px'
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.primary, display: 'inline-block', boxShadow: '0 0 8px rgba(240,64,176,0.8)' }} />
                 POWERED BY SHELBY PROTOCOL × APTOS
               </div>
 
-              <h1 className="hero-headline" style={{
+              <h1 className="hero-headline" aria-label="Decentralized Mail For Web3" style={{
                 fontSize: 'clamp(42px, 5.5vw, 72px)', fontWeight: 900,
-                lineHeight: 1.05, margin: '0 0 24px',
-                letterSpacing: '-2px',
+                lineHeight: 1.04, margin: '0 0 20px',
+                letterSpacing: 0,
               }}>
-                Decentralized Email<br />
+                Decentralized Mail<br />
                 <span style={{
                   background: BRAND.gradientSoft,
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -508,9 +510,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
               <p className="hero-desc" style={{
                 fontSize: 18, lineHeight: 1.75, color: 'rgba(255,255,255,0.62)',
-                margin: '0 0 40px', maxWidth: 500, fontWeight: 400
+                margin: '0 0 30px', maxWidth: 520, fontWeight: 400
               }}>
-                Send encrypted messages to any Aptos wallet address. Your data lives permanently on-chain as blobs, censorship-resistant, verifiable, and entirely yours.
+                Send encrypted messages to any Aptos wallet address. Your data lives as Shelby blobs with Aptos finality, built for private coordination without a centralized inbox.
               </p>
 
               <div className="hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -544,10 +546,11 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 </a>
               </div>
 
-              <div className="hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
+              <div className="hero-badges" style={{ display: 'flex', gap: 18, marginTop: 34, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Aptos Testnet', color: BRAND.aptos },
-                  { label: 'Open Source', color: '#a78bfa' },
+                  { label: 'AES-GCM Privacy', color: BRAND.primary },
+                  { label: 'Aptos Finality', color: BRAND.purple },
+                  { label: 'Shelby Blob Storage', color: '#a78bfa' },
                 ].map(b => (
                   <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
                     <span>{b.label}</span>
@@ -566,17 +569,17 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 position: 'relative', overflow: 'hidden'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid #e5e5e5', background: '#fcfcfc' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f9a8d4' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: BRAND.purple }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: BRAND.primary }} />
                   <span style={{ marginLeft: 8, fontSize: 13, color: '#555555', fontWeight: 600 }}>Inbox</span>
                 </div>
 
                 <div style={{ padding: '12px' }}>
                   {[
-                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: BRAND.aptos },
+                    { from: 'To: 0x1a2b...4c5d', subject: 'DeFi Yield Update', tag: 'defi', unread: true, time: '09:42', iconCol: BRAND.purple },
                     { from: 'To: 0x9e8f...7a6b', subject: 'DAO Proposal #47', tag: 'dao', unread: false, time: '08:15', iconCol: BRAND.primary },
-                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: '#00c49f' },
+                    { from: 'To: 0x3c4d...2e1f', subject: 'NFT Drop Confirmation', tag: 'nft', unread: true, time: 'Yesterday', iconCol: BRAND.primary },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 12, marginBottom: 4, background: item.unread ? '#f5f0ff' : 'transparent' }}>
                       <div style={{ width: 40, height: 40, borderRadius: 14, background: item.iconCol + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: item.iconCol }} />
@@ -607,12 +610,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
-            background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)',
+            background: 'rgba(240,64,176,0.08)', border: '1px solid rgba(240,64,176,0.22)',
             borderRadius: 100, padding: '5px 14px',
-            fontSize: 11, fontWeight: 700, color: BRAND.aptos, letterSpacing: '1.5px',
+            fontSize: 11, fontWeight: 700, color: '#f9a8d4', letterSpacing: '1.5px',
             textTransform: 'uppercase'
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.aptos, display: 'inline-block', boxShadow: '0 0 8px rgba(34,211,238,0.9)', animation: 'livePulse 1.4s infinite' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.primary, display: 'inline-block', boxShadow: '0 0 8px rgba(240,64,176,0.65)', animation: 'livePulse 1.4s infinite' }} />
             {statsLoading ? 'Fetching Data…' : 'Live Network Statistics'}
           </span>
         </div>
@@ -620,7 +623,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           {[
             { val: counters.blobs, label: 'Blobs Stored', color: BRAND.primary },
             { val: counters.txns,  label: 'Aptos Transactions', color: 'var(--brand-color-mid)' },
-            { val: counters.nodes, label: 'Active Storage Nodes', color: BRAND.aptos },
+            { val: counters.nodes, label: 'Active Storage Nodes', color: BRAND.purple },
           ].map((stat, i) => (
             <div className="stat-card" key={i} style={{ textAlign: 'center', padding: '20px' }}>
               <div style={{ height: 28, marginBottom: 8 }} />
@@ -694,9 +697,9 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           </div>
           <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.3)', padding: 32, borderRadius: 24, border: '1px solid rgba(240,64,176,0.2)', fontFamily: 'monospace', fontSize: 12 }}>
             <div style={{ color: BRAND.primary, opacity: 0.6, marginBottom: 8 }}>// encrypt before upload</div>
-            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: BRAND.aptos }}>key</span> = await deriveKey(sender);</div>
-            <div style={{ color: '#8b5cf6' }}>const <span style={{ color: BRAND.aptos }}>cipher</span> = await encrypt(msg, key);</div>
-            <div style={{ marginTop: 24, padding: 12, background: 'rgba(34,211,238,0.1)', borderRadius: 8, color: BRAND.aptos }}>✓ Node only receives ciphertext</div>
+            <div style={{ color: '#d8b4fe' }}>const <span style={{ color: '#f9a8d4' }}>key</span> = await deriveKey(sender);</div>
+            <div style={{ color: '#d8b4fe' }}>const <span style={{ color: '#f9a8d4' }}>cipher</span> = await encrypt(msg, key);</div>
+            <div style={{ marginTop: 24, padding: 12, background: 'rgba(240,64,176,0.12)', borderRadius: 8, color: '#f9a8d4' }}>Node only receives ciphertext</div>
           </div>
         </div>
       </section>
@@ -709,7 +712,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             {[
               {
                 n: 'Shelby Protocol',
-                icon: <ShelbyLogo size={34} />,
+                icon: <ShelbyLogo size={34} color={BRAND.primary} />,
                 c: BRAND.primary,
                 bg: 'rgba(240,64,176,0.1)',
                 border: 'rgba(240,64,176,0.25)',
@@ -717,18 +720,18 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
               },
               {
                 n: 'Aptos',
-                icon: <AptosLogo size={34} color={BRAND.aptos} />,
-                c: BRAND.aptos,
-                bg: 'rgba(34,211,238,0.1)',
-                border: 'rgba(34,211,238,0.25)',
+                icon: <AptosLogo size={34} color={BRAND.purple} />,
+                c: BRAND.purple,
+                bg: 'rgba(96,1,210,0.08)',
+                border: 'rgba(96,1,210,0.18)',
                 sub: 'L1 Blockchain'
               },
               {
                 n: 'Petra Wallet',
-                icon: <PetraLogo size={34} />,
-                c: '#f97316',
-                bg: 'rgba(249,115,22,0.1)',
-                border: 'rgba(249,115,22,0.25)',
+                icon: <PetraLogo size={34} color={BRAND.primary} />,
+                c: BRAND.primary,
+                bg: 'rgba(240,64,176,0.08)',
+                border: 'rgba(240,64,176,0.18)',
                 sub: 'Key Management'
               }
             ].map((t, i) => (
@@ -739,7 +742,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                   border: `1px solid ${t.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16,
-                  boxShadow: `0 0 28px ${t.bg}`
+                  boxShadow: `0 0 28px ${t.bg}`,
+                  color: t.c
                 }}>
                   {t.icon}
                 </div>
@@ -753,8 +757,8 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
 
       {/* ─── FINAL CTA ─── */}
       <section className="landing-cta-section" style={{ padding: '120px 5%', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Email is Ready</h2>
-        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party email. Just your wallet.</p>
+        <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, marginBottom: 24 }}>Your On-Chain Mail is Ready</h2>
+        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 40px' }}>No signups. No third-party mail server. Just your wallet.</p>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
           <button onClick={handleLaunchApp} style={{ background: BRAND.gradient, color: 'white', border: 'none', padding: '18px 48px', borderRadius: 16, fontSize: 18, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 32px rgba(240,64,176,0.3)' }}>
             {connected ? 'Launch App' : isConnecting ? 'Connecting Wallet…' : 'Connect Wallet to Launch'}
@@ -774,7 +778,7 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 17, color: '#fff', fontWeight: 700
           }}>
-            ✉
+            <MailGlyph size={17} />
           </div>
           <span style={{ fontWeight: 700, fontSize: 14 }}>AptosBlobs MAIL</span>
         </div>
@@ -821,20 +825,36 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
         
         /* Mobile: < 768px */
         @media screen and (max-width: 767px) {
+          html, body, #root {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden !important;
+          }
           .landing-nav-links { display: none !important; }
           .landing-nav { 
-            padding: 0 20px; 
+            padding: 0 14px !important; 
             justify-content: space-between; 
             height: 60px;
+            max-width: 100vw;
+            overflow: hidden;
           }
-          .landing-hero-container { padding: 80px 20px 40px; }
-          .landing-hero-content { gap: 40px; flex-direction: column; text-align: center; }
-          .hero-headline { font-size: clamp(34px, 10vw, 42px) !important; letter-spacing: -1px !important; }
+          .landing-nav button {
+            padding: 9px 14px !important;
+            font-size: 12px !important;
+          }
+          .landing-nav > div:first-child span {
+            font-size: 14px !important;
+          }
+          .landing-hero-container { padding: 78px 16px 36px !important; max-width: 100vw; overflow: hidden; }
+          .landing-hero-content { gap: 28px !important; flex-direction: column; text-align: center; max-width: 100%; }
+          .hero-headline { font-size: clamp(34px, 10vw, 42px) !important; letter-spacing: 0 !important; overflow-wrap: anywhere; }
           .hero-desc { margin: 0 auto 32px !important; }
           .hero-ctas { justify-content: center; width: 100%; flex-direction: column; }
           .hero-ctas button, .hero-ctas a { width: 100%; justify-content: center; }
-          .hero-mockup { width: 100%; max-width: 100% !important; flex: 1 1 auto !important; }
+          .hero-mockup { width: 100% !important; max-width: 100% !important; flex: 1 1 auto !important; transform: none !important; }
+          .hero-mockup > div { width: 100% !important; max-width: 100% !important; }
           .hero-badges { justify-content: center; }
+          section[style] { max-width: 100vw; overflow-x: hidden; }
           
           .landing-stats-section { padding: 48px 20px; }
           .landing-stats-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -875,14 +895,235 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
           66% { transform: translateY(-10px) translateX(10px); }
         }
         @keyframes livePulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--aptos); }
-          50% { opacity: 0.4; box-shadow: 0 0 3px var(--aptos); }
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--brand-color); }
+          50% { opacity: 0.4; box-shadow: 0 0 3px var(--brand-color); }
         }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0d0117; }
         ::-webkit-scrollbar-thumb { background: rgba(240,64,176,0.3); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(240,64,176,0.6); }
+
+        /* App-synced landing polish */
+        .landing-page {
+          background: linear-gradient(180deg, #ffffff 0%, #fffafd 58%, #ffffff 100%) !important;
+          color: #171117 !important;
+        }
+
+        .landing-nav {
+          background: rgba(255,255,255,0.92) !important;
+          border-bottom: 1px solid rgba(240,64,176,0.14) !important;
+          box-shadow: 0 10px 32px rgba(54, 20, 44, 0.06) !important;
+          backdrop-filter: blur(18px) !important;
+        }
+
+        .landing-nav > div:first-child span {
+          color: #171117 !important;
+          letter-spacing: 0 !important;
+        }
+
+        .landing-nav > div:first-child span span {
+          margin-left: 6px !important;
+          padding: 2px 8px !important;
+          border-radius: 999px !important;
+          background: #201522 !important;
+          color: #fff !important;
+          font-size: 9px !important;
+          letter-spacing: 0.9px !important;
+        }
+
+        .landing-nav-links a {
+          color: #6f6270 !important;
+          font-weight: 500 !important;
+        }
+
+        .landing-nav-links a:hover {
+          color: var(--brand-color) !important;
+        }
+
+        .landing-nav button,
+        .hero-ctas button,
+        .landing-cta-section button {
+          border-radius: 12px !important;
+          font-weight: 700 !important;
+          box-shadow: 0 12px 26px rgba(240,64,176,0.18) !important;
+        }
+
+        section[style] {
+          background-color: transparent !important;
+        }
+
+        .landing-hero-container > div > div:first-child > div:first-child {
+          background: rgba(240,64,176,0.08) !important;
+          border-color: rgba(240,64,176,0.2) !important;
+          color: var(--brand-color) !important;
+        }
+
+        .hero-headline,
+        .landing-section h2,
+        .landing-cta-section h2 {
+          color: #171117 !important;
+          font-weight: 760 !important;
+          letter-spacing: 0 !important;
+        }
+
+        .hero-desc,
+        .landing-section p,
+        .landing-cta-section p {
+          color: #6f6270 !important;
+        }
+
+        .hero-ctas a {
+          background: #ffffff !important;
+          border: 1px solid rgba(96,1,210,0.12) !important;
+          color: #403443 !important;
+          border-radius: 12px !important;
+          box-shadow: 0 8px 20px rgba(45, 17, 42, 0.04) !important;
+        }
+
+        .hero-badges > div {
+          color: #6f6270 !important;
+        }
+
+        .hero-mockup > div,
+        .feature-card,
+        .landing-security-content > div:last-child {
+          border-radius: 14px !important;
+          border: 1px solid rgba(240,64,176,0.12) !important;
+          background: #ffffff !important;
+          box-shadow: 0 18px 44px rgba(45, 17, 42, 0.06) !important;
+        }
+
+        .landing-security-content {
+          align-items: stretch !important;
+        }
+
+        .landing-security-content > div:first-child {
+          padding: 30px !important;
+          border: 1px solid rgba(240,64,176,0.12) !important;
+          border-radius: 14px !important;
+          background: #ffffff !important;
+          box-shadow: 0 18px 44px rgba(45, 17, 42, 0.05) !important;
+        }
+
+        .landing-security-content > div:first-child > div:first-child {
+          color: var(--brand-color) !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          letter-spacing: 1px !important;
+        }
+
+        .landing-security-content > div:first-child p {
+          color: #6f6270 !important;
+        }
+
+        .landing-security-content > div:first-child > div:last-child > div {
+          color: #403443 !important;
+          font-weight: 500 !important;
+        }
+
+        .landing-security-content > div:first-child > div:last-child > div > div {
+          background: var(--brand-color) !important;
+          box-shadow: 0 0 0 4px rgba(240,64,176,0.1) !important;
+        }
+
+        .landing-security-content > div:last-child {
+          background: #201522 !important;
+          color: #fff !important;
+        }
+
+        .landing-security-content > div:last-child div {
+          color: rgba(255,255,255,0.82) !important;
+        }
+
+        .feature-card h3,
+        .landing-section h3 {
+          color: #171117 !important;
+          font-weight: 650 !important;
+        }
+
+        .feature-card p,
+        .landing-steps-grid p {
+          color: #6f6270 !important;
+        }
+
+        .landing-stats-section {
+          background: #ffffff !important;
+          border-top: 1px solid rgba(240,64,176,0.1) !important;
+          border-bottom: 1px solid rgba(240,64,176,0.1) !important;
+        }
+
+        .landing-stats-section .stat-card div:last-child {
+          color: #6f6270 !important;
+        }
+
+        .landing-section[style],
+        .landing-stack-section,
+        .landing-cta-section {
+          background: #fffafd !important;
+        }
+
+        .landing-stack-section p {
+          color: #8f8190 !important;
+        }
+
+        .landing-stack-grid > div {
+          min-height: 150px !important;
+          margin: 0 8px !important;
+          padding: 24px !important;
+          border: 1px solid rgba(240,64,176,0.12) !important;
+          border-radius: 14px !important;
+          background: #ffffff !important;
+          box-shadow: 0 14px 32px rgba(45,17,42,0.05) !important;
+        }
+
+        .landing-stack-grid > div > div:first-child {
+          width: 56px !important;
+          height: 56px !important;
+          border-radius: 16px !important;
+          background: linear-gradient(135deg, rgba(240,64,176,0.12), rgba(96,1,210,0.08)) !important;
+          border: 1px solid rgba(240,64,176,0.18) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9) !important;
+          color: var(--brand-purple) !important;
+        }
+
+        .landing-stack-grid > div svg.stack-icon [data-stroke] {
+          stroke: currentColor !important;
+          fill: none !important;
+        }
+
+        .landing-stack-grid > div svg.stack-icon [data-fill] {
+          fill: currentColor !important;
+          stroke: none !important;
+        }
+
+        .landing-stack-grid > div svg.stack-icon [data-fill-soft] {
+          fill: var(--brand-color-bg-solid) !important;
+          stroke: none !important;
+        }
+
+        .landing-stack-grid > div > div:nth-child(2) {
+          color: #171117 !important;
+          font-size: 14px !important;
+          font-weight: 650 !important;
+        }
+
+        .landing-stack-grid > div > div:nth-child(3) {
+          color: #8f8190 !important;
+          letter-spacing: 0.4px !important;
+        }
+
+        .landing-footer {
+          background: #ffffff !important;
+          border-top: 1px solid rgba(240,64,176,0.12) !important;
+          color: #171117 !important;
+        }
+
+        .landing-footer > div:last-child {
+          color: #8f8190 !important;
+        }
+
+        ::-webkit-scrollbar-track { background: #fffafd; }
       `}</style>
     </div>
   )
