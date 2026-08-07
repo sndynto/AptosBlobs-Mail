@@ -721,9 +721,10 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
 
   const { aptosConfig, shelbyClient } = useMemo(() => {
     const isShelbynet = currentNetwork === 'shelbynet'
-    // Shelbynet: isolated Aptos validator network, separate from testnet/mainnet
-    // Testnet: standard Aptos testnet
-    const mappedNet = isShelbynet ? Network.TESTNET : Network.TESTNET;
+    // Shelbynet: isolated Aptos validator network (Network.SHELBYNET), separate from testnet/mainnet
+    // Testnet: standard Aptos testnet (Network.TESTNET)
+    // FIX: Sebelumnya keduanya pakai Network.TESTNET — sekarang shelbynet pakai Network.SHELBYNET
+    const mappedNet = isShelbynet ? Network.SHELBYNET : Network.TESTNET;
     const shelbyNet = isShelbynet ? 'shelbynet' : 'testnet';
     
     // Official endpoints from docs.shelby.xyz/protocol/architecture/networks
@@ -731,12 +732,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       ? 'https://api.shelbynet.shelby.xyz/v1'
       : 'https://api.testnet.aptoslabs.com/v1'
     
+    // FIX: Shelbynet GraphQL indexer menggunakan endpoint khusus Shelby, bukan Hasura standar Aptos
     const indexerUrl = isShelbynet
-      ? 'https://api.shelbynet.shelby.xyz/v1/graphql'
+      ? 'https://api.shelbynet.aptoslabs.com/v1/graphql'
       : 'https://api.testnet.aptoslabs.com/v1/graphql'
     
     const rpcUrl = isShelbynet
-      ? 'https://api.shelbynet.shelby.xyz/shelby'
+      ? 'https://shelby.shelbynet.shelby.xyz/shelby'
       : 'https://api.testnet.shelby.xyz/shelby'
     
     const aptos = new AptosConfig({
@@ -797,29 +799,80 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     queryFn: async () => {
       if (!myAddress) return [];
       
-      // We search for both normalized (canonical 64-char) and likely short forms
-      // Some wallets or users might use 'to_0x1...' instead of full 'to_0x00000...1...'
+      // Normalisasi address penerima ke berbagai format yang mungkin dipakai pengirim
       const normalizedMyAddr = normalizeAddr(myAddress);
-      // Short form: removing leading zeros after 0x if any, or just using input if raw
       const shortAddr = myAddress.startsWith('0x') ? '0x' + myAddress.substring(2).replace(/^0+/, '') : myAddress;
 
       try {
-        // PRIVACY: Search for both raw and hashed address prefixes
+        // PRIVACY: Cari juga prefix address yang sudah di-hash (untuk mode private)
         const hashedAddr = await getPrivacyHash(normalizedMyAddr);
 
-        // Fetch blobs without Hasura's invalid blob_name filter to prevent validation-failed error
-        const res = await shelbyClient.coordination.getBlobs({
-          pagination: { limit: 100 }
-        });
-        
-        const allBlobs = Array.isArray(res) ? res : (res as any)?.blobs || [];
-        return allBlobs.filter((b: any) => {
-          const name = String(b?.blob_name || b?.name || '');
-          return name.includes(`to_${normalizedMyAddr}`) ||
-                 name.includes(`to_${shortAddr}`) ||
-                 name.includes(`to_${hashedAddr}`);
-        });
+        // FIX: Gunakan filter `object_name` yang benar di Hasura Blobs_Bool_Exp.
+        // Field di GraphQL schema adalah `object_name` (format "@owner/suffix"),
+        // bukan `blob_name_suffix` yang tidak ada di schema.
+        // Kita filter dengan _like untuk mencari blob yang namanya mengandung prefix address penerima.
+        const fetchByPrefix = async (prefix: string) => {
+          try {
+            const res = await shelbyClient.coordination.getBlobs({
+              where: {
+                object_name: { _like: `%${prefix}%` }
+              } as any,
+              pagination: { limit: 500 },
+            });
+            console.log(`[AptosMail Debug] Found ${res?.length || 0} blobs for prefix ${prefix}`, res);
+            return res;
+          } catch (err) {
+            console.error(`[AptosMail Debug] Error querying prefix ${prefix}:`, err);
+            return [];
+          }
+        };
+
+        // Ambil hasil untuk ketiga format address secara paralel
+        const [rawResults, shortResults, hashedResults] = await Promise.all([
+          fetchByPrefix(`to_${normalizedMyAddr}`),
+          normalizedMyAddr !== shortAddr ? fetchByPrefix(`to_${shortAddr}`) : Promise.resolve([]),
+          fetchByPrefix(`to_${hashedAddr}`),
+        ]);
+
+        // Gabungkan dan hapus duplikat berdasarkan blob name
+        const seen = new Set<string>();
+        const combined: any[] = [];
+        for (const blob of [...(rawResults as any[]), ...(shortResults as any[]), ...(hashedResults as any[])]) {
+          const name = String(blob?.blobNameSuffix || blob?.blob_name || blob?.name || '');
+          if (name && !seen.has(name)) {
+            seen.add(name);
+            combined.push(blob);
+          }
+        }
+
+        console.log(`[AptosMail Debug] Combined incoming count: ${combined.length}`);
+
+        // Jika filter indexer tidak bekerja (semua empty), fallback ke metode lama tapi dengan limit lebih besar
+        if (combined.length === 0) {
+          console.warn("[AptosMail Debug] No blobs combined, trying fallback getBlobs(limit: 500)");
+          try {
+            const fallback = await shelbyClient.coordination.getBlobs({
+              pagination: { limit: 500 }
+            });
+            const allBlobs = Array.isArray(fallback) ? fallback : (fallback as any)?.blobs || [];
+            console.log(`[AptosMail Debug] Fallback total blobs loaded: ${allBlobs.length}`);
+            const filtered = allBlobs.filter((b: any) => {
+              const name = String(b?.blobNameSuffix || b?.blob_name || b?.name || '');
+              return name.includes(`to_${normalizedMyAddr}`) ||
+                     name.includes(`to_${shortAddr}`) ||
+                     name.includes(`to_${hashedAddr}`);
+            });
+            console.log(`[AptosMail Debug] Fallback filtered incoming count: ${filtered.length}`, filtered);
+            return filtered;
+          } catch (err) {
+            console.error("[AptosMail Debug] Fallback failed:", err);
+            return [];
+          }
+        }
+
+        return combined;
       } catch (_err) {
+        console.error("[AptosMail Debug] Query function crashed:", _err);
         return [];
       }
     },
