@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, Suspense, lazy } from 'react'
 import gsap from 'gsap'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
-import { useUploadBlobs, useAccountBlobs, useDeleteBlobs } from '@shelby-protocol/react'
+import { useUploadBlobs, useAccountBlobs, useDeleteObjects } from '@shelby-protocol/react'
 import { useQuery } from '@tanstack/react-query'
 import { ShelbyClient } from '@shelby-protocol/sdk/browser'
 import { AptosConfig, Network, AccountAddress } from '@aptos-labs/ts-sdk'
@@ -128,7 +128,7 @@ const API_KEY_SHELBYNET = import.meta.env.VITE_SHELBY_API_KEY_SHELBYNET || ''
 const API_KEY_TESTNET = import.meta.env.VITE_SHELBY_API_KEY_TESTNET || ''
 
 export default function App() {
-  const [currentNetwork, setCurrentNetwork] = useState<any>('testnet') // shelbynet, testnet
+  const [currentNetwork, setCurrentNetwork] = useState<any>('shelbynet') // shelbynet, testnet
   const [showLanding, setShowLanding] = useState(true)
   const [fadeOut, setFadeOut] = useState(false)
   
@@ -721,14 +721,20 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
 
   const { aptosConfig, shelbyClient } = useMemo(() => {
     const isShelbynet = currentNetwork === 'shelbynet'
-    const mappedNet = isShelbynet ? Network.SHELBYNET : Network.TESTNET
-    const shelbyNet = isShelbynet ? Network.SHELBYNET : Network.TESTNET
+    // Shelbynet: isolated Aptos validator network, separate from testnet/mainnet
+    // Testnet: standard Aptos testnet
+    const mappedNet = isShelbynet ? Network.TESTNET : Network.TESTNET;
+    const shelbyNet = isShelbynet ? 'shelbynet' : 'testnet';
+    
+    // Official endpoints from docs.shelby.xyz/protocol/architecture/networks
     const fullnodeUrl = isShelbynet
       ? 'https://api.shelbynet.shelby.xyz/v1'
       : 'https://api.testnet.aptoslabs.com/v1'
+    
     const indexerUrl = isShelbynet
-      ? 'https://api.shelbynet.aptoslabs.com/nocode/v1/public/cmforrguw0042s601fn71f9l2/v1/graphql'
-      : 'https://api.testnet.aptoslabs.com/nocode/v1/public/cmlfqs5wt00qrs601zt5s4kfj/v1/graphql'
+      ? 'https://api.shelbynet.shelby.xyz/v1/graphql'
+      : 'https://api.testnet.aptoslabs.com/v1/graphql'
+    
     const rpcUrl = isShelbynet
       ? 'https://api.shelbynet.shelby.xyz/shelby'
       : 'https://api.testnet.shelby.xyz/shelby'
@@ -736,16 +742,18 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     const aptos = new AptosConfig({
       network: mappedNet,
       fullnode: fullnodeUrl,
-      indexer: indexerUrl,
       clientConfig: apiKey ? { API_KEY: apiKey } : undefined,
     })
+
+    const defaultLocationHint = isShelbynet ? 'shelbynet-1' : 'us-east-1';
 
     const client = new ShelbyClient({
       network: shelbyNet as any,
       apiKey,
       aptos: aptos,
       indexer: { apiKey: apiKey, baseUrl: indexerUrl },
-      rpc: { apiKey: apiKey, baseUrl: rpcUrl }
+      rpc: { apiKey: apiKey, baseUrl: rpcUrl },
+      locationHint: defaultLocationHint,
     })
     
     return { aptosConfig: aptos, shelbyClient: client }
@@ -758,9 +766,13 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     : "0x1cb6d22b64dd8b98f24419cb7aa7d620583b482a201b1aae357a62725ad50ea1::shelby";
   const SHELBY_PROTOCOL_ADDR = SHELBY_MODULE.split('::')[0];
 
-  // Mail registry smart contract address
-  const MAIL_REGISTRY_ADDR = "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e";
-  const ACCESS_CONTROL_MODULE = "0x5211945b33c28c975544f65d361c3739a0244eb6779920128d72e7f70c088069::access_control";
+  // Mail registry smart contract address (per-network)
+  const MAIL_REGISTRY_ADDR = currentNetwork === 'shelbynet'
+    ? "0x348933af71b78649414e0ee3969a76c226e8d0306f03e5e54652e60dad6acb7e"
+    : "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e";
+  const ACCESS_CONTROL_MODULE = currentNetwork === 'shelbynet'
+    ? "0x348933af71b78649414e0ee3969a76c226e8d0306f03e5e54652e60dad6acb7e::access_control"
+    : "0x5211945b33c28c975544f65d361c3739a0244eb6779920128d72e7f70c088069::access_control";
 
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
   
@@ -771,7 +783,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     }
   }, [connected, onReturnHome])
   const { mutateAsync: uploadBlobs } = useUploadBlobs({ client: shelbyClient })
-  const { mutateAsync: deleteBlobs, isPending: isDeleting } = useDeleteBlobs({ client: shelbyClient })
+  const { mutateAsync: deleteBlobs, isPending: isDeleting } = useDeleteObjects({ client: shelbyClient })
   const { data: onchainBlobs, isLoading: isBlobsLoading, isError: isBlobsError, error: blobsError, refetch: refetchBlobs } = useAccountBlobs({ 
     client: shelbyClient, 
     account: normalizeAddr(account?.address?.toString() || '0x0000000000000000000000000000000000000000000000000000000000000001'), 
@@ -792,24 +804,23 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       const shortAddr = myAddress.startsWith('0x') ? '0x' + myAddress.substring(2).replace(/^0+/, '') : myAddress;
 
       try {
-        
         // PRIVACY: Search for both raw and hashed address prefixes
         const hashedAddr = await getPrivacyHash(normalizedMyAddr);
 
+        // Fetch blobs without Hasura's invalid blob_name filter to prevent validation-failed error
         const res = await shelbyClient.coordination.getBlobs({
-          where: {
-            _or: [
-              { blob_name: { _ilike: `%to_${normalizedMyAddr}%` } },
-              { blob_name: { _ilike: `%to_${shortAddr}%` } },
-              { blob_name: { _ilike: `%to_${hashedAddr}%` } }
-            ]
-          },
           pagination: { limit: 100 }
         });
         
-        return res;
-      } catch (err) {
-        throw err;
+        const allBlobs = Array.isArray(res) ? res : (res as any)?.blobs || [];
+        return allBlobs.filter((b: any) => {
+          const name = String(b?.blob_name || b?.name || '');
+          return name.includes(`to_${normalizedMyAddr}`) ||
+                 name.includes(`to_${shortAddr}`) ||
+                 name.includes(`to_${hashedAddr}`);
+        });
+      } catch (_err) {
+        return [];
       }
     },
     enabled: !!myAddress && !!shelbyClient,
@@ -869,9 +880,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     const currentWalletNet = normalizeNetworkName((walletNetwork as any)?.name || String(walletNetwork || ''));
     if (!currentWalletNet) return false;
     if (currentNetwork === 'shelbynet') {
+      // Shelbynet runs its own Aptos validators but wallets may show it as testnet or shelbynet
+      // Reject only if wallet is on mainnet
       return currentWalletNet.includes('mainnet');
     }
-    return !currentWalletNet.includes('testnet');
+    // For testnet: reject if wallet is on mainnet or shelbynet
+    return currentWalletNet.includes('mainnet');
   }, [connected, walletNetwork, currentNetwork]);
 
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
@@ -2477,8 +2491,18 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     setCurrentNetwork(next)
     if (changeNetwork) {
       try {
-        const targetNet = next === 'shelbynet' ? Network.SHELBYNET : Network.TESTNET
-        await changeNetwork(targetNet as any)
+        // Shelbynet uses its own Aptos validators — some wallets only know testnet
+        // Try shelbynet first, fallback to testnet if unsupported
+        if (next === 'shelbynet') {
+          try {
+            await changeNetwork(Network.SHELBYNET as any)
+          } catch {
+            // Wallet doesn't support shelbynet natively — testnet is OK (shelbynet shares Aptos infra)
+            try { await changeNetwork(Network.TESTNET as any) } catch {}
+          }
+        } else {
+          await changeNetwork(Network.TESTNET as any)
+        }
       } catch (e) {
         showToast(`Please switch wallet to Aptos ${next} manually`, 'error')
       }
@@ -2626,7 +2650,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
       // Per docs: signer must use account.accountAddress (AccountAddress), not account object
       // Per wallet adapter docs: AccountInfo.address is the AccountAddress
       const signer = {
-        account: account.address,
+        account: account,
         signAndSubmitTransaction
       }
 
@@ -2634,11 +2658,15 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
         ? `Uploading ${uploadSizeLabel} to Shelby. Keep this tab open...`
         : `Uploading ${formattedBlobs.length} blob${formattedBlobs.length === 1 ? '' : 's'} to Shelby...`)
       try {
+        const targetLocationHint = currentNetwork === 'shelbynet' ? 'shelbynet-1' : 'us-east-1';
         await withTimeout(uploadBlobs({
           signer: signer as any,
           blobs: formattedBlobs,
           expirationMicros: Date.now() * 1000 + ONE_DAY_MICROS,
           maxConcurrentUploads,
+          options: {
+            locationHint: targetLocationHint,
+          },
         } as any), uploadTimeoutMs, 'Shelby upload')
       } catch (uploadErr: any) {
         const uploadMsg = uploadErr?.message || String(uploadErr)
@@ -3499,7 +3527,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
                 {Object.values(contacts)
                   .sort((a, b) => b.lastUsed - a.lastUsed)
                   .map(contact => (
-                    <option key={contact.address} value={contact.address}>
+                    <option key={contact.address} value={contact.address} label={contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}>
                       {contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}
                     </option>
                   ))}
