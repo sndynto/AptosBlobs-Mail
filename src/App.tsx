@@ -771,7 +771,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     ? "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e"
     : "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e";
   const ACCESS_CONTROL_MODULE = currentNetwork === 'shelbynet'
-    ? "0x348933af71b78649414e0ee3969a76c226e8d0306f03e5e54652e60dad6acb7e::access_control"
+    ? "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e::access_control"
     : "0x5211945b33c28c975544f65d361c3739a0244eb6779920128d72e7f70c088069::access_control";
 
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
@@ -1128,13 +1128,16 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     }
   }
 
-  const getShelbyPurchasePermission = async (payer: string, fullBlobName: string): Promise<boolean | null> => {
+  const getShelbyPurchasePermission = async (payer: string, fullBlobName: string, ownerAddr?: string): Promise<boolean | null> => {
     if (!payer || !fullBlobName) return null
     try {
+      // Our custom access_control module requires blob_owner as argument
+      // Extract owner from fullBlobName if not provided (format: "0xowner/blobname")
+      const extractedOwner = ownerAddr || fullBlobName.split('/')[0] || payer
       const payload: any = {
         function: `${ACCESS_CONTROL_MODULE}::check_permission`,
         type_arguments: [],
-        arguments: [normalizeAddr(payer), fullBlobName],
+        arguments: [normalizeAddr(payer), normalizeAddr(extractedOwner), fullBlobName],
       }
       const res = await withTimeout(fetch(`${aptosConfig.fullnode}/view`, {
         method: 'POST',
@@ -1396,12 +1399,12 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
 
         const fullBlobName = makeShelbyFullBlobName(normalizedOwner, blobName);
         showToast('Checking Shelby paywall registration...', 'info');
-        const metadataPermission = await getShelbyPurchasePermission(normalizedOwner, fullBlobName);
+        const metadataPermission = await getShelbyPurchasePermission(normalizedOwner, fullBlobName, normalizedOwner);
         if (metadataPermission === null && !(await waitForShelbyPaywallRegistration(normalizedOwner, blobName, 2))) {
           return showToast('Shelby paywall is not registered on-chain yet. The sender must approve the second register_blobs_v2 transaction or re-send this mail.', 'error');
         }
 
-        const permission = await getShelbyPurchasePermission(account.address.toString(), fullBlobName);
+        const permission = await getShelbyPurchasePermission(account.address.toString(), fullBlobName, normalizedOwner);
         if (permission === true) {
           setPurchasedAccess(prev => ({
             ...prev,
@@ -1428,7 +1431,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
           data: {
             function: `${ACCESS_CONTROL_MODULE}::purchase`,
             typeArguments: [],
-            functionArguments: [fullBlobName],
+            functionArguments: [normalizedOwner, fullBlobName],
           },
           options: { maxGasAmount: 20000, gasUnitPrice: 100 },
         } as any)), 90000, 'Wallet signature request');
