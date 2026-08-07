@@ -771,7 +771,7 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
     ? "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e"
     : "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e";
   const ACCESS_CONTROL_MODULE = currentNetwork === 'shelbynet'
-    ? "0xf0a3b890c4ff6c78e9b89ec3630cb40efe276890fb8e34a9362e3f2be35f374e::access_control"
+    ? "0x348933af71b78649414e0ee3969a76c226e8d0306f03e5e54652e60dad6acb7e::access_control"
     : "0x5211945b33c28c975544f65d361c3739a0244eb6779920128d72e7f70c088069::access_control";
 
   const { connected, account, connect, disconnect, signAndSubmitTransaction, wallets, changeNetwork, network: walletNetwork } = useWallet()
