@@ -3568,82 +3568,84 @@ function MailApp({ currentNetwork, setCurrentNetwork, apiKey, onReturnHome }: an
             </div>
             <div className="close-btn" onClick={handleCloseCompose}><AppIcon name="close" size={16} /></div>
           </div>
-          <div className="compose-fields">
-            {connected && account && (
-              <div className="compose-identity-strip">
-                <span>From</span>
-                <b>{registeredHandle ? formatMailIdentity(registeredHandle, account.address.toString()) : formatAddr(account.address.toString())}</b>
-                <small>{formatAddr(account.address.toString())}</small>
-              </div>
-            )}
-            <div className="compose-field">
-              <span className="field-label">To</span>
-              <input className="field-input" list="contact-suggestions" placeholder={`name@${MAIL_ID_DOMAIN} or 0x...`} value={composeTo} onChange={e => setComposeTo(e.target.value)} />
-              <datalist id="contact-suggestions">
-                {Object.values(contacts)
-                  .sort((a, b) => b.lastUsed - a.lastUsed)
-                  .map(contact => (
-                    <option key={contact.address} value={contact.address} label={contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}>
-                      {contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}
-                    </option>
-                  ))}
-              </datalist>
-            </div>
-            <div className="compose-field">
-              <span className="field-label">Subject</span>
-              <input className="field-input" placeholder="Subject" value={composeSubject} onChange={e => setComposeSubject(e.target.value)} />
-            </div>
-          </div>
-          <div className="attached-files">
-            {attachedFiles.map((f, i) => (
-              <div className="attached-file" key={i}>
-                <AppIcon name="blob" size={14} />
-                <span className="attached-file-name">{f.name}</span>
-                <span className="attached-file-remove" onClick={() => setAttachedFiles(attachedFiles.filter((_, idx) => idx !== i))}>
-                  <AppIcon name="close" size={12} />
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="compose-body-area">
-            <textarea className="body-textarea" placeholder="Write your message...&#10;&#10;This message will be stored as a blob on Shelby Protocol and finalized on the Aptos blockchain." value={composeBody} onChange={e => setComposeBody(e.target.value)} />
-          </div>
-          <div className="send-readiness-panel">
-            {[
-              { label: 'Recipient', ready: composeRecipientReady, detail: composeRecipientReady ? 'Ready' : 'Add wallet address or handle' },
-              { label: 'Subject', ready: composeSubjectReady, detail: composeSubjectReady ? 'Ready' : 'Add a clear subject' },
-              { label: 'Wallet', ready: composeWalletReady, detail: composeWalletReady ? currentNetwork : apiKeyMissing ? 'Shelby API key missing' : connected ? `Switch wallet to ${currentNetwork}` : 'Connect wallet' },
-              ...(accessMode === 'timelock' ? [{ label: 'Time Lock', ready: timeLockReady, detail: timeLockReady ? formatMailDateTime(timeLockMs) : 'Choose a future unlock time' }] : []),
-            ].map(item => (
-              <div key={item.label} className={`send-readiness-item ${item.ready ? 'ready' : ''}`}>
-                <span>{item.ready ? <AppIcon name="check" size={12} /> : <AppIcon name="alert" size={12} />}</span>
-                <div>
-                  <b>{item.label}</b>
-                  <small>{item.detail}</small>
+          <div className="compose-scroll-content">
+            <div className="compose-fields">
+              {connected && account && (
+                <div className="compose-identity-strip">
+                  <span>From</span>
+                  <b>{registeredHandle ? formatMailIdentity(registeredHandle, account.address.toString()) : formatAddr(account.address.toString())}</b>
+                  <small>{formatAddr(account.address.toString())}</small>
                 </div>
+              )}
+              <div className="compose-field">
+                <span className="field-label">To</span>
+                <input className="field-input" list="contact-suggestions" placeholder={`name@${MAIL_ID_DOMAIN} or 0x...`} value={composeTo} onChange={e => setComposeTo(e.target.value)} />
+                <datalist id="contact-suggestions">
+                  {Object.values(contacts)
+                    .sort((a, b) => b.lastUsed - a.lastUsed)
+                    .map(contact => (
+                      <option key={contact.address} value={contact.address} label={contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}>
+                        {contact.label && !contact.label.startsWith('0x') ? `${formatMailIdentity(contact.label, contact.address)} - ${formatAddr(contact.address)}` : formatAddr(contact.address)}
+                      </option>
+                    ))}
+                </datalist>
               </div>
-            ))}
-          </div>
-          <div className="fee-clarity-panel">
-            <div className="fee-clarity-title">
-              <AppIcon name="transactions" size={14} />
-              Fees before sending
+              <div className="compose-field">
+                <span className="field-label">Subject</span>
+                <input className="field-input" placeholder="Subject" value={composeSubject} onChange={e => setComposeSubject(e.target.value)} />
+              </div>
             </div>
-            <div className="fee-clarity-grid">
-              <div className="fee-clarity-item">
-                <span>Sender gas</span>
-                <b>{accessMode === 'purchasable' || accessMode === 'timelock' ? '2 Aptos tx' : '1 Aptos tx'}</b>
-                <small>{accessMode === 'purchasable' ? 'Upload + paywall registration' : accessMode === 'timelock' ? 'Upload + Time Lock permission' : 'Shelby blob upload'}</small>
+            <div className="attached-files">
+              {attachedFiles.map((f, i) => (
+                <div className="attached-file" key={i}>
+                  <AppIcon name="blob" size={14} />
+                  <span className="attached-file-name">{f.name}</span>
+                  <span className="attached-file-remove" onClick={() => setAttachedFiles(attachedFiles.filter((_, idx) => idx !== i))}>
+                    <AppIcon name="close" size={12} />
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="compose-body-area">
+              <textarea className="body-textarea" placeholder="Write your message...&#10;&#10;This message will be stored as a blob on Shelby Protocol and finalized on the Aptos blockchain." value={composeBody} onChange={e => setComposeBody(e.target.value)} />
+            </div>
+            <div className="send-readiness-panel">
+              {[
+                { label: 'Recipient', ready: composeRecipientReady, detail: composeRecipientReady ? 'Ready' : 'Add wallet address or handle' },
+                { label: 'Subject', ready: composeSubjectReady, detail: composeSubjectReady ? 'Ready' : 'Add a clear subject' },
+                { label: 'Wallet', ready: composeWalletReady, detail: composeWalletReady ? currentNetwork : apiKeyMissing ? 'Shelby API key missing' : connected ? `Switch wallet to ${currentNetwork}` : 'Connect wallet' },
+                ...(accessMode === 'timelock' ? [{ label: 'Time Lock', ready: timeLockReady, detail: timeLockReady ? formatMailDateTime(timeLockMs) : 'Choose a future unlock time' }] : []),
+              ].map(item => (
+                <div key={item.label} className={`send-readiness-item ${item.ready ? 'ready' : ''}`}>
+                  <span>{item.ready ? <AppIcon name="check" size={12} /> : <AppIcon name="alert" size={12} />}</span>
+                  <div>
+                    <b>{item.label}</b>
+                    <small>{item.detail}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="fee-clarity-panel">
+              <div className="fee-clarity-title">
+                <AppIcon name="transactions" size={14} />
+                Fees before sending
               </div>
-              <div className="fee-clarity-item">
-                <span>Attachment size</span>
-                <b>{attachedFiles.length ? formatBytes(composeAttachmentBytes) : 'None'}</b>
-                <small>{attachedFiles.length ? `${attachedFiles.length} file${attachedFiles.length === 1 ? '' : 's'} stored as Shelby blobs` : 'No extra blob upload'}</small>
-              </div>
-              <div className="fee-clarity-item">
-                <span>Receiver unlock</span>
-                <b>{accessMode === 'purchasable' ? `${accessPrice.trim() || '0.1'} ShelbyUSD` : accessMode === 'timelock' ? (timeLockReady ? formatMailDateTime(timeLockMs) : 'Set future time') : 'Free'}</b>
-                <small>{accessMode === 'purchasable' ? 'Receiver also approves unlock gas' : accessMode === 'timelock' ? 'Shelby permission: available after date' : 'Receiver can read without payment'}</small>
+              <div className="fee-clarity-grid">
+                <div className="fee-clarity-item">
+                  <span>Sender gas</span>
+                  <b>{accessMode === 'purchasable' || accessMode === 'timelock' ? '2 Aptos tx' : '1 Aptos tx'}</b>
+                  <small>{accessMode === 'purchasable' ? 'Upload + paywall registration' : accessMode === 'timelock' ? 'Upload + Time Lock permission' : 'Shelby blob upload'}</small>
+                </div>
+                <div className="fee-clarity-item">
+                  <span>Attachment size</span>
+                  <b>{attachedFiles.length ? formatBytes(composeAttachmentBytes) : 'None'}</b>
+                  <small>{attachedFiles.length ? `${attachedFiles.length} file${attachedFiles.length === 1 ? '' : 's'} stored as Shelby blobs` : 'No extra blob upload'}</small>
+                </div>
+                <div className="fee-clarity-item">
+                  <span>Receiver unlock</span>
+                  <b>{accessMode === 'purchasable' ? `${accessPrice.trim() || '0.1'} ShelbyUSD` : accessMode === 'timelock' ? (timeLockReady ? formatMailDateTime(timeLockMs) : 'Set future time') : 'Free'}</b>
+                  <small>{accessMode === 'purchasable' ? 'Receiver also approves unlock gas' : accessMode === 'timelock' ? 'Shelby permission: available after date' : 'Receiver can read without payment'}</small>
+                </div>
               </div>
             </div>
           </div>

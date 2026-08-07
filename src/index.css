@@ -1778,6 +1778,14 @@
     pointer-events: all;
   }
 
+  .compose-scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .compose-panel {
     width: 540px;
     max-width: calc(100vw - 48px);
@@ -2944,15 +2952,33 @@
 
     .compose-tab:hover { background: #f9f5ff; }
 
+    .compose-scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      -webkit-overflow-scrolling: touch; /* smooth scroll iOS */
+    }
+
     .compose-panel {
-      width: 100%;
-      max-width: 100%;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100% !important;
+      max-width: 100vw !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      border-radius: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .compose-header {
+      border-radius: 0 !important;
     }
 
     .compose-overlay {
-      padding: 0;
-      align-items: flex-end;
+      padding: 0 !important;
+      align-items: stretch !important;
+      justify-content: stretch !important;
     }
 
     .mail-list-title { font-size: 16px; }
@@ -3463,6 +3489,7 @@
     }
     .access-body {
       flex-direction: column;
+      min-height: 0 !important;
     }
     .access-sidebar {
       width: 100%;
